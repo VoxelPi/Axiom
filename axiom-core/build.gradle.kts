@@ -6,9 +6,13 @@ plugins {
 }
 
 dependencies {
+    // Kotlin
     compileOnlyApi(libs.kotlin.stdlib)
     compileOnlyApi(libs.kotlin.reflect)
     compileOnlyApi(libs.bundles.kotlinx.coroutines)
+
+    // Logging
+    compileOnlyApi(libs.kotlin.logging.jvm)
 }
 
 sourceSets {

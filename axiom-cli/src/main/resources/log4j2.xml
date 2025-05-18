@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%level] %logger{1}: %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- avoid duplicated logs with additivity=false -->
+        <Logger name="net.voxelpi.vire" level="debug" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>

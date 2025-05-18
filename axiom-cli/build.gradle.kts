@@ -17,6 +17,11 @@ dependencies {
     api(projects.axiomAsm)
     api(projects.axiomArch.axiomArchMcpc8)
     api(projects.axiomArch.axiomArchMcpc16)
+
+    // Logging
+    implementation(libs.kotlin.logging.jvm)
+    runtimeOnly(libs.slf4j.api)
+    runtimeOnly(libs.log4j.slf4j.impl)
 }
 
 application {
