@@ -34,7 +34,7 @@ dependencies {
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        optIn.add("io.lettuce.core.ExperimentalLettuceCoroutinesApi")
+        optIn.add("kotlin.ExperimentalUnsignedTypes")
     }
 }
 
