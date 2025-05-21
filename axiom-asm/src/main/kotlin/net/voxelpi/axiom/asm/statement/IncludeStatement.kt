@@ -1,7 +1,6 @@
-package net.voxelpi.axiom.asm.statement.preprocessor
+package net.voxelpi.axiom.asm.statement
 
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.Statement
 import net.voxelpi.axiom.asm.statement.argument.Argument
 
 public sealed interface IncludeStatement : Statement {

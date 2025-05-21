@@ -1,8 +1,8 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.statement.IncludeStatement
 import net.voxelpi.axiom.asm.statement.InstructionStatement
 import net.voxelpi.axiom.asm.statement.ScopeStatement
-import net.voxelpi.axiom.asm.statement.preprocessor.IncludeStatement
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Operation
 
