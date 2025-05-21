@@ -35,10 +35,11 @@ public class ParserTransformation<S : Statement> internal constructor(
         val tokens = tokenizedStatement.tokens
 
         val argumentValues = mutableMapOf<String, Any?>()
+        val argumentState = ArgumentState(argumentValues)
 
         // Set parameters.
         for (parameter in parameters.values) {
-            argumentValues[parameter.id] = parameter.value
+            argumentValues[parameter.id] = parameter.valueProvider(argumentState)
         }
 
         // Parse argument values.
@@ -66,11 +67,6 @@ public class ParserTransformation<S : Statement> internal constructor(
                 val type = parameter.type
                 name to type
             }
-
-        // Check for unnecessary arguments.
-        for (argument in argumentValues.keys - constructorArguments.keys) {
-            return Result.failure(IllegalArgumentException("No argument with id '$argument' found for statement class $type."))
-        }
 
         // Check the argument types.
         for ((argumentName, argumentType) in constructorArguments) {
@@ -220,14 +216,26 @@ public class ParserTransformation<S : Statement> internal constructor(
             return argument
         }
 
-        public fun <T> parameter(id: String, type: KType, value: T): ParserTransformationParameter<T> {
+        public fun <T> parameter(id: String, type: KType, value: ArgumentState.() -> T): ParserTransformationParameter<T> {
             val parameter = ParserTransformationParameter(id, type, value)
             parameters[id] = parameter
             return parameter
         }
 
-        public inline fun <reified T> parameter(id: String, value: T): ParserTransformationParameter<T> {
+        public inline fun <reified T> parameter(id: String, noinline value: ArgumentState.() -> T): ParserTransformationParameter<T> {
             return parameter(id, typeOf<T>(), value)
+        }
+    }
+
+    public class ArgumentState internal constructor(private val arguments: Map<String, Any?>) {
+
+        public operator fun get(name: String): Any? {
+            return arguments[name]
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        public operator fun <T> get(argument: ParserTransformationArgument<T>): T {
+            return arguments[argument.id]!! as T
         }
     }
 }

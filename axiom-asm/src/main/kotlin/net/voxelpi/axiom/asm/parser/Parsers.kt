@@ -50,6 +50,16 @@ public object Parsers {
 
             conditionSubStatement()
         }
+
+        rule<ArithmeticStatements.AdditionStatement>("increment_with_condition") {
+            literal("inc")
+            val register = registerLikeArgument("input1")
+
+            conditionSubStatement()
+
+            parameter("input2") { 0 }
+            parameter("output") { this[register] }
+        }
     }
 
     private fun ParserTransformation.Builder<*>.conditionSubStatement() {
