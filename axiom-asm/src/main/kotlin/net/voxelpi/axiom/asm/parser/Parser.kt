@@ -5,7 +5,7 @@ import net.voxelpi.axiom.asm.statement.TokenizedStatement
 import kotlin.reflect.KClass
 
 public class Parser(
-    public val rules: List<ParserRule<*>>,
+    public val rules: List<ParserTransformation<*>>,
 ) {
 
     public fun parse(statement: TokenizedStatement): Result<Statement> {
@@ -32,19 +32,19 @@ public class Parser(
 
     public class Builder internal constructor() {
 
-        private val rules: MutableList<ParserRule<*>> = mutableListOf()
+        private val rules: MutableList<ParserTransformation<*>> = mutableListOf()
 
-        public fun rules(): List<ParserRule<*>> {
+        public fun rules(): List<ParserTransformation<*>> {
             return rules
         }
 
-        public fun <S : Any> rule(id: String, type: KClass<S>, block: ParserRule.Builder<S>.() -> Unit): ParserRule<S> {
-            val rule = ParserRule.create(id, type, block)
+        public fun <S : Any> rule(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
+            val rule = ParserTransformation.create(id, type, block)
             rules += rule
             return rule
         }
 
-        public inline fun <reified S : Any> rule(id: String, noinline block: ParserRule.Builder<S>.() -> Unit): ParserRule<S> {
+        public inline fun <reified S : Any> rule(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
             return rule(id, S::class, block)
         }
     }
