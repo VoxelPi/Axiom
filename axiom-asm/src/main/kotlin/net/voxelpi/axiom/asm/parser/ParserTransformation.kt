@@ -1,7 +1,9 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.statement.Statement
 import net.voxelpi.axiom.asm.statement.TokenizedStatement
+import net.voxelpi.axiom.asm.statement.argument.Argument
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSuperclassOf
@@ -34,13 +36,8 @@ public class ParserTransformation<S : Statement> internal constructor(
     public fun apply(tokenizedStatement: TokenizedStatement): Result<Statement> {
         val tokens = tokenizedStatement.tokens
 
-        val argumentValues = mutableMapOf<String, Any?>()
+        val argumentValues = mutableMapOf<String, Any?>("source" to tokenizedStatement.source)
         val argumentState = ArgumentState(argumentValues)
-
-        // Set parameters.
-        for (parameter in parameters.values) {
-            argumentValues[parameter.id] = parameter.valueProvider(argumentState)
-        }
 
         // Parse argument values.
         for ((segment, token) in segments.zip(tokens)) {
@@ -49,21 +46,26 @@ public class ParserTransformation<S : Statement> internal constructor(
             }
 
             val argument = arguments[segment.id]!!
-            val value = argument.parse(token).onFailure {
+            val value = argument.parse(token).getOrElse {
                 return Result.failure(it)
             }
             argumentValues[argument.id] = value
         }
 
+        // Set parameters.
+        for (parameter in parameters.values) {
+            argumentValues[parameter.id] = parameter.valueProvider(argumentState)
+        }
+
         // Get the primary constructor.
         val primaryConstructor = type.primaryConstructor
-            ?: return Result.failure(IllegalArgumentException("No primary constructor found for statement class $type."))
+            ?: return Result.failure(ParseException(tokenizedStatement.source, "No primary constructor found for statement class $type."))
 
         // Get constructor arguments of the primary constructor.
         val constructorArguments = primaryConstructor.parameters
             .filterNot { it.isOptional || it.isVararg }
             .associate { parameter ->
-                val name = parameter.name ?: return Result.failure(IllegalArgumentException("Parameter $parameter has no name."))
+                val name = parameter.name ?: return Result.failure(ParseException(tokenizedStatement.source, "Constructor parameter '$parameter' has no name."))
                 val type = parameter.type
                 name to type
             }
@@ -72,13 +74,14 @@ public class ParserTransformation<S : Statement> internal constructor(
         for ((argumentName, argumentType) in constructorArguments) {
             // Check that the argument is present in the value map.
             if (argumentName !in argumentValues) {
-                return Result.failure(IllegalArgumentException("No value specified for argument $argumentName."))
+                return Result.failure(ParseException(tokenizedStatement.source, "No value specified for argument $argumentName."))
             }
             val argumentValue = argumentValues[argumentName]
 
             // Check that the type is valid.
             if (!isInstanceOfType(argumentValue, argumentType)) {
-                return Result.failure(IllegalArgumentException("Value '$argumentValue' for argument $argumentName is not of type $argumentType"))
+                val source = if (argumentValue is Argument) argumentValue.source else tokenizedStatement.source
+                return Result.failure(ParseException(source, "Value '$argumentValue' for argument $argumentName is not of type $argumentType"))
             }
         }
 
@@ -190,6 +193,20 @@ public class ParserTransformation<S : Statement> internal constructor(
 
         public fun labelArgument(id: String): ParserTransformationArgument.LabelArgument {
             val argument = ParserTransformationArgument.LabelArgument(id)
+            segments += argument
+            arguments[id] = argument
+            return argument
+        }
+
+        public fun scopeArgument(id: String): ParserTransformationArgument.ScopeArgument {
+            val argument = ParserTransformationArgument.ScopeArgument(id)
+            segments += argument
+            arguments[id] = argument
+            return argument
+        }
+
+        public fun unitArgument(id: String): ParserTransformationArgument.UnitArgument {
+            val argument = ParserTransformationArgument.UnitArgument(id)
             segments += argument
             arguments[id] = argument
             return argument

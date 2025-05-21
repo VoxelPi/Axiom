@@ -20,7 +20,7 @@ public data class TokenizedStatement(
                 } else {
                     0
                 }
-            }
+            } + (tokens.count { it.source.unit == firstTokenSource.unit } - 1).coerceAtLeast(0)
 
             return SourceLink.CompilationUnitSlice(firstTokenSource.unit, firstTokenSource.index, firstTokenSource.line, firstTokenSource.column, length)
         }

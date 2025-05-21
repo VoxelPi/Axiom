@@ -7,7 +7,11 @@ public sealed interface ParserTransformationLiteral : ParserTransformationSegmen
     public data class Text(val value: String) : ParserTransformationLiteral {
 
         override fun isApplicable(token: Token): Boolean {
-            return token is Token.Text && token.value == value
+            return when (token) {
+                is Token.Text -> token.value == value
+                is Token.Integer -> token.source.text == value
+                else -> false
+            }
         }
     }
 

@@ -7,41 +7,41 @@ import net.voxelpi.axiom.asm.statement.preprocessor.IncludeStatement
 public object Parsers {
 
     public val AXIOM_ASM: Parser = Parser.create {
-        rule<IncludeStatement.Unit>("include/unit") {
+        transformation<IncludeStatement.Unit>("include/unit") {
             directive("include")
-            textArgument("unit")
+            unitArgument("unit")
         }
 
-        rule<IncludeStatement.Scope>("include/scope") {
+        transformation<IncludeStatement.Scope>("include/scope") {
             directive("include")
-            labelArgument("scope")
+            scopeArgument("scope")
             literal("from")
-            textArgument("unit")
+            unitArgument("unit")
         }
 
-        rule<IncludeStatement.ScopeWithAlias>("include/scope_with_alias") {
+        transformation<IncludeStatement.ScopeWithAlias>("include/scope_with_alias") {
             directive("include")
-            labelArgument("scope")
+            scopeArgument("scope")
             literal("from")
-            textArgument("unit")
+            unitArgument("unit")
             literal("as")
-            labelArgument("alias")
+            scopeArgument("alias")
         }
 
-        rule<ScopeStatement.OpenScope.Unnamed>("scope_open_unnamed") {
+        transformation<ScopeStatement.OpenScope.Unnamed>("scope_open_unnamed") {
             curlyBracketsOpen()
         }
 
-        rule<ScopeStatement.OpenScope.Named>("scope_open_named") {
-            labelArgument("name")
+        transformation<ScopeStatement.OpenScope.Named>("scope_open_named") {
+            scopeArgument("name")
             curlyBracketsOpen()
         }
 
-        rule<ScopeStatement.CloseScope>("scope_close") {
+        transformation<ScopeStatement.CloseScope>("scope_close") {
             curlyBracketsClose()
         }
 
-        rule<ArithmeticStatements.AdditionStatement>("addition_with_condition") {
+        transformation<ArithmeticStatements.AdditionStatement>("addition_with_condition") {
             registerLikeArgument("output")
             literal("=")
             valueLikeArgument("input1")
@@ -51,7 +51,7 @@ public object Parsers {
             conditionSubStatement()
         }
 
-        rule<ArithmeticStatements.AdditionStatement>("increment_with_condition") {
+        transformation<ArithmeticStatements.AdditionStatement>("increment_with_condition") {
             literal("inc")
             val register = registerLikeArgument("input1")
 
@@ -64,7 +64,7 @@ public object Parsers {
 
     private fun ParserTransformation.Builder<*>.conditionSubStatement() {
         literal("if")
-        registerLikeArgument("conditionSource")
+        registerLikeArgument("conditionRegister")
         conditionArgument("condition")
         literal("0")
     }

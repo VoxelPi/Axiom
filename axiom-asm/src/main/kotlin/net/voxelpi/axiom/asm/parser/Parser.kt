@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.statement.Statement
 import net.voxelpi.axiom.asm.statement.TokenizedStatement
 import kotlin.reflect.KClass
@@ -18,7 +19,7 @@ public class Parser(
             return statement
         }
 
-        return Result.failure(IllegalArgumentException("No applicable parsing rule found."))
+        return Result.failure(ParseException(statement.source, "No applicable parsing rule found."))
     }
 
     public companion object {
@@ -38,14 +39,14 @@ public class Parser(
             return rules
         }
 
-        public fun <S : Statement> rule(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
+        public fun <S : Statement> transformation(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
             val rule = ParserTransformation.create(id, type, block)
             rules += rule
             return rule
         }
 
-        public inline fun <reified S : Statement> rule(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
-            return rule(id, S::class, block)
+        public inline fun <reified S : Statement> transformation(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
+            return transformation(id, S::class, block)
         }
     }
 }

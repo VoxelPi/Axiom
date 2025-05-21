@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.parser
 
 import net.voxelpi.axiom.asm.lexer.Token
+import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.statement.argument.Argument
 import net.voxelpi.axiom.instruction.Condition
 
@@ -16,59 +17,87 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
 
     public fun parse(token: Token): Result<T>
 
-    public data class TextArgument(override val id: String) : ParserTransformationArgument<String> {
+    public data class TextArgument(override val id: String) : ParserTransformationArgument<Argument.Text> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text
         }
 
-        override fun parse(token: Token): Result<String> {
+        override fun parse(token: Token): Result<Argument.Text> {
             if (token !is Token.Text) {
-                return Result.failure(IllegalArgumentException("Expected a text token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
             }
-            return Result.success(token.value)
+            return Result.success(Argument.Text(token.source, token.value))
         }
     }
 
-    public data class IntegerArgument(override val id: String) : ParserTransformationArgument<Long> {
+    public data class IntegerArgument(override val id: String) : ParserTransformationArgument<Argument.Integer> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Integer
         }
 
-        override fun parse(token: Token): Result<Long> {
+        override fun parse(token: Token): Result<Argument.Integer> {
             if (token !is Token.Integer) {
-                return Result.failure(IllegalArgumentException("Expected an integer token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected an integer token but got ${token::class.simpleName}"))
             }
-            return Result.success(token.value)
+            return Result.success(Argument.Integer(token.source, token.value))
         }
     }
 
-    public data class VariableArgument(override val id: String) : ParserTransformationArgument<String> {
+    public data class VariableArgument(override val id: String) : ParserTransformationArgument<Argument.VariableLike.NamedVariableReference> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable
         }
 
-        override fun parse(token: Token): Result<String> {
+        override fun parse(token: Token): Result<Argument.VariableLike.NamedVariableReference> {
             if (token !is Token.Variable) {
-                return Result.failure(IllegalArgumentException("Expected a variable token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected a variable token but got ${token::class.simpleName}"))
             }
-            return Result.success(token.value)
+            return Result.success(Argument.VariableLike.NamedVariableReference(token.source, token.value))
         }
     }
 
-    public data class LabelArgument(override val id: String) : ParserTransformationArgument<String> {
+    public data class LabelArgument(override val id: String) : ParserTransformationArgument<Argument.LabelLike.NamedLabelReference> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Label
         }
 
-        override fun parse(token: Token): Result<String> {
+        override fun parse(token: Token): Result<Argument.LabelLike.NamedLabelReference> {
             if (token !is Token.Label) {
-                return Result.failure(IllegalArgumentException("Expected a label token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
             }
-            return Result.success(token.value)
+            return Result.success(Argument.LabelLike.NamedLabelReference(token.source, token.value))
+        }
+    }
+
+    public data class ScopeArgument(override val id: String) : ParserTransformationArgument<Argument.ScopeLike.NamedScopeReference> {
+
+        override fun isValid(token: Token): Boolean {
+            return token is Token.Label
+        }
+
+        override fun parse(token: Token): Result<Argument.ScopeLike.NamedScopeReference> {
+            if (token !is Token.Label) {
+                return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
+            }
+            return Result.success(Argument.ScopeLike.NamedScopeReference(token.source, token.value))
+        }
+    }
+
+    public data class UnitArgument(override val id: String) : ParserTransformationArgument<Argument.UnitLike.NamedUnitReference> {
+
+        override fun isValid(token: Token): Boolean {
+            return token is Token.Text
+        }
+
+        override fun parse(token: Token): Result<Argument.UnitLike.NamedUnitReference> {
+            if (token !is Token.Text) {
+                return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
+            }
+            return Result.success(Argument.UnitLike.NamedUnitReference(token.source, token.value))
         }
     }
 
@@ -80,12 +109,13 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
 
         override fun parse(token: Token): Result<Condition> {
             if (token !is Token.Text) {
-                return Result.failure(IllegalArgumentException("Expected a text token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
             }
-            return Result.success(
-                Condition.entries.find { it.name == token.value }
-                    ?: return Result.failure(IllegalArgumentException("Unknown condition '${token.value}'")),
-            )
+
+            val condition = Condition.entries.find { it.symbol == token.value }
+                ?: return Result.failure(ParseException(token.source, "Unknown condition '${token.value}'"))
+
+            return Result.success(condition)
         }
     }
 
@@ -101,7 +131,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
                 is Token.Text -> Result.success(Argument.ValueLike.Unparsed(token.source, token.value))
                 is Token.Integer -> Result.success(Argument.Integer(token.source, token.value))
                 else -> Result.failure(
-                    IllegalArgumentException("Expected a variable, text or integer token but got ${token::class.simpleName}"),
+                    ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
                 )
             }
         }
@@ -118,7 +148,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
                 is Token.Variable -> Result.success(Argument.Variable(token.source, token.value))
                 is Token.Text -> Result.success(Argument.RegisterLike.Unparsed(token.source, token.value))
                 else -> Result.failure(
-                    IllegalArgumentException("Expected a variable, text or integer token but got ${token::class.simpleName}"),
+                    ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
                 )
             }
         }

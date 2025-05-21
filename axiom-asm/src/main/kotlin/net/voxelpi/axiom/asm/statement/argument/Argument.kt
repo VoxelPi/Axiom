@@ -33,6 +33,22 @@ public interface Argument {
         ) : ScopeLike
     }
 
+    public interface LabelLike : AnchorLike {
+
+        public class NamedLabelReference(
+            override val source: SourceLink,
+            public val name: String,
+        ) : LabelLike
+    }
+
+    public interface VariableLike : AnchorLike {
+
+        public class NamedVariableReference(
+            override val source: SourceLink,
+            public val name: String,
+        ) : VariableLike
+    }
+
     public interface UnitLike : Argument {
 
         public class NamedUnitReference(
@@ -55,6 +71,11 @@ public interface Argument {
         override val source: SourceLink,
         public val name: String,
     ) : RegisterLike
+
+    public class Label(
+        override val source: SourceLink,
+        public val name: String,
+    ) : AnchorLike, LabelLike
 
     public class Integer(
         override val source: SourceLink,
