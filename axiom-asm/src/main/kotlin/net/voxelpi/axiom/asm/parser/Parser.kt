@@ -38,13 +38,13 @@ public class Parser(
             return rules
         }
 
-        public fun <S : Any> rule(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
+        public fun <S : Statement> rule(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
             val rule = ParserTransformation.create(id, type, block)
             rules += rule
             return rule
         }
 
-        public inline fun <reified S : Any> rule(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
+        public inline fun <reified S : Statement> rule(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
             return rule(id, S::class, block)
         }
     }

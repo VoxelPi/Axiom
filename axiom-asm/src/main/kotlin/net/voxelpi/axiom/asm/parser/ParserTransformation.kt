@@ -4,9 +4,11 @@ import net.voxelpi.axiom.asm.statement.Statement
 import net.voxelpi.axiom.asm.statement.TokenizedStatement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.typeOf
 
-public class ParserTransformation<S : Any> internal constructor(
+public class ParserTransformation<S : Statement> internal constructor(
     public val id: String,
     public val type: KClass<S>,
     public val segments: List<ParserTransformationSegment>,
@@ -27,10 +29,10 @@ public class ParserTransformation<S : Any> internal constructor(
     }
 
     /**
-     * Applies this rule on the given [statement] to generate a parsed statement.
+     * Applies this rule on the given [tokenizedStatement] to generate a parsed statement.
      */
-    public fun apply(statement: TokenizedStatement): Result<Statement> {
-        val tokens = statement.tokens
+    public fun apply(tokenizedStatement: TokenizedStatement): Result<Statement> {
+        val tokens = tokenizedStatement.tokens
 
         val argumentValues = mutableMapOf<String, Any?>()
 
@@ -46,20 +48,69 @@ public class ParserTransformation<S : Any> internal constructor(
             }
 
             val argument = arguments[segment.id]!!
-            argumentValues[argument.id] = argument.parse(token)
+            val value = argument.parse(token).onFailure {
+                return Result.failure(it)
+            }
+            argumentValues[argument.id] = value
         }
 
-        TODO()
+        // Get the primary constructor.
+        val primaryConstructor = type.primaryConstructor
+            ?: return Result.failure(IllegalArgumentException("No primary constructor found for statement class $type."))
+
+        // Get constructor arguments of the primary constructor.
+        val constructorArguments = primaryConstructor.parameters
+            .filterNot { it.isOptional || it.isVararg }
+            .associate { parameter ->
+                val name = parameter.name ?: return Result.failure(IllegalArgumentException("Parameter $parameter has no name."))
+                val type = parameter.type
+                name to type
+            }
+
+        // Check for unnecessary arguments.
+        for (argument in argumentValues.keys - constructorArguments.keys) {
+            return Result.failure(IllegalArgumentException("No argument with id '$argument' found for statement class $type."))
+        }
+
+        // Check the argument types.
+        for ((argumentName, argumentType) in constructorArguments) {
+            // Check that the argument is present in the value map.
+            if (argumentName !in argumentValues) {
+                return Result.failure(IllegalArgumentException("No value specified for argument $argumentName."))
+            }
+            val argumentValue = argumentValues[argumentName]
+
+            // Check that the type is valid.
+            if (!isInstanceOfType(argumentValue, argumentType)) {
+                return Result.failure(IllegalArgumentException("Value '$argumentValue' for argument $argumentName is not of type $argumentType"))
+            }
+        }
+
+        // Create the statement.
+        val constructorValues = primaryConstructor.parameters.associateWith { parameter ->
+            argumentValues[parameter.name!!]
+        }
+        return runCatching { primaryConstructor.callBy(constructorValues) }
+    }
+
+    private fun isInstanceOfType(value: Any?, type: KType): Boolean {
+        // Handle null values: only return true if 'value' is nullable
+        if (value == null) return type.isMarkedNullable
+
+        return when (val classifier = type.classifier) {
+            is KClass<*> -> classifier.isSuperclassOf(value::class)
+            else -> classifier == value::class
+        }
     }
 
     internal companion object {
-        fun <S : Any> create(id: String, type: KClass<S>, block: Builder<S>.() -> Unit): ParserTransformation<S> {
+        fun <S : Statement> create(id: String, type: KClass<S>, block: Builder<S>.() -> Unit): ParserTransformation<S> {
             val builder = Builder(id, type)
             builder.block()
             return ParserTransformation(builder.id, type, builder.segments(), builder.arguments(), builder.parameters())
         }
 
-        inline fun <reified S : Any> create(id: String, noinline block: Builder<S>.() -> Unit): ParserTransformation<S> {
+        inline fun <reified S : Statement> create(id: String, noinline block: Builder<S>.() -> Unit): ParserTransformation<S> {
             return create(id, S::class, block)
         }
     }
