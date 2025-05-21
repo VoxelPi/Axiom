@@ -18,39 +18,39 @@ class LexerTest {
 
         // Statement 1.
         val statement1 = tokenStatements[0]
-        assertEquals(4, statement1.size, "Invalid number of tokens in statement 1")
+        assertEquals(4, statement1.tokens.size, "Invalid number of tokens in statement 1")
 
-        assertIs<Token.Text>(statement1[0])
-        assertEquals("this", (statement1[0] as Token.Text).value)
+        assertIs<Token.Text>(statement1.tokens[0])
+        assertEquals("this", (statement1.tokens[0] as Token.Text).value)
 
-        assertIs<Token.Text>(statement1[1])
-        assertEquals("is", (statement1[1] as Token.Text).value)
+        assertIs<Token.Text>(statement1.tokens[1])
+        assertEquals("is", (statement1.tokens[1] as Token.Text).value)
 
-        assertIs<Token.Integer>(statement1[2])
-        assertEquals(1, (statement1[2] as Token.Integer).value)
+        assertIs<Token.Integer>(statement1.tokens[2])
+        assertEquals(1, (statement1.tokens[2] as Token.Integer).value)
 
-        assertIs<Token.Label>(statement1[3])
-        assertEquals("label", (statement1[3] as Token.Label).value)
+        assertIs<Token.Label>(statement1.tokens[3])
+        assertEquals("label", (statement1.tokens[3] as Token.Label).value)
 
         // Statement 2.
         val statement2 = tokenStatements[1]
-        assertEquals(2, statement2.size, "Invalid number of tokens in statement 2")
+        assertEquals(2, statement2.tokens.size, "Invalid number of tokens in statement 2")
 
-        assertIs<Token.Text>(statement2[0])
-        assertEquals("another", (statement2[0] as Token.Text).value)
+        assertIs<Token.Text>(statement2.tokens[0])
+        assertEquals("another", (statement2.tokens[0] as Token.Text).value)
 
-        assertIs<Token.Variable>(statement2[1])
-        assertEquals("var", (statement2[1] as Token.Variable).value)
+        assertIs<Token.Variable>(statement2.tokens[1])
+        assertEquals("var", (statement2.tokens[1] as Token.Variable).value)
 
         // Statement 3.
         val statement3 = tokenStatements[2]
-        assertEquals(2, statement3.size, "Invalid number of tokens in statement 3")
+        assertEquals(2, statement3.tokens.size, "Invalid number of tokens in statement 3")
 
-        assertIs<Token.PreProcessorDirective>(statement3[0])
-        assertEquals("include", (statement3[0] as Token.PreProcessorDirective).value)
+        assertIs<Token.Directive>(statement3.tokens[0])
+        assertEquals("include", (statement3.tokens[0] as Token.Directive).value)
 
-        assertIs<Token.Text>(statement3[1])
-        assertEquals("stuff", (statement3[1] as Token.Text).value)
+        assertIs<Token.Text>(statement3.tokens[1])
+        assertEquals("stuff", (statement3.tokens[1] as Token.Text).value)
     }
 
     @Test
@@ -61,7 +61,7 @@ class LexerTest {
         val tokenStatements = lexer.tokenize(unit)
         assertEquals(3, tokenStatements.size, "Invalid number of statements")
 
-        val token = tokenStatements[2][0]
+        val token = tokenStatements[2].tokens[0]
         val source = SourceLink.CompilationUnitSlice(unit, 36, 1, 18, 8)
 
         assertEquals(source, token.source)

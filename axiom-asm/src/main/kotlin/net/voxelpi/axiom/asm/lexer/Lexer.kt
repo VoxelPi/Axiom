@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.lexer
 
 import net.voxelpi.axiom.asm.CompilationUnit
 import net.voxelpi.axiom.asm.source.SourceLink
+import net.voxelpi.axiom.asm.statement.TokenizedStatement
 
 /**
  * The lexer converts the string content of a compilation unit into a series of tokens.
@@ -11,7 +12,7 @@ public class Lexer() {
     /**
      * Convert tokens
      */
-    public fun tokenize(unit: CompilationUnit): List<List<Token>> {
+    public fun tokenize(unit: CompilationUnit): List<TokenizedStatement> {
         val statements: MutableList<List<Token>> = mutableListOf()
         val statement: MutableList<Token> = mutableListOf()
 
@@ -42,22 +43,22 @@ public class Lexer() {
                     continue
                 }
                 '{' -> {
-                    statement.add(Token.Scope.Open(cSource))
+                    statement.add(Token.CurlyBrackets.Open(cSource))
                     ++iSymbol
                     continue
                 }
                 '}' -> {
-                    statement.add(Token.Scope.Close(cSource))
+                    statement.add(Token.CurlyBrackets.Close(cSource))
                     ++iSymbol
                     continue
                 }
                 '[' -> {
-                    statement.add(Token.MemoryAddress.Open(cSource))
+                    statement.add(Token.SquareBrackets.Open(cSource))
                     ++iSymbol
                     continue
                 }
                 ']' -> {
-                    statement.add(Token.MemoryAddress.Close(cSource))
+                    statement.add(Token.SquareBrackets.Close(cSource))
                     ++iSymbol
                     continue
                 }
@@ -96,7 +97,7 @@ public class Lexer() {
             // Pre-Processor directives
             if (tokenText.startsWith("!")) {
                 val iLabelNameStart = iTokenStart + 1
-                statement.add(Token.PreProcessorDirective(unit.content.substring(iLabelNameStart, iTokenEnd), wordSource))
+                statement.add(Token.Directive(unit.content.substring(iLabelNameStart, iTokenEnd), wordSource))
                 continue
             }
 
@@ -161,7 +162,7 @@ public class Lexer() {
         statements.removeAll { it.isEmpty() }
 
         // Return the list of all generated tokens.
-        return statements
+        return statements.map { TokenizedStatement(it) }
     }
 
     private fun parseNumberSign(text: String): Pair<Boolean, Int> {

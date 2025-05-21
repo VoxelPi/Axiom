@@ -44,7 +44,7 @@ public sealed interface Token {
     /**
      * A label token.
      */
-    public data class PreProcessorDirective(
+    public data class Directive(
         val value: String,
         override val source: SourceLink.CompilationUnitSlice,
     ) : Token
@@ -52,26 +52,26 @@ public sealed interface Token {
     /**
      * A scope token.
      */
-    public sealed interface Scope : Token {
+    public sealed interface CurlyBrackets : Token {
         public data class Open(
             override val source: SourceLink.CompilationUnitSlice,
-        ) : Scope
+        ) : CurlyBrackets
 
         public data class Close(
             override val source: SourceLink.CompilationUnitSlice,
-        ) : Scope
+        ) : CurlyBrackets
     }
 
     /**
      * A memory address token.
      */
-    public sealed interface MemoryAddress : Token {
+    public sealed interface SquareBrackets : Token {
         public data class Open(
             override val source: SourceLink.CompilationUnitSlice,
-        ) : MemoryAddress
+        ) : SquareBrackets
 
         public data class Close(
             override val source: SourceLink.CompilationUnitSlice,
-        ) : MemoryAddress
+        ) : SquareBrackets
     }
 }

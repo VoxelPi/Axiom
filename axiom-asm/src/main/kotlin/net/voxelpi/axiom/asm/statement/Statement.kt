@@ -1,3 +1,8 @@
 package net.voxelpi.axiom.asm.statement
 
-public interface Statement
+import net.voxelpi.axiom.asm.source.SourceLink
+
+public interface Statement {
+
+    public val source: SourceLink
+}
