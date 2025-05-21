@@ -62,6 +62,11 @@ public class Lexer() {
                     ++iSymbol
                     continue
                 }
+                ',' -> {
+                    statement.add(Token.Text(",", cSource))
+                    ++iSymbol
+                    continue
+                }
             }
 
             // Whitespace.
@@ -73,7 +78,7 @@ public class Lexer() {
             // Word tokens.
             // Store the current symbol index and increment until a whitespace or semicolon is encountered.
             val iTokenStart = iSymbol
-            while (iSymbol < unit.content.length && !(unit.content[iSymbol].isWhitespace() || unit.content[iSymbol] == ';')) {
+            while (iSymbol < unit.content.length && !(unit.content[iSymbol].isWhitespace() || unit.content[iSymbol] == ';' || unit.content[iSymbol] == ',')) {
                 ++iSymbol
             }
             val iTokenEnd = iSymbol
