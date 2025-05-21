@@ -1,31 +1,35 @@
 package net.voxelpi.axiom.asm.parser
 
-internal sealed interface ParserRulePart {
+public sealed interface ParserRulePart {
 
-    data class Directive(val directive: String) : ParserRulePart
+    public data class Directive(val directive: String) : ParserRulePart
 
-    data class Literal(val value: String) : ParserRulePart
+    public data class Literal(val value: String) : ParserRulePart
 
-    sealed interface Argument<T> : ParserRulePart {
+    public sealed interface Argument<T> : ParserRulePart {
 
-        val id: String
+        public val id: String
 
-        data class Text(override val id: String) : Argument<String>
+        public data class Text(override val id: String) : Argument<String>
 
-        data class Integer(override val id: String) : Argument<Long>
+        public data class Integer(override val id: String) : Argument<Long>
 
-        data class Variable(override val id: String) : Argument<String>
+        public data class Variable(override val id: String) : Argument<String>
 
-        data class Label(override val id: String) : Argument<String>
+        public data class Label(override val id: String) : Argument<String>
     }
 
-    sealed interface CurlyBrackets : ParserRulePart {
-        data object Open : CurlyBrackets
-        data object Close : CurlyBrackets
+    public sealed interface CurlyBrackets : ParserRulePart {
+
+        public data object Open : CurlyBrackets
+
+        public data object Close : CurlyBrackets
     }
 
-    sealed interface SquareBrackets : ParserRulePart {
-        data object Open : SquareBrackets
-        data object Close : SquareBrackets
+    public sealed interface SquareBrackets : ParserRulePart {
+
+        public data object Open : SquareBrackets
+
+        public data object Close : SquareBrackets
     }
 }
