@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class ParserTest {
-    
+
     class SimpleStatement(
         override val source: SourceLink,
         val number: Argument.Integer,
@@ -21,13 +21,13 @@ class ParserTest {
     @Test
     fun `test simple parser`() {
         val lexer = Lexer()
-        val parser = Parser.create { 
+        val parser = Parser.create {
             transformation<SimpleStatement>("simple statement") {
                 literal("simple")
                 integerArgument("number")
             }
-        }   
-        
+        }
+
         val source = CompilationUnit("__test__", "simple 5")
         val tokenizedStatement = lexer.tokenize(source).first()
 
@@ -55,10 +55,10 @@ class ParserTest {
     @Test
     fun `test complex parser`() {
         val code = """
-            @my_scope {
-                !include @lib_scope from my_lib
-                R1 = R2 + R3 if R1 < 0
-            }
+        @my_scope {
+            !include @lib_scope from my_lib
+            R1 = R2 + R3 if R1 < 0
+        }
         """.trimIndent()
         val unit = CompilationUnit("__test__", code)
 

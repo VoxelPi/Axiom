@@ -134,40 +134,37 @@ public class ParserTransformation<S : Statement> internal constructor(
             return parameters
         }
 
-        public fun literal(text: String): ParserTransformationLiteral.Text {
-            val part = ParserTransformationLiteral.Text(text)
-            segments += part
-            return part
+        public fun literal(text: String) {
+            val words = text.split("\\s+".toRegex())
+            for (word in words) {
+                val part = ParserTransformationLiteral.Text(word)
+                segments += part
+            }
         }
 
-        public fun directive(text: String): ParserTransformationLiteral.Directive {
+        public fun directive(text: String) {
             val part = ParserTransformationLiteral.Directive(text)
             segments += part
-            return part
         }
 
-        public fun curlyBracketsOpen(): ParserTransformationLiteral.CurlyBrackets.Open {
+        public fun curlyBracketsOpen() {
             val part = ParserTransformationLiteral.CurlyBrackets.Open
             segments += part
-            return part
         }
 
-        public fun curlyBracketsClose(): ParserTransformationLiteral.CurlyBrackets.Close {
+        public fun curlyBracketsClose() {
             val part = ParserTransformationLiteral.CurlyBrackets.Close
             segments += part
-            return part
         }
 
-        public fun squareBracketsOpen(): ParserTransformationLiteral.SquareBrackets.Open {
+        public fun squareBracketsOpen() {
             val part = ParserTransformationLiteral.SquareBrackets.Open
             segments += part
-            return part
         }
 
-        public fun squareBracketsClose(): ParserTransformationLiteral.SquareBrackets.Close {
+        public fun squareBracketsClose() {
             val part = ParserTransformationLiteral.SquareBrackets.Close
             segments += part
-            return part
         }
 
         public fun textArgument(id: String): ParserTransformationArgument.TextArgument {
@@ -233,13 +230,12 @@ public class ParserTransformation<S : Statement> internal constructor(
             return argument
         }
 
-        public fun <T> parameter(id: String, type: KType, value: ArgumentState.() -> T): ParserTransformationParameter<T> {
+        public fun <T> parameter(id: String, type: KType, value: ArgumentState.() -> T) {
             val parameter = ParserTransformationParameter(id, type, value)
             parameters[id] = parameter
-            return parameter
         }
 
-        public inline fun <reified T> parameter(id: String, noinline value: ArgumentState.() -> T): ParserTransformationParameter<T> {
+        public inline fun <reified T> parameter(id: String, noinline value: ArgumentState.() -> T) {
             return parameter(id, typeOf<T>(), value)
         }
     }
