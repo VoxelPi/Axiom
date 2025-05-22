@@ -2,7 +2,10 @@ package net.voxelpi.axiom.asm.parser
 
 import net.voxelpi.axiom.asm.statement.IncludeStatement
 import net.voxelpi.axiom.asm.statement.InstructionStatement
+import net.voxelpi.axiom.asm.statement.RepeatStatement
 import net.voxelpi.axiom.asm.statement.ScopeStatement
+import net.voxelpi.axiom.asm.statement.StatementArgument
+import net.voxelpi.axiom.asm.type.ScopeLike
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Operation
 
@@ -17,14 +20,14 @@ public object Parsers {
             unitArgument("unit")
         }
 
-        transformation<IncludeStatement.Scope>("include/scope") {
+        transformation<IncludeStatement.Scope.Direct>("include/scope") {
             directive("include")
             scopeArgument("scope")
             literal("from")
             unitArgument("unit")
         }
 
-        transformation<IncludeStatement.ScopeWithAlias>("include/scope_with_alias") {
+        transformation<IncludeStatement.Scope.WithAlias>("include/scope_with_alias") {
             directive("include")
             scopeArgument("scope")
             literal("from")
@@ -35,25 +38,55 @@ public object Parsers {
 
         // SCOPES
 
-        transformation<ScopeStatement.OpenScope.Unnamed>("scope_open_unnamed") {
+        transformation<ScopeStatement.OpenScope.Unnamed>("scope/open_unnamed") {
             curlyBracketsOpen()
         }
 
-        transformation<ScopeStatement.OpenScope.Named>("scope_open_named") {
+        transformation<ScopeStatement.OpenScope.Named>("scope/open_named") {
             scopeArgument("name")
             curlyBracketsOpen()
         }
 
-        transformation<ScopeStatement.CloseScope>("scope_close") {
+        transformation<ScopeStatement.CloseScope>("scope/close") {
             curlyBracketsClose()
         }
 
         // Instruction statements. These are generated twice, once with and once without the condition part.
         for (withConditionPart in listOf(true, false)) {
-            val transformationSuffix = if (withConditionPart) "_with_condition" else "_without_condition"
+            val transformationSuffix = if (withConditionPart) "with_condition" else "without_condition"
+
+            // REPEAT
+            transformation<RepeatStatement>("repeat_parent_${transformationSuffix}") {
+                literal("repeat")
+
+                generateCondition(withConditionPart)
+
+                parameter("scope") { StatementArgument.generated("parent", "parser", ScopeLike.ParentScope) }
+            }
+            transformation<RepeatStatement>("repeat_named_scope_${transformationSuffix}") {
+                literal("repeat")
+                scopeArgument("scope")
+
+                generateCondition(withConditionPart)
+            }
+
+            // EXIT
+            transformation<RepeatStatement>("exit_parent_${transformationSuffix}") {
+                literal("exit")
+
+                generateCondition(withConditionPart)
+
+                parameter("scope") { StatementArgument.generated("parent", "parser", ScopeLike.ParentScope) }
+            }
+            transformation<RepeatStatement>("exit_named_scope_${transformationSuffix}") {
+                literal("exit")
+                scopeArgument("scope")
+
+                generateCondition(withConditionPart)
+            }
 
             // LOAD
-            transformation<InstructionStatement.WithOutput>("load${transformationSuffix}") {
+            transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
                 registerLikeArgument("output")
                 literal("=")
                 valueLikeArgument("inputA")
@@ -65,7 +98,7 @@ public object Parsers {
             }
 
             // LOAD 2, 'PC = R1, R2'
-            transformation<InstructionStatement.WithOutput>("load_2${transformationSuffix}") {
+            transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
                 registerLikeArgument("output")
                 literal("=")
                 valueLikeArgument("inputA")
@@ -85,7 +118,7 @@ public object Parsers {
             )
 
             for ((operator, operation) in commandFunctions) {
-                transformation<InstructionStatement.WithOutput>("${operator}${transformationSuffix}") {
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
                     literal(operator)
 
                     generateCondition(withConditionPart)
@@ -117,7 +150,7 @@ public object Parsers {
             )
 
             for ((operator, operation) in abInputWithOutputOperators) {
-                transformation<InstructionStatement.WithOutput>("${operator}${transformationSuffix}") {
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
                     registerLikeArgument("output")
                     literal("=")
                     valueLikeArgument("inputA")
@@ -140,7 +173,7 @@ public object Parsers {
             )
 
             for ((operator, operation) in aInputWithOutputFunctions) {
-                transformation<InstructionStatement.WithOutput>("${operator}${transformationSuffix}") {
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
                     registerLikeArgument("output")
                     literal("=")
                     literal(operator)
@@ -153,7 +186,7 @@ public object Parsers {
                 }
             }
 
-            transformation<InstructionStatement.WithOutput>("increment${transformationSuffix}") {
+            transformation<InstructionStatement.WithOutput>("increment_${transformationSuffix}") {
                 literal("inc")
                 val register = registerLikeArgument("inputA")
 
@@ -164,7 +197,7 @@ public object Parsers {
                 parameter("output") { this[register] }
             }
 
-            transformation<InstructionStatement.WithOutput>("decrement${transformationSuffix}") {
+            transformation<InstructionStatement.WithOutput>("decrement_${transformationSuffix}") {
                 literal("dec")
                 val register = registerLikeArgument("inputA")
 

@@ -1,9 +1,9 @@
 package net.voxelpi.axiom.asm.scope
 
-import net.voxelpi.axiom.asm.source.SourceLink
+import java.util.UUID
 
 public class GlobalScope : Scope {
 
-    override val source: SourceLink
-        get() = SourceLink.Generated("__global__", "__global__")
+    // The global scope has a unique id of 0.
+    override val uniqueId: UUID = UUID(0, 0)
 }

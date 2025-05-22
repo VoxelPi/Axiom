@@ -6,21 +6,26 @@ import net.voxelpi.axiom.asm.type.UnitLike
 
 public sealed interface IncludeStatement : Statement {
 
+    public val unit: StatementArgument<UnitLike>
+
     public data class Unit(
         override val source: SourceLink,
-        val unit: StatementArgument<UnitLike>,
+        override val unit: StatementArgument<UnitLike>,
     ) : IncludeStatement
 
-    public data class Scope(
-        override val source: SourceLink,
-        val unit: StatementArgument<UnitLike>,
-        val scope: StatementArgument<ScopeLike.ScopeName>,
-    ) : IncludeStatement
+    public interface Scope : IncludeStatement {
 
-    public data class ScopeWithAlias(
-        override val source: SourceLink,
-        val unitId: StatementArgument<UnitLike>,
-        val scope: StatementArgument<ScopeLike.ScopeName>,
-        val alias: StatementArgument<ScopeLike.ScopeName>,
-    ) : IncludeStatement
+        public data class Direct(
+            override val source: SourceLink,
+            override val unit: StatementArgument<UnitLike>,
+            val scope: StatementArgument<ScopeLike.ScopeName>,
+        ) : Scope
+
+        public data class WithAlias(
+            override val source: SourceLink,
+            override val unit: StatementArgument<UnitLike>,
+            val scope: StatementArgument<ScopeLike.ScopeName>,
+            val alias: StatementArgument<ScopeLike.ScopeName>,
+        ) : Scope
+    }
 }

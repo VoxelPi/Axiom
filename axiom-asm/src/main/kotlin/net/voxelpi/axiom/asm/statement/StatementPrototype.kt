@@ -12,7 +12,7 @@ import kotlin.reflect.typeOf
 public data class StatementPrototype<out S : Statement>(
     override val source: SourceLink,
     val type: KClass<out S>,
-    var scope: Scope,
+    val scope: Scope,
     val arguments: MutableMap<String, *>,
 ) : Statement {
 

@@ -1,24 +1,34 @@
 package net.voxelpi.axiom.asm.scope
 
-import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.Statement
+import net.voxelpi.axiom.asm.anchor.ScopeAnchor
+import java.util.UUID
 
 public sealed class LocalScope(
-    public override val source: SourceLink,
     public val parent: Scope,
-    public val statements: List<Statement>,
 ) : Scope {
 
+    public lateinit var startAnchor: ScopeAnchor.ScopeStart
+        private set
+
+    public lateinit var endAnchor: ScopeAnchor.ScopeEnd
+        private set
+
+    internal fun registerStartAnchor(anchor: ScopeAnchor.ScopeStart) {
+        startAnchor = anchor
+    }
+
+    internal fun registerEndAnchor(anchor: ScopeAnchor.ScopeEnd) {
+        endAnchor = anchor
+    }
+
     public class Named(
-        source: SourceLink,
         parent: Scope,
-        statements: List<Statement>,
+        override val uniqueId: UUID,
         public val name: String,
-    ) : LocalScope(source, parent, statements)
+    ) : LocalScope(parent)
 
     public class Unnamed(
-        source: SourceLink,
         parent: Scope,
-        statements: List<Statement>,
-    ) : LocalScope(source, parent, statements)
+        override val uniqueId: UUID,
+    ) : LocalScope(parent)
 }

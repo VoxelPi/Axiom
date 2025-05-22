@@ -1,5 +1,8 @@
 package net.voxelpi.axiom.asm.scope
 
-import net.voxelpi.axiom.asm.statement.Statement
+import java.util.UUID
 
-public sealed interface Scope : Statement
+public sealed interface Scope {
+
+    public val uniqueId: UUID
+}

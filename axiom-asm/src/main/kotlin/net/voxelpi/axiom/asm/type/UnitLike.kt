@@ -10,5 +10,5 @@ public sealed interface UnitLike {
 
     public data class UnitReference(
         val unit: CompilationUnit,
-    )
+    ) : UnitLike
 }
