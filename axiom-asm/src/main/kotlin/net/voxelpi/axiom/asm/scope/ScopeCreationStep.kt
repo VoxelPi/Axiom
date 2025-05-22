@@ -1,7 +1,7 @@
 package net.voxelpi.axiom.asm.scope
 
+import net.voxelpi.axiom.asm.lexer.TokenizedStatement
 import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.TokenizedStatement
 
 public class ScopeCreationStep {
 

@@ -1,7 +1,7 @@
-package net.voxelpi.axiom.asm.statement
+package net.voxelpi.axiom.asm.lexer
 
-import net.voxelpi.axiom.asm.lexer.Token
 import net.voxelpi.axiom.asm.source.SourceLink
+import net.voxelpi.axiom.asm.statement.Statement
 
 public data class TokenizedStatement(
     val tokens: List<Token>,

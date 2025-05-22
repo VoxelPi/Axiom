@@ -2,7 +2,14 @@ package net.voxelpi.axiom.asm.parser
 
 import net.voxelpi.axiom.asm.lexer.Token
 import net.voxelpi.axiom.asm.parser.exception.ParseException
-import net.voxelpi.axiom.asm.statement.argument.Argument
+import net.voxelpi.axiom.asm.statement.StatementArgument
+import net.voxelpi.axiom.asm.type.IntegerValue
+import net.voxelpi.axiom.asm.type.LabelLike
+import net.voxelpi.axiom.asm.type.RegisterLike
+import net.voxelpi.axiom.asm.type.ScopeLike
+import net.voxelpi.axiom.asm.type.UnitLike
+import net.voxelpi.axiom.asm.type.ValueLike
+import net.voxelpi.axiom.asm.type.VariableLike
 import net.voxelpi.axiom.instruction.Condition
 
 public sealed interface ParserTransformationArgument<T> : ParserTransformationSegment {
@@ -15,89 +22,89 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
 
     public fun isValid(token: Token): Boolean
 
-    public fun parse(token: Token): Result<T>
+    public fun parse(token: Token): Result<StatementArgument<T>>
 
-    public data class TextArgument(override val id: String) : ParserTransformationArgument<Argument.Text> {
+    public data class TextArgument(override val id: String) : ParserTransformationArgument<String> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text
         }
 
-        override fun parse(token: Token): Result<Argument.Text> {
+        override fun parse(token: Token): Result<StatementArgument<String>> {
             if (token !is Token.Text) {
                 return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.Text(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, token.value))
         }
     }
 
-    public data class IntegerArgument(override val id: String) : ParserTransformationArgument<Argument.Integer> {
+    public data class IntegerArgument(override val id: String) : ParserTransformationArgument<IntegerValue> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Integer
         }
 
-        override fun parse(token: Token): Result<Argument.Integer> {
+        override fun parse(token: Token): Result<StatementArgument<IntegerValue>> {
             if (token !is Token.Integer) {
                 return Result.failure(ParseException(token.source, "Expected an integer token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.Integer(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, IntegerValue(token.value)))
         }
     }
 
-    public data class VariableArgument(override val id: String) : ParserTransformationArgument<Argument.VariableLike.NamedVariableReference> {
+    public data class VariableArgument(override val id: String) : ParserTransformationArgument<VariableLike.VariableName> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable
         }
 
-        override fun parse(token: Token): Result<Argument.VariableLike.NamedVariableReference> {
+        override fun parse(token: Token): Result<StatementArgument<VariableLike.VariableName>> {
             if (token !is Token.Variable) {
                 return Result.failure(ParseException(token.source, "Expected a variable token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.VariableLike.NamedVariableReference(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, VariableLike.VariableName(token.value)))
         }
     }
 
-    public data class LabelArgument(override val id: String) : ParserTransformationArgument<Argument.LabelLike.NamedLabelReference> {
+    public data class LabelArgument(override val id: String) : ParserTransformationArgument<LabelLike.LabelName> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Label
         }
 
-        override fun parse(token: Token): Result<Argument.LabelLike.NamedLabelReference> {
+        override fun parse(token: Token): Result<StatementArgument<LabelLike.LabelName>> {
             if (token !is Token.Label) {
                 return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.LabelLike.NamedLabelReference(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, LabelLike.LabelName(token.value)))
         }
     }
 
-    public data class ScopeArgument(override val id: String) : ParserTransformationArgument<Argument.ScopeLike.NamedScopeReference> {
+    public data class ScopeArgument(override val id: String) : ParserTransformationArgument<ScopeLike.ScopeName> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Label
         }
 
-        override fun parse(token: Token): Result<Argument.ScopeLike.NamedScopeReference> {
+        override fun parse(token: Token): Result<StatementArgument<ScopeLike.ScopeName>> {
             if (token !is Token.Label) {
                 return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.ScopeLike.NamedScopeReference(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, ScopeLike.ScopeName(token.value)))
         }
     }
 
-    public data class UnitArgument(override val id: String) : ParserTransformationArgument<Argument.UnitLike.NamedUnitReference> {
+    public data class UnitArgument(override val id: String) : ParserTransformationArgument<UnitLike.UnitName> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text
         }
 
-        override fun parse(token: Token): Result<Argument.UnitLike.NamedUnitReference> {
+        override fun parse(token: Token): Result<StatementArgument<UnitLike.UnitName>> {
             if (token !is Token.Text) {
                 return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
             }
-            return Result.success(Argument.UnitLike.NamedUnitReference(token.source, token.value))
+            return Result.success(StatementArgument.create(token.source, UnitLike.UnitName(token.value)))
         }
     }
 
@@ -107,7 +114,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
             return token is Token.Text && token.value in Condition.entries.map { it.name }
         }
 
-        override fun parse(token: Token): Result<Condition> {
+        override fun parse(token: Token): Result<StatementArgument<Condition>> {
             if (token !is Token.Text) {
                 return Result.failure(ParseException(token.source, "Expected a text token but got ${token::class.simpleName}"))
             }
@@ -115,42 +122,44 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
             val condition = Condition.entries.find { it.symbol == token.value }
                 ?: return Result.failure(ParseException(token.source, "Unknown condition '${token.value}'"))
 
-            return Result.success(condition)
+            return Result.success(StatementArgument.create(token.source, condition))
         }
     }
 
-    public data class ValueLikeArgument(override val id: String) : ParserTransformationArgument<Argument.ValueLike> {
+    public data class ValueLikeArgument(override val id: String) : ParserTransformationArgument<ValueLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable || token is Token.Text || token is Token.Integer
         }
 
-        override fun parse(token: Token): Result<Argument.ValueLike> {
-            return when (token) {
-                is Token.Variable -> Result.success(Argument.Variable(token.source, token.value))
-                is Token.Text -> Result.success(Argument.ValueLike.Unparsed(token.source, token.value))
-                is Token.Integer -> Result.success(Argument.Integer(token.source, token.value))
-                else -> Result.failure(
+        override fun parse(token: Token): Result<StatementArgument<ValueLike>> {
+            val value: ValueLike = when (token) {
+                is Token.Variable -> VariableLike.VariableName(token.value)
+                is Token.Text -> ValueLike.UnparsedValue(token.value)
+                is Token.Integer -> IntegerValue(token.value)
+                else -> return Result.failure(
                     ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
                 )
             }
+            return Result.success(StatementArgument.create(token.source, value))
         }
     }
 
-    public data class RegisterLikeArgument(override val id: String) : ParserTransformationArgument<Argument.RegisterLike> {
+    public data class RegisterLikeArgument(override val id: String) : ParserTransformationArgument<RegisterLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable || token is Token.Text
         }
 
-        override fun parse(token: Token): Result<Argument.RegisterLike> {
-            return when (token) {
-                is Token.Variable -> Result.success(Argument.Variable(token.source, token.value))
-                is Token.Text -> Result.success(Argument.RegisterLike.Unparsed(token.source, token.value))
-                else -> Result.failure(
+        override fun parse(token: Token): Result<StatementArgument<RegisterLike>> {
+            val value: RegisterLike = when (token) {
+                is Token.Variable -> VariableLike.VariableName(token.value)
+                is Token.Text -> RegisterLike.UnparsedRegister(token.value)
+                else -> return Result.failure(
                     ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
                 )
             }
+            return Result.success(StatementArgument.create(token.source, value))
         }
     }
 }

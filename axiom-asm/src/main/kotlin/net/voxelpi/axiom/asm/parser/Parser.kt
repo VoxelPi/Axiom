@@ -1,21 +1,23 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.lexer.TokenizedStatement
 import net.voxelpi.axiom.asm.parser.exception.ParseException
+import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.TokenizedStatement
+import net.voxelpi.axiom.asm.statement.StatementPrototype
 import kotlin.reflect.KClass
 
 public class Parser(
-    public val rules: List<ParserTransformation<*>>,
+    public val transformations: List<ParserTransformation<*>>,
 ) {
 
-    public fun parse(statement: TokenizedStatement): Result<Statement> {
-        for (rule in rules) {
+    public fun parse(statement: TokenizedStatement, scope: Scope): Result<StatementPrototype<*>> {
+        for (rule in transformations) {
             if (!rule.isApplicable(statement)) {
                 continue
             }
 
-            val statement = rule.apply(statement)
+            val statement = rule.apply(statement, scope)
             return statement
         }
 

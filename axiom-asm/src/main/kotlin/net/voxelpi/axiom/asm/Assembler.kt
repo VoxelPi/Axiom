@@ -1,6 +1,9 @@
 package net.voxelpi.axiom.asm
 
 import net.voxelpi.axiom.asm.lexer.Lexer
+import net.voxelpi.axiom.asm.parser.Parser
+import net.voxelpi.axiom.asm.parser.Parsers
+import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.instruction.Program
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -24,12 +27,17 @@ public class Assembler(
         return assemble(compilationUnit)
     }
 
-    public fun assemble(unit: CompilationUnit): Result<Program> {
-        // Parse tokens.
+    public fun assemble(unit: CompilationUnit, parser: Parser = Parsers.AXIOM_ASM): Result<Program> {
+        // Tokenize input text.
         val lexer = Lexer()
-        lexer.tokenize(unit)
+        val tokenizedStatements = lexer.tokenize(unit)
 
-        // Preprocessor - includes
+        val globalScope = GlobalScope()
+
+        // Parse tokenized statements
+        val statements = tokenizedStatements.map {
+            parser.parse(it, globalScope).getOrElse { exception -> return Result.failure(exception) }
+        }.toMutableList()
 
         TODO()
     }

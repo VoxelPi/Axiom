@@ -2,7 +2,6 @@ package net.voxelpi.axiom.asm.lexer
 
 import net.voxelpi.axiom.asm.CompilationUnit
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.TokenizedStatement
 
 /**
  * The lexer converts the string content of a compilation unit into a series of tokens.

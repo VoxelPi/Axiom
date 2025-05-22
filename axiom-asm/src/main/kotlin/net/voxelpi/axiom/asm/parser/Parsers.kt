@@ -64,7 +64,7 @@ public object Parsers {
                 parameter("operation") { Operation.LOAD }
             }
 
-            // LOAD 2
+            // LOAD 2, 'PC = R1, R2'
             transformation<InstructionStatement.WithOutput>("load_2${transformationSuffix}") {
                 registerLikeArgument("output")
                 literal("=")

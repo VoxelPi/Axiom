@@ -1,13 +1,12 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.lexer.TokenizedStatement
 import net.voxelpi.axiom.asm.parser.exception.ParseException
+import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.TokenizedStatement
-import net.voxelpi.axiom.asm.statement.argument.Argument
+import net.voxelpi.axiom.asm.statement.StatementPrototype
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.full.isSuperclassOf
-import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.typeOf
 
 public class ParserTransformation<S : Statement> internal constructor(
@@ -33,11 +32,10 @@ public class ParserTransformation<S : Statement> internal constructor(
     /**
      * Applies this rule on the given [tokenizedStatement] to generate a parsed statement.
      */
-    public fun apply(tokenizedStatement: TokenizedStatement): Result<Statement> {
+    public fun apply(tokenizedStatement: TokenizedStatement, scope: Scope): Result<StatementPrototype<*>> {
         val tokens = tokenizedStatement.tokens
 
-        val argumentValues = mutableMapOf<String, Any?>("source" to tokenizedStatement.source)
-        val argumentState = ArgumentState(argumentValues)
+        val statementArguments = mutableMapOf<String, Any?>()
 
         // Parse argument values.
         for ((segment, token) in segments.zip(tokens)) {
@@ -49,57 +47,24 @@ public class ParserTransformation<S : Statement> internal constructor(
             val value = argument.parse(token).getOrElse {
                 return Result.failure(it)
             }
-            argumentValues[argument.id] = value
+            statementArguments[argument.id] = value
         }
 
         // Set parameters.
+        val argumentState = ArgumentState(statementArguments)
         for (parameter in parameters.values) {
-            argumentValues[parameter.id] = parameter.valueProvider(argumentState)
+            statementArguments[parameter.id] = parameter.valueProvider(argumentState)
+        }
+        val prototype = StatementPrototype(tokenizedStatement.source, type, scope, statementArguments)
+
+        // Try building the statement.
+        // This checks if all types are valid.
+        prototype.build().onFailure {
+            return Result.failure(ParseException(tokenizedStatement.source, "Failed to build statement prototype: ${it.message}"))
         }
 
-        // Get the primary constructor.
-        val primaryConstructor = type.primaryConstructor
-            ?: return Result.failure(ParseException(tokenizedStatement.source, "No primary constructor found for statement class $type."))
-
-        // Get constructor arguments of the primary constructor.
-        val constructorArguments = primaryConstructor.parameters
-            .filterNot { it.isOptional || it.isVararg }
-            .associate { parameter ->
-                val name = parameter.name ?: return Result.failure(ParseException(tokenizedStatement.source, "Constructor parameter '$parameter' has no name."))
-                val type = parameter.type
-                name to type
-            }
-
-        // Check the argument types.
-        for ((argumentName, argumentType) in constructorArguments) {
-            // Check that the argument is present in the value map.
-            if (argumentName !in argumentValues) {
-                return Result.failure(ParseException(tokenizedStatement.source, "No value specified for argument $argumentName."))
-            }
-            val argumentValue = argumentValues[argumentName]
-
-            // Check that the type is valid.
-            if (!isInstanceOfType(argumentValue, argumentType)) {
-                val source = if (argumentValue is Argument) argumentValue.source else tokenizedStatement.source
-                return Result.failure(ParseException(source, "Value '$argumentValue' for argument $argumentName is not of type $argumentType"))
-            }
-        }
-
-        // Create the statement.
-        val constructorValues = primaryConstructor.parameters.associateWith { parameter ->
-            argumentValues[parameter.name!!]
-        }
-        return runCatching { primaryConstructor.callBy(constructorValues) }
-    }
-
-    private fun isInstanceOfType(value: Any?, type: KType): Boolean {
-        // Handle null values: only return true if 'value' is nullable
-        if (value == null) return type.isMarkedNullable
-
-        return when (val classifier = type.classifier) {
-            is KClass<*> -> classifier.isSuperclassOf(value::class)
-            else -> classifier == value::class
-        }
+        // Return the created statement prototype.
+        return Result.success(prototype)
     }
 
     internal companion object {
