@@ -13,7 +13,7 @@ public sealed interface IncludeStatement : Statement {
         override val unit: StatementArgument<UnitLike>,
     ) : IncludeStatement
 
-    public interface Scope : IncludeStatement {
+    public sealed interface Scope : IncludeStatement {
 
         public data class Direct(
             override val source: SourceLink,

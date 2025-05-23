@@ -27,7 +27,7 @@ public class Assembler(
 
     public fun assemble(unit: CompilationUnit, parser: Parser = Parsers.AXIOM_ASM): Result<Program> {
         val unitCollector = CompilationUnitCollector(unit, parser, includeDirectories)
-        val statements = unitCollector.collect().getOrElse {
+        val statements = unitCollector.reduce().getOrElse {
             return Result.failure(it)
         }
 

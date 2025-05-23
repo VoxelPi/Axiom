@@ -15,6 +15,15 @@ public class MutableStatementSequence(
 ) {
     public constructor(globalScope: GlobalScope, statements: List<Statement>) : this(globalScope, statements.toMutableList(), mutableMapOf(), mutableMapOf())
 
+    public fun copy(): MutableStatementSequence {
+        return MutableStatementSequence(
+            globalScope,
+            statements.toMutableList(),
+            scopes.toMutableMap(),
+            anchors.toMutableMap(),
+        )
+    }
+
     public fun transform(transformation: suspend SequenceScope<Statement>.(statement: Statement) -> Unit): Result<Unit> {
         val previousStatements = statements.toList()
         statements.clear()
