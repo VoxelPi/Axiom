@@ -1,9 +1,8 @@
 package net.voxelpi.axiom.asm.anchor
 
-import net.voxelpi.axiom.asm.statement.Statement
 import java.util.UUID
 
-public sealed interface Anchor : Statement {
+public sealed interface Anchor {
 
     public val uniqueId: UUID
 

@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.statement.types.ConditionalStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeJumpStatement
@@ -16,39 +17,39 @@ public object Parsers {
 
         // INCLUDE
 
-        transformation("include/unit", IncludeStatement.IncludeUnit) {
+        transformation<IncludeStatement.Unit>("include/unit") {
             directive("include")
-            unitArgument(IncludeStatement.Parameter.UNIT)
+            unitArgument(IncludeStatement::unit)
         }
 
-        transformation("include/scope", IncludeStatement.IncludeScopeFromUnit) {
+        transformation<IncludeStatement.Scope.Direct>("include/scope") {
             directive("include")
-            scopeNameArgument(IncludeStatement.Parameter.SCOPE)
+            scopeArgument(IncludeStatement.Scope::scope)
             literal("from")
-            unitArgument(IncludeStatement.Parameter.UNIT)
+            unitArgument(IncludeStatement::unit)
         }
 
-        transformation("include/scope_with_alias", IncludeStatement.IncludeScopeFromUnitAsAlias) {
+        transformation<IncludeStatement.Scope.WithAlias>("include/scope_with_alias") {
             directive("include")
-            scopeNameArgument(IncludeStatement.Parameter.SCOPE)
+            scopeArgument(IncludeStatement.Scope::scope)
             literal("from")
-            unitArgument(IncludeStatement.Parameter.UNIT)
+            unitArgument(IncludeStatement::unit)
             literal("as")
-            scopeNameArgument(IncludeStatement.Parameter.ALIAS)
+            scopeArgument(IncludeStatement.Scope.WithAlias::alias)
         }
 
         // SCOPES
 
-        transformation("scope/open_unnamed", ScopeStatement.OpenUnnamed) {
+        transformation<ScopeStatement.Open.Unnamed>("scope/open_unnamed") {
             curlyBracketsOpen()
         }
 
-        transformation("scope/open_named", ScopeStatement.OpenNamed) {
-            scopeNameArgument(ScopeStatement.Parameter.NAME)
+        transformation<ScopeStatement.Open.Named>("scope/open_named") {
+            scopeArgument(ScopeStatement.Open.Named::name)
             curlyBracketsOpen()
         }
 
-        transformation("scope/close", ScopeStatement.Close) {
+        transformation<ScopeStatement.Close>("scope/close") {
             curlyBracketsClose()
         }
 
@@ -57,58 +58,58 @@ public object Parsers {
             val transformationSuffix = if (withConditionPart) "with_condition" else "without_condition"
 
             // REPEAT
-            transformation("repeat_parent_${transformationSuffix}", ScopeJumpStatement.Repeat) {
+            transformation<ScopeJumpStatement.Repeat>("repeat_parent_${transformationSuffix}") {
                 literal("repeat")
 
                 generateCondition(withConditionPart)
 
-                parameter(ScopeJumpStatement.Parameter.SCOPE) { ScopeLike.ParentScope }
+                parameter(ScopeJumpStatement::scope) { ScopeLike.ParentScope }
             }
-            transformation("repeat_named_scope_${transformationSuffix}", ScopeJumpStatement.Repeat) {
+            transformation<ScopeJumpStatement.Repeat>("repeat_named_scope_${transformationSuffix}") {
                 literal("repeat")
-                scopeArgument(ScopeJumpStatement.Parameter.SCOPE)
+                scopeArgument(ScopeJumpStatement::scope)
 
                 generateCondition(withConditionPart)
             }
 
             // EXIT
-            transformation("exit_parent_${transformationSuffix}", ScopeJumpStatement.Exit) {
+            transformation<ScopeJumpStatement.Exit>("exit_parent_${transformationSuffix}") {
                 literal("exit")
 
                 generateCondition(withConditionPart)
 
-                parameter(ScopeJumpStatement.Parameter.SCOPE) { ScopeLike.ParentScope }
+                parameter(ScopeJumpStatement::scope) { ScopeLike.ParentScope }
             }
-            transformation("exit_named_scope_${transformationSuffix}", ScopeJumpStatement.Exit) {
+            transformation<ScopeJumpStatement.Exit>("exit_named_scope_${transformationSuffix}") {
                 literal("exit")
-                scopeArgument(ScopeJumpStatement.Parameter.SCOPE)
+                scopeArgument(ScopeJumpStatement::scope)
 
                 generateCondition(withConditionPart)
             }
 
             // LOAD
-            transformation("load_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
-                registerLikeArgument(InstructionStatement.Parameter.OUTPUT)
+            transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
+                registerLikeArgument(InstructionStatement.WithOutput::output)
                 literal("=")
-                valueLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                valueLikeArgument(InstructionStatement::inputA)
 
                 generateCondition(withConditionPart)
 
-                parameter(InstructionStatement.Parameter.INPUT_B) { IntegerValue(0) }
-                parameter(InstructionStatement.Parameter.OPERATION) { Operation.LOAD }
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement::operation) { Operation.LOAD }
             }
 
             // LOAD 2, 'PC = R1, R2'
-            transformation("load_2_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
-                registerLikeArgument(InstructionStatement.Parameter.OUTPUT)
+            transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
+                registerLikeArgument(InstructionStatement.WithOutput::output)
                 literal("=")
-                valueLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                valueLikeArgument(InstructionStatement::inputA)
                 literal(",")
-                valueLikeArgument(InstructionStatement.Parameter.INPUT_B)
+                valueLikeArgument(InstructionStatement::inputB)
 
                 generateCondition(withConditionPart)
 
-                parameter(InstructionStatement.Parameter.OPERATION) { Operation.LOAD_2 }
+                parameter(InstructionStatement::operation) { Operation.LOAD_2 }
             }
 
             // COMMAND FUNCTIONS, "<function>"
@@ -119,14 +120,14 @@ public object Parsers {
             )
 
             for ((operator, operation) in commandFunctions) {
-                transformation("${operator}_${transformationSuffix}", InstructionStatement.InstructionWithoutOutput) {
+                transformation<InstructionStatement.WithoutOutput>("${operator}_${transformationSuffix}") {
                     literal(operator)
 
                     generateCondition(withConditionPart)
 
-                    parameter(InstructionStatement.Parameter.INPUT_A) { IntegerValue(0) }
-                    parameter(InstructionStatement.Parameter.INPUT_B) { IntegerValue(0) }
-                    parameter(InstructionStatement.Parameter.OPERATION) { operation }
+                    parameter(InstructionStatement::inputA) { IntegerValue(0) }
+                    parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                    parameter(InstructionStatement::operation) { operation }
                 }
             }
 
@@ -151,16 +152,16 @@ public object Parsers {
             )
 
             for ((operator, operation) in abInputWithOutputOperators) {
-                transformation("${operator}_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
-                    registerLikeArgument(InstructionStatement.Parameter.OUTPUT)
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
+                    registerLikeArgument(InstructionStatement.WithOutput::output)
                     literal("=")
-                    valueLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                    valueLikeArgument(InstructionStatement::inputA)
                     literal(operator)
-                    valueLikeArgument(InstructionStatement.Parameter.INPUT_B)
+                    valueLikeArgument(InstructionStatement::inputB)
 
                     generateCondition(withConditionPart)
 
-                    parameter(InstructionStatement.Parameter.OPERATION) { operation }
+                    parameter(InstructionStatement::operation) { operation }
                 }
             }
 
@@ -174,44 +175,44 @@ public object Parsers {
             )
 
             for ((operator, operation) in aInputWithOutputFunctions) {
-                transformation("${operator}_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
-                    registerLikeArgument(InstructionStatement.Parameter.OUTPUT)
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
+                    registerLikeArgument(InstructionStatement.WithOutput::output)
                     literal("=")
                     literal(operator)
-                    valueLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                    valueLikeArgument(InstructionStatement::inputA)
 
                     generateCondition(withConditionPart)
 
-                    parameter(InstructionStatement.Parameter.OPERATION) { operation }
-                    parameter(InstructionStatement.Parameter.INPUT_B) { IntegerValue(0) }
+                    parameter(InstructionStatement::operation) { operation }
+                    parameter(InstructionStatement::inputB) { IntegerValue(0) }
                 }
             }
 
-            transformation("increment_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
+            transformation<InstructionStatement.WithOutput>("increment_${transformationSuffix}") {
                 literal("inc")
-                val register = registerLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                val register = registerLikeArgument(InstructionStatement.WithOutput::output)
 
                 generateCondition(withConditionPart)
 
-                parameter(InstructionStatement.Parameter.OPERATION) { Operation.ADD }
-                parameter(InstructionStatement.Parameter.INPUT_B) { IntegerValue(1) }
-                parameter(InstructionStatement.Parameter.OUTPUT) { this[register] }
+                parameter(InstructionStatement::operation) { Operation.ADD }
+                parameter(InstructionStatement::inputA) { this[register] }
+                parameter(InstructionStatement::inputB) { IntegerValue(1) }
             }
 
-            transformation("decrement_${transformationSuffix}", InstructionStatement.InstructionWithOutput) {
+            transformation<InstructionStatement.WithOutput>("decrement_${transformationSuffix}") {
                 literal("dec")
-                val register = registerLikeArgument(InstructionStatement.Parameter.INPUT_A)
+                val register = registerLikeArgument(InstructionStatement.WithOutput::output)
 
                 generateCondition(withConditionPart)
 
-                parameter(InstructionStatement.Parameter.OPERATION) { Operation.SUBTRACT }
-                parameter(InstructionStatement.Parameter.INPUT_B) { IntegerValue(1) }
-                parameter(InstructionStatement.Parameter.OUTPUT) { this[register] }
+                parameter(InstructionStatement::operation) { Operation.SUBTRACT }
+                parameter(InstructionStatement::inputA) { this[register] }
+                parameter(InstructionStatement::inputB) { IntegerValue(1) }
             }
         }
     }
 
-    private fun ParserTransformation.Builder.generateCondition(withConditionPart: Boolean) {
+    private fun ParserTransformation.Builder<out ConditionalStatement>.generateCondition(withConditionPart: Boolean) {
         if (withConditionPart) {
             withCondition()
         } else {
@@ -219,15 +220,15 @@ public object Parsers {
         }
     }
 
-    private fun ParserTransformation.Builder.withCondition() {
+    private fun ParserTransformation.Builder<out ConditionalStatement>.withCondition() {
         literal("if")
-        registerLikeArgument(InstructionStatement.Parameter.CONDITION_VALUE)
-        conditionArgument(InstructionStatement.Parameter.CONDITION)
+        registerLikeArgument(ConditionalStatement::conditionValue)
+        conditionArgument(ConditionalStatement::condition)
         literal("0")
     }
 
-    private fun ParserTransformation.Builder.withoutCondition() {
-        parameter(InstructionStatement.Parameter.CONDITION_VALUE) { RegisterLike.UnparsedRegister("R1") }
-        parameter(InstructionStatement.Parameter.CONDITION) { Condition.ALWAYS }
+    private fun ParserTransformation.Builder<out ConditionalStatement>.withoutCondition() {
+        parameter(ConditionalStatement::conditionValue) { RegisterLike.UnparsedRegister("R1") }
+        parameter(ConditionalStatement::condition) { Condition.ALWAYS }
     }
 }

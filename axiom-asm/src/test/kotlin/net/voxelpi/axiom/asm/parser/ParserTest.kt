@@ -1,24 +1,26 @@
 package net.voxelpi.axiom.asm.parser
 
 import net.voxelpi.axiom.asm.CompilationUnit
+import net.voxelpi.axiom.asm.exception.ParseException
 import net.voxelpi.axiom.asm.lexer.Lexer
-import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.GlobalScope
-import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.StatementArgument
+import net.voxelpi.axiom.asm.statement.StatementParameter
 import net.voxelpi.axiom.asm.statement.StatementPrototype
+import net.voxelpi.axiom.asm.statement.annotation.StatementType
 import net.voxelpi.axiom.asm.type.IntegerValue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class ParserTest {
 
+    @StatementType("simple")
     class SimpleStatement(
-        override val source: SourceLink,
-        val number: StatementArgument<IntegerValue>,
-    ) : Statement
+        val number: IntegerValue,
+    )
+
+    val statementPrototype = StatementPrototype.fromType(SimpleStatement::class)
 
     @Test
     fun `test simple parser`() {
@@ -26,7 +28,7 @@ class ParserTest {
         val parser = Parser.create {
             transformation<SimpleStatement>("simple statement") {
                 literal("simple")
-                integerArgument("number")
+                integerArgument(SimpleStatement::number)
             }
         }
 
@@ -35,13 +37,22 @@ class ParserTest {
 
         val globalScope = GlobalScope()
 
-        val statementPrototype = parser.parse(tokenizedStatement, globalScope).getOrThrow()
-        assertEquals(SimpleStatement::class, statementPrototype.type)
-        @Suppress("UNCHECKED_CAST")
-        statementPrototype as StatementPrototype<SimpleStatement>
+        val statementInstance = parser.parse(tokenizedStatement, globalScope).getOrThrow()
+        val statement = statementInstance.build()
+        assertIs<SimpleStatement>(statement)
+        assertEquals(5, statement.number.value)
+    }
 
-        val statement = statementPrototype.build().getOrThrow()
-        assertEquals(5, statement.number.value.value)
+    @Test
+    fun `test missing statement parameter`() {
+        assertThrows<Exception> {
+            Parser.create {
+                transformation<SimpleStatement>("simple statement") {
+                    literal("simple")
+                    // Nothing defined for the number parameter.
+                }
+            }
+        }
     }
 
     @Test
@@ -50,7 +61,7 @@ class ParserTest {
         val parser = Parser.create {
             transformation<SimpleStatement>("simple statement") {
                 literal("simple")
-                textArgument("number")
+                textArgument(StatementParameter.create<String>("number"))
             }
         }
 

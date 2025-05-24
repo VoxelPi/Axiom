@@ -1,32 +1,33 @@
 package net.voxelpi.axiom.asm.statement.types
 
-import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.StatementParameter
-import net.voxelpi.axiom.asm.statement.StatementSet
+import net.voxelpi.axiom.asm.statement.annotation.StatementType
 import net.voxelpi.axiom.asm.type.ScopeLike
 import net.voxelpi.axiom.asm.type.UnitLike
 
-public object IncludeStatement {
+public sealed interface IncludeStatement {
 
-    public object Parameter {
-        public val UNIT: StatementParameter<UnitLike> = StatementParameter.create("unit")
-        public val SCOPE: StatementParameter<ScopeLike.ScopeName> = StatementParameter.create("scope")
-        public val ALIAS: StatementParameter<ScopeLike.ScopeName> = StatementParameter.create("alias")
-    }
+    public val unit: UnitLike
 
-    public val Include: StatementSet = StatementSet.create("include_statement") {
-        declare(Parameter.UNIT)
-    }
+    @StatementType("include/unit")
+    public data class Unit(
+        override val unit: UnitLike,
+    ) : IncludeStatement
 
-    public val ScopedInclude: StatementSet = StatementSet.create("include_statement/scoped", Include) {
-        declare(Parameter.SCOPE)
-    }
+    public sealed interface Scope : IncludeStatement {
 
-    public val IncludeUnit: Statement = Statement.create("include_statement/unit", Include)
+        public val scope: ScopeLike.ScopeName
 
-    public val IncludeScopeFromUnit: Statement = Statement.create("include_statement/unit", ScopedInclude)
+        @StatementType("include/scope")
+        public data class Direct(
+            override val unit: UnitLike,
+            override val scope: ScopeLike.ScopeName,
+        ) : Scope
 
-    public val IncludeScopeFromUnitAsAlias: Statement = Statement.create("include_statement/unit", ScopedInclude) {
-        declare(Parameter.ALIAS)
+        @StatementType("include/scope/with_alias")
+        public data class WithAlias(
+            override val unit: UnitLike,
+            override val scope: ScopeLike.ScopeName,
+            val alias: ScopeLike.ScopeName,
+        ) : Scope
     }
 }

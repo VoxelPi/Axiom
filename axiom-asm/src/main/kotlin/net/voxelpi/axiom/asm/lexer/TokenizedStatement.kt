@@ -1,13 +1,12 @@
 package net.voxelpi.axiom.asm.lexer
 
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.Statement
 
 public data class TokenizedStatement(
     val tokens: List<Token>,
-) : Statement {
+) {
 
-    override val source: SourceLink
+    val source: SourceLink
         get() {
             if (tokens.isEmpty()) {
                 return SourceLink.Generated("__empty__", "__empty__")

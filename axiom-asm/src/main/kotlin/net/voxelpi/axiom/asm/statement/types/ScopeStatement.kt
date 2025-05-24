@@ -1,25 +1,21 @@
 package net.voxelpi.axiom.asm.statement.types
 
-import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.StatementParameter
-import net.voxelpi.axiom.asm.statement.StatementSet
+import net.voxelpi.axiom.asm.statement.annotation.StatementType
 import net.voxelpi.axiom.asm.type.ScopeLike
 
-public object ScopeStatement {
+public sealed interface ScopeStatement {
 
-    public object Parameter {
-        public val NAME: StatementParameter<ScopeLike.ScopeName> = StatementParameter.create("name")
+    public sealed interface Open : ScopeStatement {
+
+        @StatementType("scope/open/named")
+        public data class Named(
+            public val name: ScopeLike.ScopeName,
+        ) : Open
+
+        @StatementType("scope/open/unnamed")
+        public data object Unnamed : Open
     }
 
-    public val Clopen: StatementSet = StatementSet.create("scope")
-
-    public val Open: StatementSet = StatementSet.create("scope/open", Clopen)
-
-    public val OpenNamed: Statement = Statement.create("scope/open/named", Open) {
-        declare(Parameter.NAME)
-    }
-
-    public val OpenUnnamed: Statement = Statement.create("scope/open/unnamed", Open)
-
-    public val Close: Statement = Statement.create("include_statement/unit", Clopen)
+    @StatementType("scope/close")
+    public data object Close : ScopeStatement
 }

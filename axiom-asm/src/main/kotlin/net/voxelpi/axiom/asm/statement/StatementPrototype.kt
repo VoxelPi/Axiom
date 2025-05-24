@@ -1,67 +1,70 @@
 package net.voxelpi.axiom.asm.statement
 
-import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.util.isInstanceOfType
+import net.voxelpi.axiom.asm.statement.annotation.StatementType
 import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.typeOf
 
-public data class StatementPrototype<out S : Statement>(
-    override val source: SourceLink,
-    val type: KClass<out S>,
-    val scope: Scope,
-    val arguments: MutableMap<String, *>,
-) : Statement {
+public class StatementPrototype<T : Any> internal constructor(
+    public val id: String,
+    public val type: KClass<T>,
+    public val parameters: Map<String, StatementParameter<*>>,
+) {
 
-    public fun build(): Result<S> {
-        // Build a map containing all constructor arguments.
-        val constructorParameterValues = mutableMapOf<String, Any?>("source" to source)
-        constructorParameterValues.putAll(arguments)
+    public fun createInstance(
+        scope: Scope,
+        source: SourceLink,
+        parameterValues: Map<String, Any?> = emptyMap(),
+        parameterSources: Map<String, SourceLink> = emptyMap(),
+    ): Result<StatementInstance<T>> {
+        return runCatching {
+            StatementInstance(this, scope, source, parameterValues, parameterSources)
+        }
+    }
 
-        // Get the primary constructor.
-        val primaryConstructor = type.primaryConstructor
-            ?: return Result.failure(ParseException(source, "No primary constructor found for statement class $type."))
+    public fun createInstance(statement: T, scope: Scope, source: SourceLink): StatementInstance<T> {
+        val parameterValues = parameters.values.associate { parameter ->
+            parameter.id to statement::class.memberProperties.find { it.name == parameter.id }?.getter?.call(statement)
+        }
+        return StatementInstance(
+            this,
+            scope,
+            source,
+            parameterValues,
+            emptyMap(),
+        )
+    }
 
-        // Get constructor arguments of the primary constructor.
-        val constructorParameterTypes = primaryConstructor.parameters
-            .filterNot { it.isOptional || it.isVararg }
-            .associate { parameter ->
-                val name = parameter.name ?: return Result.failure(ParseException(source, "Constructor parameter '$parameter' has no name."))
-                val type = parameter.type
-                name to type
+    public companion object {
+
+        public fun <T : Any> fromType(typeClass: KClass<T>): Result<StatementPrototype<T>> {
+            val statementType = typeClass.findAnnotation<StatementType>()
+                ?: return Result.failure(IllegalArgumentException("The class $typeClass is not annotated with @StatementTemplate."))
+            val statementId = statementType.id
+
+            // Check if the type is an object.
+            typeClass.objectInstance?.let {
+                return Result.success(StatementPrototype(statementId, typeClass, emptyMap()))
             }
 
-        // Check the argument types.
-        for ((parameterName, parameterType) in constructorParameterTypes) {
-            // Check that the argument is present in the value map.
-            if (parameterName !in constructorParameterValues) {
-                return Result.failure(ParseException(source, "No value specified for argument $parameterName."))
-            }
-            val parameterValue = constructorParameterValues[parameterName]
+            val primaryConstructor = typeClass.primaryConstructor
+                ?: return Result.failure(IllegalArgumentException("No primary constructor found for statement class $typeClass."))
 
-            // Check that the type is valid.
-            if (!isInstanceOfType(parameterValue, parameterType)) {
-                val source = if (parameterValue is StatementArgument<*>) parameterValue.source else source
-                return Result.failure(ParseException(source, "Value '$parameterValue' for argument $parameterName is not of type $parameterType"))
-            }
-
-            // Check that type of argument is valid.
-            if (parameterType.classifier == StatementArgument::class && parameterValue is StatementArgument<*>) {
-                val argumentType = parameterValue.type
-                val parameterGenericType = parameterType.arguments.first().type ?: typeOf<Any?>()
-                if (!argumentType.isSubtypeOf(parameterGenericType)) {
-                    return Result.failure(ParseException(parameterValue.source, "Value '${parameterValue.value}' for argument $parameterName is not of type $parameterGenericType"))
+            val parameters = mutableMapOf<String, StatementParameter<*>>()
+            for (parameter in primaryConstructor.parameters) {
+                if (parameter.isOptional || parameter.isVararg) {
+                    continue
                 }
-            }
-        }
 
-        // Create the statement.
-        val constructorValues = primaryConstructor.parameters.associateWith { parameter ->
-            constructorParameterValues[parameter.name!!]
+                val statementParameter = StatementParameter.create<Any?>(parameter)
+                parameters[statementParameter.id] = statementParameter
+            }
+
+            val statement = StatementPrototype(statementId, typeClass, parameters)
+            return Result.success(statement)
         }
-        return runCatching { primaryConstructor.callBy(constructorValues) }
     }
 }

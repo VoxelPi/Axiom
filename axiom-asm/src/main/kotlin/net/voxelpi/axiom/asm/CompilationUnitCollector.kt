@@ -1,11 +1,12 @@
 package net.voxelpi.axiom.asm
 
+import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.lexer.Lexer
 import net.voxelpi.axiom.asm.parser.Parser
-import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.GlobalScope
-import net.voxelpi.axiom.asm.statement.MutableStatementSequence
-import net.voxelpi.axiom.asm.statement.StatementPrototype
+import net.voxelpi.axiom.asm.statement.StatementInstance
+import net.voxelpi.axiom.asm.statement.sequence.MutableStatementSequence
+import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.type.UnitLike
 import java.nio.file.Path
 import kotlin.io.path.div
@@ -37,14 +38,16 @@ internal class CompilationUnitCollector(
 
         val program: MutableStatementSequence = mainProgram.copy()
 
-        program.transformType<IncludeStatement> { includeStatement ->
+        program.transformType<IncludeStatement> { statementInstance ->
+            val includeStatement = statementInstance.build()
+
             when (includeStatement) {
                 is IncludeStatement.Unit -> {
-                    val unitIdArgument = includeStatement.unit
-                    val unitIdValue = unitIdArgument.value
+                    val unitIdValue = includeStatement.unit
+                    val unitIdSource = statementInstance.sourceOfOrDefault(IncludeStatement::unit)
                     require(unitIdValue is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
                     val unitId = unitIdValue.name
-                    val unitStatements = unitsStatements[unitId] ?: throw ParseException(unitIdArgument.source, "The unit $unitId was not found.")
+                    val unitStatements = unitsStatements[unitId] ?: throw SourceCompilationException(unitIdSource, "The unit $unitId was not found.")
 
                     val unitScopes = unitStatements.scopes.mapValues { (_, scope) ->
                         if (scope is GlobalScope) {
@@ -53,17 +56,13 @@ internal class CompilationUnitCollector(
                     }
 
                     for (unitStatement in unitStatements.statements) {
-                        if (unitStatement !is StatementPrototype<*>) {
-                            yield(unitStatement)
-                            continue
-                        }
-
                         yield(
-                            StatementPrototype(
-                                unitStatement.source,
-                                unitStatement.type,
+                            StatementInstance(
+                                unitStatement.prototype,
                                 unitStatement.scope,
-                                unitStatement.arguments,
+                                unitStatement.source,
+                                unitStatement.parameterValues,
+                                unitStatement.parameterSources,
                             )
                         )
                     }
@@ -76,12 +75,13 @@ internal class CompilationUnitCollector(
     }
 
     private fun collect(program: MutableStatementSequence): Result<Unit> {
-        for (statement in program.statements) {
+        for (statementInstance in program.statements) {
+            val statement = statementInstance.build()
             if (statement !is IncludeStatement) {
                 continue
             }
 
-            val unitNameArgument = statement.unit.value
+            val unitNameArgument = statement.unit
             require(unitNameArgument is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
             val unitName = unitNameArgument.name
 
@@ -140,11 +140,6 @@ internal class CompilationUnitCollector(
 
         // Build scopes.
         statements.buildScopes()
-
-        // Build include statements.
-        statements.buildPrototypesWithType<IncludeStatement>().getOrElse {
-            return Result.failure(it)
-        }
 
         return Result.success(statements)
     }
