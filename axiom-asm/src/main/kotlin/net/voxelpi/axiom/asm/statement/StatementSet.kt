@@ -1,8 +1,6 @@
 package net.voxelpi.axiom.asm.statement
 
-import kotlin.collections.plusAssign
-
-public class Statement(
+public data class StatementSet(
     override val id: String,
     override val parameters: Map<String, StatementParameter<*>>,
     override val sets: Set<StatementSet>,
@@ -10,19 +8,19 @@ public class Statement(
 
     public companion object {
 
-        public fun create(id: String, parameters: Iterable<StatementParameter<*>>, sets: Set<StatementSet>): Statement {
+        public fun create(id: String, parameters: Iterable<StatementParameter<*>>, sets: Set<StatementSet> = emptySet()): StatementSet {
             val parameterMap = parameters.associateBy { it.id }.toMutableMap()
             for (set in sets) {
                 parameterMap += set.parameters
             }
 
-            return Statement(id, parameterMap, sets)
+            return StatementSet(id, parameterMap, sets)
         }
 
-        public fun create(id: String, vararg sets: StatementSet, block: Builder.() -> Unit = {}): Statement {
+        public fun create(id: String, vararg sets: StatementSet, block: Builder.() -> Unit = {}): StatementSet {
             val builder = Builder(id, sets = sets.toMutableSet())
             builder.block()
-            return Statement(builder.id, builder.parameters, builder.sets)
+            return StatementSet(builder.id, builder.parameters, builder.sets)
         }
     }
 

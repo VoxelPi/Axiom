@@ -1,17 +1,23 @@
 package net.voxelpi.axiom.asm.parser
 
 import net.voxelpi.axiom.asm.lexer.TokenizedStatement
-import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.Scope
+import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.StatementPrototype
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import net.voxelpi.axiom.asm.statement.StatementInstance
+import net.voxelpi.axiom.asm.statement.StatementParameter
+import net.voxelpi.axiom.asm.type.IntegerValue
+import net.voxelpi.axiom.asm.type.LabelLike
+import net.voxelpi.axiom.asm.type.RegisterLike
+import net.voxelpi.axiom.asm.type.ScopeLike
+import net.voxelpi.axiom.asm.type.UnitLike
+import net.voxelpi.axiom.asm.type.ValueLike
+import net.voxelpi.axiom.asm.type.VariableLike
+import net.voxelpi.axiom.instruction.Condition
 
-public class ParserTransformation<S : Statement> internal constructor(
+public class ParserTransformation internal constructor(
     public val id: String,
-    public val type: KClass<S>,
+    public val statement: Statement,
     public val segments: List<ParserTransformationSegment>,
     public val arguments: Map<String, ParserTransformationArgument<*>>,
     public val parameters: Map<String, ParserTransformationParameter<*>>,
@@ -32,10 +38,11 @@ public class ParserTransformation<S : Statement> internal constructor(
     /**
      * Applies this rule on the given [tokenizedStatement] to generate a parsed statement.
      */
-    public fun apply(tokenizedStatement: TokenizedStatement, scope: Scope): Result<StatementPrototype<*>> {
+    public fun apply(tokenizedStatement: TokenizedStatement, scope: Scope): Result<StatementInstance> {
         val tokens = tokenizedStatement.tokens
 
-        val statementArguments = mutableMapOf<String, Any?>()
+        val statementParameterValues = mutableMapOf<String, Any?>()
+        val statementParameterSources = mutableMapOf<String, SourceLink>()
 
         // Parse argument values.
         for ((segment, token) in segments.zip(tokens)) {
@@ -43,45 +50,43 @@ public class ParserTransformation<S : Statement> internal constructor(
                 continue
             }
 
-            val argument = arguments[segment.id]!!
+            val argument = arguments[segment.parameter.id]!!
             val value = argument.parse(token).getOrElse {
                 return Result.failure(it)
             }
-            statementArguments[argument.id] = value
+            statementParameterValues[argument.parameter.id] = value.value
+            statementParameterSources[argument.parameter.id] = value.source
         }
 
         // Set parameters.
-        val argumentState = ArgumentState(statementArguments)
+        val argumentState = ArgumentState(statementParameterValues)
         for (parameter in parameters.values) {
-            statementArguments[parameter.id] = parameter.valueProvider(argumentState)
+            statementParameterValues[parameter.parameter.id] = parameter.valueProvider(argumentState)
         }
-        val prototype = StatementPrototype(tokenizedStatement.source, type, scope, statementArguments)
 
-        // Try building the statement.
-        // This checks if all types are valid.
-        prototype.build().onFailure {
-            return Result.failure(ParseException(tokenizedStatement.source, "Failed to build statement prototype: ${it.message}"))
-        }
+        val prototype = StatementInstance(statement, tokenizedStatement.source, statementParameterValues, statementParameterSources, scope)
+
+        // // Try building the statement.
+        // // This checks if all types are valid.
+        // prototype.build().onFailure {
+        //     return Result.failure(ParseException(tokenizedStatement.source, "Failed to build statement prototype: ${it.message}"))
+        // }
 
         // Return the created statement prototype.
         return Result.success(prototype)
     }
 
     internal companion object {
-        fun <S : Statement> create(id: String, type: KClass<S>, block: Builder<S>.() -> Unit): ParserTransformation<S> {
-            val builder = Builder(id, type)
+        fun create(id: String, statement: Statement, block: Builder.() -> Unit): ParserTransformation {
+            val builder = Builder(id, statement)
             builder.block()
-            return ParserTransformation(builder.id, type, builder.segments(), builder.arguments(), builder.parameters())
-        }
-
-        inline fun <reified S : Statement> create(id: String, noinline block: Builder<S>.() -> Unit): ParserTransformation<S> {
-            return create(id, S::class, block)
+            return ParserTransformation(builder.id, builder.statement, builder.segments(), builder.arguments(), builder.parameters())
         }
     }
 
-    public class Builder<S : Any> internal constructor(
+    public class Builder internal constructor(
         public val id: String,
-        public val type: KClass<S>,
+        public val statement: Statement,
     ) {
         private val segments: MutableList<ParserTransformationSegment> = mutableListOf()
         private val arguments: MutableMap<String, ParserTransformationArgument<*>> = mutableMapOf()
@@ -132,88 +137,91 @@ public class ParserTransformation<S : Statement> internal constructor(
             segments += part
         }
 
-        public fun textArgument(id: String): ParserTransformationArgument.TextArgument {
-            val argument = ParserTransformationArgument.TextArgument(id)
+        public fun textArgument(parameter: StatementParameter<String>): ParserTransformationArgument.TextArgument {
+            val argument = ParserTransformationArgument.TextArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun integerArgument(id: String): ParserTransformationArgument.IntegerArgument {
-            val argument = ParserTransformationArgument.IntegerArgument(id)
+        public fun integerArgument(parameter: StatementParameter<IntegerValue>): ParserTransformationArgument.IntegerArgument {
+            val argument = ParserTransformationArgument.IntegerArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun variableArgument(id: String): ParserTransformationArgument.VariableArgument {
-            val argument = ParserTransformationArgument.VariableArgument(id)
+        public fun variableArgument(parameter: StatementParameter<in VariableLike>): ParserTransformationArgument.VariableArgument {
+            val argument = ParserTransformationArgument.VariableArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun labelArgument(id: String): ParserTransformationArgument.LabelArgument {
-            val argument = ParserTransformationArgument.LabelArgument(id)
+        public fun labelArgument(parameter: StatementParameter<in LabelLike>): ParserTransformationArgument.LabelArgument {
+            val argument = ParserTransformationArgument.LabelArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun scopeArgument(id: String): ParserTransformationArgument.ScopeArgument {
-            val argument = ParserTransformationArgument.ScopeArgument(id)
+        public fun scopeNameArgument(parameter: StatementParameter<ScopeLike.ScopeName>): ParserTransformationArgument.ScopeArgument {
+            val argument = ParserTransformationArgument.ScopeArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun unitArgument(id: String): ParserTransformationArgument.UnitArgument {
-            val argument = ParserTransformationArgument.UnitArgument(id)
+        public fun scopeArgument(parameter: StatementParameter<in ScopeLike>): ParserTransformationArgument.ScopeArgument {
+            val argument = ParserTransformationArgument.ScopeArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun conditionArgument(id: String): ParserTransformationArgument.ConditionArgument {
-            val argument = ParserTransformationArgument.ConditionArgument(id)
+        public fun unitArgument(parameter: StatementParameter<in UnitLike>): ParserTransformationArgument.UnitArgument {
+            val argument = ParserTransformationArgument.UnitArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun valueLikeArgument(id: String): ParserTransformationArgument.ValueLikeArgument {
-            val argument = ParserTransformationArgument.ValueLikeArgument(id)
+        public fun conditionArgument(parameter: StatementParameter<Condition>): ParserTransformationArgument.ConditionArgument {
+            val argument = ParserTransformationArgument.ConditionArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun registerLikeArgument(id: String): ParserTransformationArgument.RegisterLikeArgument {
-            val argument = ParserTransformationArgument.RegisterLikeArgument(id)
+        public fun valueLikeArgument(parameter: StatementParameter<in ValueLike>): ParserTransformationArgument.ValueLikeArgument {
+            val argument = ParserTransformationArgument.ValueLikeArgument(parameter)
             segments += argument
             arguments[id] = argument
             return argument
         }
 
-        public fun <T> parameter(id: String, type: KType, value: ArgumentState.() -> T) {
-            val parameter = ParserTransformationParameter(id, type, value)
+        public fun registerLikeArgument(parameter: StatementParameter<in RegisterLike>): ParserTransformationArgument.RegisterLikeArgument {
+            val argument = ParserTransformationArgument.RegisterLikeArgument(parameter)
+            segments += argument
+            arguments[id] = argument
+            return argument
+        }
+
+        public fun <T> parameter(parameter: StatementParameter<T>, value: ArgumentState.() -> T) {
+            val parameter = ParserTransformationParameter(parameter, value)
             parameters[id] = parameter
-        }
-
-        public inline fun <reified T> parameter(id: String, noinline value: ArgumentState.() -> T) {
-            return parameter(id, typeOf<T>(), value)
         }
     }
 
     public class ArgumentState internal constructor(private val arguments: Map<String, Any?>) {
 
-        public operator fun get(name: String): Any? {
-            return arguments[name]
+        public operator fun get(parameter: StatementParameter<*>): Any? {
+            return arguments[parameter.id]
         }
 
         @Suppress("UNCHECKED_CAST")
         public operator fun <T> get(argument: ParserTransformationArgument<T>): T {
-            return arguments[argument.id]!! as T
+            return arguments[argument.parameter.id]!! as T
         }
     }
 }

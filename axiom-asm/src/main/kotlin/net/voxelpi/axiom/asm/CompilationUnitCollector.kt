@@ -4,7 +4,6 @@ import net.voxelpi.axiom.asm.lexer.Lexer
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.GlobalScope
-import net.voxelpi.axiom.asm.statement.IncludeStatement
 import net.voxelpi.axiom.asm.statement.MutableStatementSequence
 import net.voxelpi.axiom.asm.statement.StatementPrototype
 import net.voxelpi.axiom.asm.type.UnitLike

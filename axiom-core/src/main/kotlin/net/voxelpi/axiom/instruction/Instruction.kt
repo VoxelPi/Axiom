@@ -5,6 +5,6 @@ public data class Instruction(
     val condition: Condition,
     val conditionRegister: Register,
     val outputRegister: Register,
-    val inputA: InstructionDataSource,
-    val inputB: InstructionDataSource,
+    val inputA: InstructionValue,
+    val inputB: InstructionValue,
 )

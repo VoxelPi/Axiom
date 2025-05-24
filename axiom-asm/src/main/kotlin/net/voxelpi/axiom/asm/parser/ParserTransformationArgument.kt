@@ -3,6 +3,7 @@ package net.voxelpi.axiom.asm.parser
 import net.voxelpi.axiom.asm.lexer.Token
 import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.statement.StatementArgument
+import net.voxelpi.axiom.asm.statement.StatementParameter
 import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.LabelLike
 import net.voxelpi.axiom.asm.type.RegisterLike
@@ -14,7 +15,7 @@ import net.voxelpi.axiom.instruction.Condition
 
 public sealed interface ParserTransformationArgument<T> : ParserTransformationSegment {
 
-    public val id: String
+    public val parameter: StatementParameter<in T>
 
     override fun isApplicable(token: Token): Boolean {
         return true
@@ -22,9 +23,9 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
 
     public fun isValid(token: Token): Boolean
 
-    public fun parse(token: Token): Result<StatementArgument<T>>
+    public fun parse(token: Token): Result<StatementArgument<out T>>
 
-    public data class TextArgument(override val id: String) : ParserTransformationArgument<String> {
+    public data class TextArgument(override val parameter: StatementParameter<String>) : ParserTransformationArgument<String> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text
@@ -38,7 +39,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class IntegerArgument(override val id: String) : ParserTransformationArgument<IntegerValue> {
+    public data class IntegerArgument(override val parameter: StatementParameter<IntegerValue>) : ParserTransformationArgument<IntegerValue> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Integer
@@ -52,7 +53,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class VariableArgument(override val id: String) : ParserTransformationArgument<VariableLike.VariableName> {
+    public data class VariableArgument(override val parameter: StatementParameter<in VariableLike>) : ParserTransformationArgument<VariableLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable
@@ -66,7 +67,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class LabelArgument(override val id: String) : ParserTransformationArgument<LabelLike.LabelName> {
+    public data class LabelArgument(override val parameter: StatementParameter<in LabelLike>) : ParserTransformationArgument<LabelLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Label
@@ -80,7 +81,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class ScopeArgument(override val id: String) : ParserTransformationArgument<ScopeLike.ScopeName> {
+    public data class ScopeArgument(override val parameter: StatementParameter<in ScopeLike>) : ParserTransformationArgument<ScopeLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Label
@@ -94,7 +95,21 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class UnitArgument(override val id: String) : ParserTransformationArgument<UnitLike.UnitName> {
+    public data class ScopeNameArgument(override val parameter: StatementParameter<ScopeLike.ScopeName>) : ParserTransformationArgument<ScopeLike.ScopeName> {
+
+        override fun isValid(token: Token): Boolean {
+            return token is Token.Label
+        }
+
+        override fun parse(token: Token): Result<StatementArgument<ScopeLike.ScopeName>> {
+            if (token !is Token.Label) {
+                return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
+            }
+            return Result.success(StatementArgument.create(token.source, ScopeLike.ScopeName(token.value)))
+        }
+    }
+
+    public data class UnitArgument(override val parameter: StatementParameter<in UnitLike>) : ParserTransformationArgument<UnitLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text
@@ -108,7 +123,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class ConditionArgument(override val id: String) : ParserTransformationArgument<Condition> {
+    public data class ConditionArgument(override val parameter: StatementParameter<Condition>) : ParserTransformationArgument<Condition> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Text && token.value in Condition.entries.map { it.name }
@@ -126,7 +141,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class ValueLikeArgument(override val id: String) : ParserTransformationArgument<ValueLike> {
+    public data class ValueLikeArgument(override val parameter: StatementParameter<in ValueLike>) : ParserTransformationArgument<ValueLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable || token is Token.Text || token is Token.Integer
@@ -145,7 +160,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         }
     }
 
-    public data class RegisterLikeArgument(override val id: String) : ParserTransformationArgument<RegisterLike> {
+    public data class RegisterLikeArgument(override val parameter: StatementParameter<in RegisterLike>) : ParserTransformationArgument<RegisterLike> {
 
         override fun isValid(token: Token): Boolean {
             return token is Token.Variable || token is Token.Text

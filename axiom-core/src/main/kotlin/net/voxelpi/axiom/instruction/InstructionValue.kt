@@ -1,3 +1,3 @@
 package net.voxelpi.axiom.instruction
 
-public interface InstructionDataSource
+public interface InstructionValue

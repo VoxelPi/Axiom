@@ -4,14 +4,13 @@ import net.voxelpi.axiom.asm.lexer.TokenizedStatement
 import net.voxelpi.axiom.asm.parser.exception.ParseException
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.Statement
-import net.voxelpi.axiom.asm.statement.StatementPrototype
-import kotlin.reflect.KClass
+import net.voxelpi.axiom.asm.statement.StatementInstance
 
 public class Parser(
-    public val transformations: List<ParserTransformation<*>>,
+    public val transformations: List<ParserTransformation>,
 ) {
 
-    public fun parse(statement: TokenizedStatement, scope: Scope): Result<StatementPrototype<*>> {
+    public fun parse(statement: TokenizedStatement, scope: Scope): Result<StatementInstance> {
         for (rule in transformations) {
             if (!rule.isApplicable(statement)) {
                 continue
@@ -35,20 +34,16 @@ public class Parser(
 
     public class Builder internal constructor() {
 
-        private val rules: MutableList<ParserTransformation<*>> = mutableListOf()
+        private val transformations: MutableList<ParserTransformation> = mutableListOf()
 
-        public fun rules(): List<ParserTransformation<*>> {
-            return rules
+        public fun rules(): List<ParserTransformation> {
+            return transformations
         }
 
-        public fun <S : Statement> transformation(id: String, type: KClass<S>, block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
-            val rule = ParserTransformation.create(id, type, block)
-            rules += rule
+        public fun transformation(id: String, statement: Statement, block: ParserTransformation.Builder.() -> Unit): ParserTransformation {
+            val rule = ParserTransformation.create(id, statement, block)
+            transformations += rule
             return rule
-        }
-
-        public inline fun <reified S : Statement> transformation(id: String, noinline block: ParserTransformation.Builder<S>.() -> Unit): ParserTransformation<S> {
-            return transformation(id, S::class, block)
         }
     }
 }

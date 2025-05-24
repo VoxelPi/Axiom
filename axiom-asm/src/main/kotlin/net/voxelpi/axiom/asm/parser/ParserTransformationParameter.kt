@@ -1,5 +1,5 @@
 package net.voxelpi.axiom.asm.parser
 
-import kotlin.reflect.KType
+import net.voxelpi.axiom.asm.statement.StatementParameter
 
-public data class ParserTransformationParameter<T>(val id: String, val type: KType, val valueProvider: ParserTransformation.ArgumentState.() -> T)
+public data class ParserTransformationParameter<T>(val parameter: StatementParameter<T>, val valueProvider: ParserTransformation.ArgumentState.() -> T)
