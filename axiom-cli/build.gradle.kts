@@ -10,6 +10,7 @@ dependencies {
     // Kotlin
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.reflect)
+    implementation(libs.kotlinx.cli)
     implementation(libs.bundles.kotlinx.coroutines)
 
     // Project

@@ -2,6 +2,7 @@
 junit = "5.11.4"
 kotlin = "2.1.10"
 kotlin-logging = "7.0.7"
+kotlinx-cli = "0.3.6"
 kotlinx-coroutines = "1.10.2"
 log4j = "2.24.3"
 slf4j = "1.7.36"
@@ -19,6 +20,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlinx-cli = { module = "org.jetbrains.kotlinx:kotlinx-cli", version.ref = "kotlinx-cli" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
 
