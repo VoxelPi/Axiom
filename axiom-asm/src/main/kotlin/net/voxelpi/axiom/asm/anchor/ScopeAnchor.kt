@@ -1,21 +1,19 @@
 package net.voxelpi.axiom.asm.anchor
 
-import net.voxelpi.axiom.asm.statement.annotation.StatementType
+import net.voxelpi.axiom.asm.scope.LocalScope
 import java.util.UUID
 
 public sealed interface ScopeAnchor : Anchor {
 
-    public val scope: UUID
+    public val scope: LocalScope
 
-    @StatementType("scope/start")
     public data class ScopeStart(
         override val uniqueId: UUID,
-        override val scope: UUID,
+        override val scope: LocalScope,
     ) : ScopeAnchor
 
-    @StatementType("scope/end")
     public data class ScopeEnd(
         override val uniqueId: UUID,
-        override val scope: UUID,
+        override val scope: LocalScope,
     ) : ScopeAnchor
 }

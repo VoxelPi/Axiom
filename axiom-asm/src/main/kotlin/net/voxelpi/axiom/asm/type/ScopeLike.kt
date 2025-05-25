@@ -1,5 +1,7 @@
 package net.voxelpi.axiom.asm.type
 
+import net.voxelpi.axiom.asm.scope.Scope
+
 public sealed interface ScopeLike : AnchorLike {
 
     /**
@@ -13,4 +15,8 @@ public sealed interface ScopeLike : AnchorLike {
      * The parent scope of a statement.
      */
     public data object ParentScope : ScopeLike
+
+    public data class ScopeReference(
+        val scope: Scope,
+    ) : ScopeLike
 }

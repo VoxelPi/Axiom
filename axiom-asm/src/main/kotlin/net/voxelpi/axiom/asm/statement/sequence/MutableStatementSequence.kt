@@ -1,25 +1,31 @@
 package net.voxelpi.axiom.asm.statement.sequence
 
-import net.voxelpi.axiom.asm.anchor.ScopeAnchor
+import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
 import net.voxelpi.axiom.asm.statement.StatementPrototype
+import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeStatement
 import java.util.UUID
 import kotlin.reflect.full.isSubclassOf
 
 public class MutableStatementSequence(
-    public val globalScope: GlobalScope,
-    public val statements: MutableList<StatementInstance<*>>,
-    public val scopes: MutableMap<UUID, Scope> = mutableMapOf(),
-    public val anchors: MutableMap<UUID, ScopeAnchor> = mutableMapOf(),
-) {
+    override val globalScope: GlobalScope,
+    override val statements: MutableList<StatementInstance<*>>,
+    override val scopes: MutableMap<UUID, Scope> = mutableMapOf(),
+    override val anchors: MutableMap<UUID, Anchor> = mutableMapOf(),
+) : StatementSequence {
+
     public constructor(
         globalScope: GlobalScope,
         statements: List<StatementInstance<*>>,
     ) : this(globalScope, statements.toMutableList(), mutableMapOf(), mutableMapOf())
+
+    init {
+        scopes[globalScope.uniqueId] = globalScope
+    }
 
     public fun copy(): MutableStatementSequence {
         return MutableStatementSequence(
@@ -69,21 +75,25 @@ public class MutableStatementSequence(
                     // Create a new name scope and push it to the scope stack.
                     val parentScope = scopeStack.last()
                     val scope = LocalScope.Named(parentScope, UUID.randomUUID(), statement.name.name, emptyMap(), emptyMap())
-                    scope.registerStartAnchor(ScopeAnchor.ScopeStart(UUID.randomUUID(), scope.uniqueId))
+                    scopes[scope.uniqueId] = scope
+                    anchors[scope.startAnchor.uniqueId] = scope.startAnchor
+                    anchors[scope.endAnchor.uniqueId] = scope.endAnchor
                     scopeStack.addLast(scope)
 
                     // Yield the start anchor of the scope.
-                    yield(SCOPE_START_ANCHOR_PROTOTYPE.createInstance(scope.startAnchor, scope, statementInstance.source))
+                    yield(ANCHOR_PROTOTYPE.createInstance(AnchorStatement(scope.startAnchor), scope, statementInstance.source))
                 }
                 is ScopeStatement.Open.Unnamed -> {
                     // Create a new unnamed scope and push it to the scope stack.
                     val parentScope = scopeStack.last()
                     val scope = LocalScope.Unnamed(parentScope, UUID.randomUUID(), emptyMap(), emptyMap())
-                    scope.registerStartAnchor(ScopeAnchor.ScopeStart(UUID.randomUUID(), scope.uniqueId))
+                    scopes[scope.uniqueId] = scope
+                    anchors[scope.startAnchor.uniqueId] = scope.startAnchor
+                    anchors[scope.endAnchor.uniqueId] = scope.endAnchor
                     scopeStack.addLast(scope)
 
                     // Yield the start anchor of the scope.
-                    yield(SCOPE_START_ANCHOR_PROTOTYPE.createInstance(scope.startAnchor, scope, statementInstance.source))
+                    yield(ANCHOR_PROTOTYPE.createInstance(AnchorStatement(scope.startAnchor), scope, statementInstance.source))
                 }
                 is ScopeStatement.Close -> {
                     // Make sure that the scope stack is not empty.
@@ -95,8 +105,7 @@ public class MutableStatementSequence(
                     val scope = scopeStack.removeLast() as LocalScope
 
                     // Yield the end anchor of the scope.
-                    scope.registerEndAnchor(ScopeAnchor.ScopeEnd(UUID.randomUUID(), scope.uniqueId))
-                    yield(SCOPE_END_ANCHOR_PROTOTYPE.createInstance(scope.endAnchor, scope, statementInstance.source))
+                    yield(ANCHOR_PROTOTYPE.createInstance(AnchorStatement(scope.endAnchor), scope, statementInstance.source))
                 }
                 else -> {
                     // Update scope of statement prototype.
@@ -115,7 +124,8 @@ public class MutableStatementSequence(
     }
 
     public companion object {
-        private val SCOPE_START_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeStart::class).getOrThrow()
-        private val SCOPE_END_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeEnd::class).getOrThrow()
+        private val ANCHOR_PROTOTYPE = StatementPrototype.fromType(AnchorStatement::class).getOrThrow()
+        // private val SCOPE_START_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeStart::class).getOrThrow()
+        // private val SCOPE_END_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeEnd::class).getOrThrow()
     }
 }

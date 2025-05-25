@@ -7,21 +7,13 @@ import java.util.UUID
 
 public sealed class LocalScope(
     public val parent: Scope,
+    scopeStartAnchorUniqueId: UUID,
+    scopeEndAnchorUniqueId: UUID,
 ) : Scope {
 
-    public lateinit var startAnchor: ScopeAnchor.ScopeStart
-        private set
+    public val startAnchor: ScopeAnchor.ScopeStart = ScopeAnchor.ScopeStart(scopeStartAnchorUniqueId, this)
 
-    public lateinit var endAnchor: ScopeAnchor.ScopeEnd
-        private set
-
-    internal fun registerStartAnchor(anchor: ScopeAnchor.ScopeStart) {
-        startAnchor = anchor
-    }
-
-    internal fun registerEndAnchor(anchor: ScopeAnchor.ScopeEnd) {
-        endAnchor = anchor
-    }
+    public val endAnchor: ScopeAnchor.ScopeEnd = ScopeAnchor.ScopeEnd(scopeEndAnchorUniqueId, this)
 
     public class Named(
         parent: Scope,
@@ -29,12 +21,16 @@ public sealed class LocalScope(
         public val name: String,
         override val variables: Map<String, Variable>,
         override val labels: Map<String, Label>,
-    ) : LocalScope(parent)
+        scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
+        scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
+    ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
 
     public class Unnamed(
         parent: Scope,
         override val uniqueId: UUID,
         override val variables: Map<String, Variable>,
         override val labels: Map<String, Label>,
-    ) : LocalScope(parent)
+        scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
+        scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
+    ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
 }
