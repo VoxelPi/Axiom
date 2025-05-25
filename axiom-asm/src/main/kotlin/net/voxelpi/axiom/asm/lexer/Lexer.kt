@@ -93,21 +93,21 @@ public class Lexer() {
             val wordSource = SourceLink.CompilationUnitSlice(unit, iTokenStart, line, (iTokenStart - iLineStart), iTokenEnd - iTokenStart)
 
             // Labels
-            if (tokenText.startsWith("@")) {
+            if ("^@(?:[A-Za-z0-9_-]+:)?[A-Za-z0-9_\\-/]+".toRegex().matches(tokenText)) {
                 val iLabelNameStart = iTokenStart + 1
                 statement.add(Token.Label(unit.content.substring(iLabelNameStart, iTokenEnd), wordSource))
                 continue
             }
 
             // Variables
-            if (tokenText.startsWith("$")) {
+            if ("^\\$(?:[A-Za-z0-9_-]+:)?[A-Za-z0-9_\\-/]+".toRegex().matches(tokenText)) {
                 val iLabelNameStart = iTokenStart + 1
                 statement.add(Token.Variable(unit.content.substring(iLabelNameStart, iTokenEnd), wordSource))
                 continue
             }
 
             // Pre-Processor directives
-            if (tokenText.startsWith("!")) {
+            if ("^!(\\w+)".toRegex().matches(tokenText)) {
                 val iLabelNameStart = iTokenStart + 1
                 statement.add(Token.Directive(unit.content.substring(iLabelNameStart, iTokenEnd), wordSource))
                 continue
