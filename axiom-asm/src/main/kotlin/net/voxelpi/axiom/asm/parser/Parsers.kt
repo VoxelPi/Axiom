@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.parser
 
+import net.voxelpi.axiom.asm.statement.types.IfStatement
 import net.voxelpi.axiom.asm.statement.types.ConditionalStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
@@ -69,6 +70,15 @@ public object Parsers {
             valueLikeArgument(VariableStatement.Definition::value)
         }
 
+        // IF STATEMENTS, 'if <condition_register> <condition> 0'
+
+        transformation<IfStatement>("if") {
+            literal("if")
+            registerLikeArgument(IfStatement::conditionValue)
+            conditionArgument(IfStatement::condition)
+            literal("0")
+        }
+
         // Instruction statements. These are generated twice, once with and once without the condition part.
         for (withConditionPart in listOf(true, false)) {
             val transformationSuffix = if (withConditionPart) "with_condition" else "without_condition"
@@ -103,7 +113,7 @@ public object Parsers {
                 generateCondition(withConditionPart)
             }
 
-            // LOAD
+            // LOAD, '<register> = <value>'
             transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
                 registerLikeArgument(InstructionStatement.WithOutput::output)
                 literal("=")
@@ -115,7 +125,7 @@ public object Parsers {
                 parameter(InstructionStatement::operation) { Operation.LOAD }
             }
 
-            // LOAD 2, 'PC = R1, R2'
+            // LOAD 2, '<register> = <value1>, <value2>'
             transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
                 registerLikeArgument(InstructionStatement.WithOutput::output)
                 literal("=")
@@ -126,6 +136,43 @@ public object Parsers {
                 generateCondition(withConditionPart)
 
                 parameter(InstructionStatement::operation) { Operation.LOAD_2 }
+            }
+
+            // JUMP, 'jump <value>'
+            transformation<InstructionStatement.WithOutput>("jump_${transformationSuffix}") {
+                literal("jump")
+                valueLikeArgument(InstructionStatement::inputA)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement::operation) { Operation.LOAD }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
+            }
+
+            // JUMP 2, 'jump <value1>, <value2>'
+            transformation<InstructionStatement.WithOutput>("jump_2_${transformationSuffix}") {
+                literal("jump")
+                valueLikeArgument(InstructionStatement::inputA)
+                literal(",")
+                valueLikeArgument(InstructionStatement::inputB)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.LOAD_2 }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
+            }
+
+            // SKIP, 'skip <value>'
+            transformation<InstructionStatement.WithOutput>("skip_${transformationSuffix}") {
+                literal("skip")
+                valueLikeArgument(InstructionStatement::inputA)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement::operation) { Operation.ADD }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
             }
 
             // COMMAND FUNCTIONS, "<function>"
