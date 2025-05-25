@@ -11,6 +11,7 @@ import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
 import net.voxelpi.axiom.asm.statement.sequence.MutableStatementSequence
 import net.voxelpi.axiom.asm.statement.sequence.StatementSequence
+import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.type.ScopeLike
 import net.voxelpi.axiom.asm.type.UnitLike
@@ -157,15 +158,160 @@ internal class CompilationUnitCollector private constructor(
                     }
                     program.statements.addAll(iStatement, includedStatements)
 
-                    // We have to go through the included program, as there could again be another include.
-                    // Therefore, we DO NOT increase the statement index.
+                    // Skip over all included statements, as they have already been processed.
+                    iStatement += includedStatements.size
                     continue
                 }
-                is IncludeStatement.Scope.Direct -> {
-                    TODO()
-                }
-                is IncludeStatement.Scope.WithAlias -> {
-                    TODO()
+                is IncludeStatement.Scope -> {
+                    val scopeName = statement.scope.name
+
+                    // Copy over all relevant scopes.
+                    val sortedIncludedScopes = unitProgram.sortedScopes()
+                    val includedScopeMapping = mutableMapOf<UUID, Scope>()
+                    var includedScopeStartAnchor: ScopeAnchor.ScopeStart? = null
+                    var includedScopeEndAnchor: ScopeAnchor.ScopeEnd? = null
+                    for (includedScope in sortedIncludedScopes) {
+                        when (includedScope) {
+                            is GlobalScope -> {} // Do nothing, as global scopes can't be included by scope.
+                            is LocalScope.Named -> {
+                                if (includedScope.parent is GlobalScope && includedScope.name == scopeName) {
+                                    val name = when (statement) {
+                                        is IncludeStatement.Scope.Direct -> includedScope.name
+                                        is IncludeStatement.Scope.WithAlias -> statement.alias.name
+                                    }
+
+                                    // The include scope itself.
+                                    val parentScope = statementInstance.scope
+                                    val scope = LocalScope.Named(
+                                        parentScope,
+                                        includedScope.uniqueId,
+                                        name,
+                                        includedScope.variables.toMutableMap(),
+                                        includedScope.labels.toMutableMap(),
+                                        includedScope.startAnchor.uniqueId,
+                                        includedScope.endAnchor.uniqueId,
+                                    )
+                                    includedScopeStartAnchor = scope.startAnchor
+                                    includedScopeEndAnchor = scope.endAnchor
+                                    program.scopes[scope.uniqueId] = scope
+                                    includedScopeMapping[includedScope.uniqueId] = scope
+                                    includedScopeMapping[includedScope.parent.uniqueId] = parentScope
+                                } else {
+                                    if (includedScope.parent.uniqueId in includedScopeMapping) {
+                                        val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
+                                        val scope = LocalScope.Named(
+                                            parentScope,
+                                            includedScope.uniqueId,
+                                            includedScope.name,
+                                            includedScope.variables.toMutableMap(),
+                                            includedScope.labels.toMutableMap(),
+                                            includedScope.startAnchor.uniqueId,
+                                            includedScope.endAnchor.uniqueId,
+                                        )
+                                        program.scopes[scope.uniqueId] = scope
+                                        includedScopeMapping[includedScope.uniqueId] = scope
+                                    }
+                                }
+                            }
+                            is LocalScope.Unnamed -> {
+                                if (includedScope.parent.uniqueId in includedScopeMapping) {
+                                    val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
+                                    val scope = LocalScope.Unnamed(
+                                        parentScope,
+                                        includedScope.uniqueId,
+                                        includedScope.variables.toMutableMap(),
+                                        includedScope.labels.toMutableMap(),
+                                        includedScope.startAnchor.uniqueId,
+                                        includedScope.endAnchor.uniqueId,
+                                    )
+                                    program.scopes[scope.uniqueId] = scope
+                                    includedScopeMapping[includedScope.uniqueId] = scope
+                                }
+                            }
+                        }
+                    }
+
+                    if (includedScopeStartAnchor == null) {
+                        return Result.failure(SourceCompilationException(statementInstance.source, "The starting anchor of the scope \"$scopeName\" was not found in the included unit."))
+                    }
+                    if (includedScopeEndAnchor == null) {
+                        return Result.failure(SourceCompilationException(statementInstance.source, "The ending anchor of the scope \"$scopeName\" was not found in the included unit."))
+                    }
+
+                    val firstIncludedStatementIndex = unitProgram.statements.indexOfFirst {
+                        if (it.prototype.type == AnchorStatement::class) {
+                            val statement = it.create() as AnchorStatement
+                            val anchor = statement.anchor
+                            anchor is ScopeAnchor.ScopeStart && anchor.uniqueId == includedScopeStartAnchor.uniqueId
+                        } else {
+                            false
+                        }
+                    }
+                    val lastIncludedStatementIndex = unitProgram.statements.indexOfFirst {
+                        if (it.prototype.type == AnchorStatement::class) {
+                            val statement = it.create() as AnchorStatement
+                            val anchor = statement.anchor
+                            anchor is ScopeAnchor.ScopeEnd && anchor.uniqueId == includedScopeEndAnchor.uniqueId
+                        } else {
+                            false
+                        }
+                    }
+
+                    // Copy over all statements.
+                    val includedStatements = unitProgram.statements
+                        .subList(firstIncludedStatementIndex, lastIncludedStatementIndex + 1)
+                        .map { includedStatementInstance ->
+                            val scope = includedScopeMapping[statementInstance.scope.uniqueId]!!
+
+                            val parameterValues = includedStatementInstance.parameterValues.mapValues { (_, value) ->
+                                when (value) {
+                                    is Anchor -> {
+                                        // Copy over anchor if not already present.
+                                        if (value.uniqueId !in program.anchors) {
+                                            val includedAnchor = value
+                                            when (includedAnchor) {
+                                                is ScopeAnchor.ScopeStart -> {
+                                                    val mappedScope = includedScopeMapping[includedAnchor.scope.uniqueId]!! as LocalScope // A local scope can't become a global scope.
+                                                    program.anchors[includedAnchor.uniqueId] = ScopeAnchor.ScopeStart(includedAnchor.uniqueId, mappedScope)
+                                                }
+                                                is ScopeAnchor.ScopeEnd -> {
+                                                    val mappedScope = includedScopeMapping[includedAnchor.scope.uniqueId]!! as LocalScope // A local scope can't become a global scope.
+                                                    program.anchors[includedAnchor.uniqueId] = ScopeAnchor.ScopeEnd(includedAnchor.uniqueId, mappedScope)
+                                                }
+                                                else -> {
+                                                    program.anchors[includedAnchor.uniqueId] = includedAnchor
+                                                }
+                                            }
+                                        }
+
+                                        // Swap reference for copied anchor.
+                                        program.anchors[value.uniqueId]!!
+                                    }
+                                    is Scope -> {
+                                        program.scopes[value.uniqueId]!!
+                                    }
+                                    is ScopeLike.ScopeReference -> {
+                                        ScopeLike.ScopeReference(program.scopes[value.scope.uniqueId]!!)
+                                    }
+                                    else -> {
+                                        value
+                                    }
+                                }
+                            }
+
+                            StatementInstance(
+                                includedStatementInstance.prototype,
+                                scope,
+                                includedStatementInstance.source,
+                                parameterValues,
+                                includedStatementInstance.parameterSources,
+                            )
+                        }
+                    program.statements.addAll(iStatement, includedStatements)
+
+                    // Skip over all included statements, as they have already been processed.
+                    iStatement += includedStatements.size
+                    continue
                 }
             }
         }
@@ -220,7 +366,7 @@ internal class CompilationUnitCollector private constructor(
                 unit
             }
 
-            // Yield the include statement, with the unit name replaced to a unit reference.
+            // Yield the include statement, with the unit name replaced with a unit reference.
             yield(
                 statementInstance.modifiedCopy {
                     this[IncludeStatement::unit] = UnitLike.UnitReference(unit)
