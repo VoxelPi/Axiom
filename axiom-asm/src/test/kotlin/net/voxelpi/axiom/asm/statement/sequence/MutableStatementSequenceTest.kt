@@ -3,7 +3,6 @@ package net.voxelpi.axiom.asm.statement.sequence
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import org.junit.jupiter.api.Test
-import java.util.UUID
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
@@ -14,14 +13,14 @@ class MutableStatementSequenceTest {
         val globalScope = GlobalScope()
         val program = MutableStatementSequence(globalScope, emptyList())
 
-        val scope1 = LocalScope.Named(globalScope, UUID.randomUUID(), "scope1", emptyMap(), emptyMap())
-        val scope11 = LocalScope.Named(scope1, UUID.randomUUID(), "scope11", emptyMap(), emptyMap())
-        val scope12 = LocalScope.Named(scope1, UUID.randomUUID(), "scope12", emptyMap(), emptyMap())
-        val scope121 = LocalScope.Named(scope12, UUID.randomUUID(), "scope121", emptyMap(), emptyMap())
-        val scope2 = LocalScope.Named(globalScope, UUID.randomUUID(), "scope2", emptyMap(), emptyMap())
-        val scope21 = LocalScope.Named(scope2, UUID.randomUUID(), "scope21", emptyMap(), emptyMap())
-        val scope22 = LocalScope.Named(scope2, UUID.randomUUID(), "scope22", emptyMap(), emptyMap())
-        val scope23 = LocalScope.Named(scope2, UUID.randomUUID(), "scope23", emptyMap(), emptyMap())
+        val scope1 = globalScope.createScope("scope1")
+        val scope11 = scope1.createScope("scope11")
+        val scope12 = scope1.createScope("scope12")
+        val scope121 = scope12.createScope("scope121")
+        val scope2 = globalScope.createScope("scope2")
+        val scope21 = scope2.createScope("scope21")
+        val scope22 = scope2.createScope("scope22")
+        val scope23 = scope2.createScope("scope23")
 
         fun registerScope(scope: LocalScope) {
             program.scopes[scope.uniqueId] = scope
@@ -61,7 +60,7 @@ class MutableStatementSequenceTest {
         // Register 100 scopes with random parent scopes.
         repeat(1000) { index ->
             val parentScope = program.scopes.values.random()
-            val scope = LocalScope.Named(parentScope, UUID.randomUUID(), "scope_$index", emptyMap(), emptyMap())
+            val scope = parentScope.createScope("scope_$index")
             program.scopes[scope.uniqueId] = scope
         }
 

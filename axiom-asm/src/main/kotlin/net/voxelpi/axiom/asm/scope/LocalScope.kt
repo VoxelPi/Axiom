@@ -17,19 +17,21 @@ public sealed class LocalScope(
 
     public class Named(
         parent: Scope,
+        override val scopes: MutableList<Scope>,
         override val uniqueId: UUID,
         public val name: String,
-        override val variables: Map<String, Variable>,
-        override val labels: Map<String, Label>,
+        override val variables: MutableMap<String, Variable>,
+        override val labels: MutableMap<String, Label>,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
 
     public class Unnamed(
         parent: Scope,
+        override val scopes: MutableList<Scope>,
         override val uniqueId: UUID,
-        override val variables: Map<String, Variable>,
-        override val labels: Map<String, Label>,
+        override val variables: MutableMap<String, Variable>,
+        override val labels: MutableMap<String, Label>,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)

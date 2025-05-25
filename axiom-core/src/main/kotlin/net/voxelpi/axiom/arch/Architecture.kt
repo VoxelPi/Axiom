@@ -1,7 +1,7 @@
 package net.voxelpi.axiom.arch
 
+import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.instruction.Instruction
-import net.voxelpi.axiom.instruction.Register
 
 public interface Architecture<W> {
 
@@ -34,4 +34,6 @@ public interface Architecture<W> {
      * Returns the register with the given [id] or null if no such register exists.
      */
     public fun register(id: String): Register?
+
+    public val programCounter: Register
 }

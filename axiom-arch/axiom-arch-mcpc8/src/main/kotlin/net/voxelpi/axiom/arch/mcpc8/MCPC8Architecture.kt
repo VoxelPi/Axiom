@@ -1,16 +1,18 @@
 package net.voxelpi.axiom.arch.mcpc8
 
+import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.arch.Architecture8
 import net.voxelpi.axiom.instruction.Instruction
-import net.voxelpi.axiom.instruction.Register
 
 public object MCPC8Architecture : Architecture8("mcpc8") {
 
+    override val programCounter: Register = Register("PC")
+
     override fun createRegisters(): Collection<Register> {
         val registers = mutableListOf<Register>()
-        registers.add(Register("pc"))
+        registers.add(programCounter)
         for (i in 1..7) {
-            registers.add(Register("r$i"))
+            registers.add(Register("R$i"))
         }
         return registers
     }

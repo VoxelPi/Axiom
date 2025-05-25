@@ -82,10 +82,9 @@ internal class CompilationUnitCollector private constructor(
                             }
                             is LocalScope.Named -> {
                                 val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
-                                val scope = LocalScope.Named(
-                                    parentScope,
-                                    includedScope.uniqueId,
+                                val scope = parentScope.createScope(
                                     includedScope.name,
+                                    includedScope.uniqueId,
                                     includedScope.variables.toMutableMap(),
                                     includedScope.labels.toMutableMap(),
                                     includedScope.startAnchor.uniqueId,
@@ -96,8 +95,7 @@ internal class CompilationUnitCollector private constructor(
                             }
                             is LocalScope.Unnamed -> {
                                 val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
-                                val scope = LocalScope.Unnamed(
-                                    parentScope,
+                                val scope = parentScope.createScope(
                                     includedScope.uniqueId,
                                     includedScope.variables.toMutableMap(),
                                     includedScope.labels.toMutableMap(),
@@ -182,10 +180,9 @@ internal class CompilationUnitCollector private constructor(
 
                                     // The include scope itself.
                                     val parentScope = statementInstance.scope
-                                    val scope = LocalScope.Named(
-                                        parentScope,
-                                        includedScope.uniqueId,
+                                    val scope = parentScope.createScope(
                                         name,
+                                        includedScope.uniqueId,
                                         includedScope.variables.toMutableMap(),
                                         includedScope.labels.toMutableMap(),
                                         includedScope.startAnchor.uniqueId,
@@ -199,10 +196,9 @@ internal class CompilationUnitCollector private constructor(
                                 } else {
                                     if (includedScope.parent.uniqueId in includedScopeMapping) {
                                         val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
-                                        val scope = LocalScope.Named(
-                                            parentScope,
-                                            includedScope.uniqueId,
+                                        val scope = parentScope.createScope(
                                             includedScope.name,
+                                            includedScope.uniqueId,
                                             includedScope.variables.toMutableMap(),
                                             includedScope.labels.toMutableMap(),
                                             includedScope.startAnchor.uniqueId,
@@ -216,8 +212,7 @@ internal class CompilationUnitCollector private constructor(
                             is LocalScope.Unnamed -> {
                                 if (includedScope.parent.uniqueId in includedScopeMapping) {
                                     val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!
-                                    val scope = LocalScope.Unnamed(
-                                        parentScope,
+                                    val scope = parentScope.createScope(
                                         includedScope.uniqueId,
                                         includedScope.variables.toMutableMap(),
                                         includedScope.labels.toMutableMap(),

@@ -1,6 +1,6 @@
 package net.voxelpi.axiom.arch
 
-import net.voxelpi.axiom.instruction.Register
+import net.voxelpi.axiom.Register
 
 public abstract class Architecture8(
     override val id: String,

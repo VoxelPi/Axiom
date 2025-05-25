@@ -4,6 +4,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
+import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.ParseException
@@ -39,7 +40,7 @@ fun main(args: Array<String>) {
             val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
 
             val compilationTime = measureTimeMillis {
-                val program = assembler.assemble(inputFilePath).getOrElse { exception ->
+                val program = assembler.assemble(inputFilePath, MCPC16Architecture).getOrElse { exception ->
                     when (exception) {
                         is ParseException -> {
                             println(exception.message)

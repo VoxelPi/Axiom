@@ -1,16 +1,18 @@
 package net.voxelpi.axiom.arch.mcpc16
 
+import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.arch.Architecture16
 import net.voxelpi.axiom.instruction.Instruction
-import net.voxelpi.axiom.instruction.Register
 
 public object MCPC16Architecture : Architecture16("mcpc16") {
 
+    override val programCounter: Register = Register("PC")
+
     override fun createRegisters(): Collection<Register> {
         val registers = mutableListOf<Register>()
-        registers.add(Register("pc"))
+        registers.add(programCounter)
         for (i in 1..15) {
-            registers.add(Register("r$i"))
+            registers.add(Register("R$i"))
         }
         return registers
     }

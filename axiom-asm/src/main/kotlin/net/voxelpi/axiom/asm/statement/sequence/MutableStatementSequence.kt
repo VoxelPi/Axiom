@@ -65,7 +65,7 @@ public class MutableStatementSequence(
                 is ScopeStatement.Open.Named -> {
                     // Create a new name scope and push it to the scope stack.
                     val parentScope = scopeStack.last()
-                    val scope = LocalScope.Named(parentScope, UUID.randomUUID(), statement.name.name, emptyMap(), emptyMap())
+                    val scope = parentScope.createScope(statement.name.name)
                     scopes[scope.uniqueId] = scope
                     anchors[scope.startAnchor.uniqueId] = scope.startAnchor
                     anchors[scope.endAnchor.uniqueId] = scope.endAnchor
@@ -77,7 +77,7 @@ public class MutableStatementSequence(
                 is ScopeStatement.Open.Unnamed -> {
                     // Create a new unnamed scope and push it to the scope stack.
                     val parentScope = scopeStack.last()
-                    val scope = LocalScope.Unnamed(parentScope, UUID.randomUUID(), emptyMap(), emptyMap())
+                    val scope = parentScope.createScope()
                     scopes[scope.uniqueId] = scope
                     anchors[scope.startAnchor.uniqueId] = scope.startAnchor
                     anchors[scope.endAnchor.uniqueId] = scope.endAnchor

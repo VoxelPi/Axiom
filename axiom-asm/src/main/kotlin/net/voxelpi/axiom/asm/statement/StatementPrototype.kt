@@ -66,5 +66,9 @@ public class StatementPrototype<T : Any> internal constructor(
             val statement = StatementPrototype(statementId, typeClass, parameters)
             return Result.success(statement)
         }
+
+        public inline fun <reified T : Any> fromType(): Result<StatementPrototype<T>> {
+            return fromType(T::class)
+        }
     }
 }
