@@ -23,6 +23,14 @@ public class Lexer() {
             val c = unit.content[iSymbol]
             val cSource = SourceLink.CompilationUnitSlice(unit, iSymbol, line, (iSymbol - iLineStart), 1)
 
+            // Handle comments.
+            if (c == '#') {
+                while (iSymbol < unit.content.length && !(unit.content[iSymbol] == ';' || unit.content[iSymbol] == '\n')) {
+                    ++iSymbol
+                }
+                continue
+            }
+
             // Handle single character tokens.
             when (c) {
                 '\n' -> {
