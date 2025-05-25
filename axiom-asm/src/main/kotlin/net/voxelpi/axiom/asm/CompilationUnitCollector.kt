@@ -10,6 +10,7 @@ import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
 import net.voxelpi.axiom.asm.statement.sequence.MutableStatementSequence
+import net.voxelpi.axiom.asm.statement.sequence.StatementSequence
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.type.ScopeLike
 import net.voxelpi.axiom.asm.type.UnitLike
@@ -33,11 +34,15 @@ internal class CompilationUnitCollector private constructor(
     private val unitsStatements: MutableMap<String, MutableStatementSequence> = mutableMapOf(mainUnit.id to mainProgram)
 
     fun reduce(): Result<MutableStatementSequence> {
-        val program: MutableStatementSequence = mainProgram.copy()
-
-        collect(program).onFailure {
+        collect(mainProgram).onFailure {
             return Result.failure(it)
         }
+
+        return reduceProgram(mainProgram, setOf(mainUnit.id))
+    }
+
+    private fun reduceProgram(inputProgram: StatementSequence, unitTrace: Set<String>): Result<MutableStatementSequence> {
+        val program: MutableStatementSequence = inputProgram.mutableCopy()
 
         var iStatement = 0
         while (iStatement < program.statements.size) {
@@ -51,17 +56,21 @@ internal class CompilationUnitCollector private constructor(
             // Delete original include statement.
             program.statements.removeAt(iStatement)
 
-            val unit = statement.unit
-            when (unit) {
-                is UnitLike.UnitName -> throw SourceCompilationException(statementInstance.source, "Encountered unresolved unit reference \"${unit.name}\" in include statement.")
+            val unitParameter = statement.unit
+            when (unitParameter) {
+                is UnitLike.UnitName -> throw SourceCompilationException(statementInstance.source, "Encountered unresolved unit reference \"${unitParameter.name}\" in include statement.")
                 is UnitLike.UnitReference -> {}
+            }
+            val unit = unitParameter.unit
+            if (unit.id in unitTrace) {
+                return Result.failure(SourceCompilationException(statementInstance.source, "Cyclic unit inclusion."))
+            }
+            val unitProgram = reduceProgram(unitsStatements[unit.id]!!, unitTrace + unit.id).getOrElse {
+                return Result.failure(it)
             }
 
             when (statement) {
                 is IncludeStatement.Unit -> {
-                    val unit = (statement.unit as UnitLike.UnitReference).unit
-                    val unitProgram = unitsStatements[unit.id]!!
-
                     // Copy over all relevant scopes.
                     val sortedIncludedScopes = unitProgram.sortedScopes()
                     val includedScopeMapping = mutableMapOf<UUID, Scope>()
@@ -161,40 +170,7 @@ internal class CompilationUnitCollector private constructor(
             }
         }
 
-        // program.transformType<IncludeStatement> { statementInstance ->
-        //     val includeStatement = statementInstance.create()
-        //
-        //     when (includeStatement) {
-        //         is IncludeStatement.Unit -> {
-        //             val unitIdValue = includeStatement.unit
-        //             val unitIdSource = statementInstance.sourceOfOrDefault(IncludeStatement::unit)
-        //             require(unitIdValue is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
-        //             val unitId = unitIdValue.name
-        //             val unitStatements = unitsStatements[unitId] ?: throw SourceCompilationException(unitIdSource, "The unit $unitId was not found.")
-        //
-        //             val unitScopes = unitStatements.scopes.mapValues { (_, scope) ->
-        //                 if (scope is GlobalScope) {
-        //                     scopes
-        //                 }
-        //             }
-        //
-        //             for (unitStatement in unitStatements.statements) {
-        //                 yield(
-        //                     StatementInstance(
-        //                         unitStatement.prototype,
-        //                         unitStatement.scope,
-        //                         unitStatement.source,
-        //                         unitStatement.parameterValues,
-        //                         unitStatement.parameterSources,
-        //                     )
-        //                 )
-        //             }
-        //         }
-        //         is IncludeStatement.Scope.Direct -> {}
-        //         is IncludeStatement.Scope.WithAlias -> {}
-        //     }
-        // }
-        return Result.success(mainProgram)
+        return Result.success(program)
     }
 
     private fun collect(program: MutableStatementSequence): Result<Unit> {
@@ -202,7 +178,9 @@ internal class CompilationUnitCollector private constructor(
             val statement = statementInstance.create()
 
             val unitNameArgument = statement.unit
-            require(unitNameArgument is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
+            if (unitNameArgument !is UnitLike.UnitName) {
+                throw SourceCompilationException(statementInstance.sourceOfOrDefault(IncludeStatement::unit), "Only unit names are allowed in include statements.")
+            }
             val unitName = unitNameArgument.name
 
             // Check if the unit is already resolved.

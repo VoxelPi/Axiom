@@ -17,6 +17,10 @@ public interface StatementSequence {
 
     public val anchors: Map<UUID, Anchor>
 
+    public fun mutableCopy(): MutableStatementSequence {
+        return MutableStatementSequence(globalScope, statements.toMutableList(), scopes.toMutableMap(), anchors.toMutableMap())
+    }
+
     public fun sortedScopes(): List<Scope> {
         val scopeChildCounter = scopes.keys.associateWith { 0 }.toMutableMap()
         for (scope in scopes.values) {

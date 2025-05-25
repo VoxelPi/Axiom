@@ -27,15 +27,6 @@ public class MutableStatementSequence(
         scopes[globalScope.uniqueId] = globalScope
     }
 
-    public fun copy(): MutableStatementSequence {
-        return MutableStatementSequence(
-            globalScope,
-            statements.toMutableList(),
-            scopes.toMutableMap(),
-            anchors.toMutableMap(),
-        )
-    }
-
     public fun transform(transformation: suspend SequenceScope<StatementInstance<*>>.(statement: StatementInstance<*>) -> Unit): Result<Unit> {
         val previousStatements = statements.toList()
         statements.clear()
@@ -125,7 +116,5 @@ public class MutableStatementSequence(
 
     public companion object {
         private val ANCHOR_PROTOTYPE = StatementPrototype.fromType(AnchorStatement::class).getOrThrow()
-        // private val SCOPE_START_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeStart::class).getOrThrow()
-        // private val SCOPE_END_ANCHOR_PROTOTYPE = StatementPrototype.fromType(ScopeAnchor.ScopeEnd::class).getOrThrow()
     }
 }

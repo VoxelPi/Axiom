@@ -30,11 +30,11 @@ public class Assembler(
         val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrElse {
             return Result.failure(it)
         }
-        val statements = unitCollector.reduce().getOrElse {
+        val program = unitCollector.reduce().getOrElse {
             return Result.failure(it)
         }
 
-        return Result.failure(CompilationException("Not yet implemented"))
+        return Result.failure(CompilationException("Not yet implemented (${program.statements.size})"))
     }
 
     public companion object {
