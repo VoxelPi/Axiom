@@ -7,11 +7,11 @@ import net.voxelpi.axiom.asm.util.isInstanceOfType
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.primaryConstructor
 
-public data class StatementInstance<T : Any>(
-    public val prototype: StatementPrototype<T>,
+public data class StatementInstance<S : Any>(
+    public val prototype: StatementPrototype<S>,
     public val scope: Scope,
     public val source: SourceLink,
-    public val parameterValues: Map<String, *>,
+    public val parameterValues: Map<String, Any?>,
     public val parameterSources: Map<String, SourceLink>,
 ) {
 
@@ -28,7 +28,7 @@ public data class StatementInstance<T : Any>(
         require(prototype.parameters.size == parameterValues.size) { "Invalid number of parameter." }
 
         // Try building the instance.
-        build()
+        create()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -57,7 +57,7 @@ public data class StatementInstance<T : Any>(
         return parameterSources[property.name] ?: source
     }
 
-    public fun build(): T {
+    public fun create(): S {
         prototype.type.objectInstance?.let {
             return it
         }
@@ -71,5 +71,59 @@ public data class StatementInstance<T : Any>(
             parameterValues[parameter.name!!]
         }
         return primaryConstructor.callBy(constructorValues)
+    }
+
+    public fun modifiedCopy(block: Builder<S>.() -> Unit): StatementInstance<S> {
+        val builder = Builder(prototype, scope, source, parameterValues.toMutableMap(), parameterSources.toMutableMap())
+        builder.block()
+        return builder.build()
+    }
+
+    public class Builder<S : Any> internal constructor(
+        public val prototype: StatementPrototype<S>,
+        public var scope: Scope,
+        public var source: SourceLink,
+        public val parameterValues: MutableMap<String, Any?>,
+        public val parameterSources: MutableMap<String, SourceLink>,
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        public operator fun <T> get(parameter: StatementParameter<T>): T {
+            return parameterValues[parameter.id] as T
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        public operator fun <T> get(property: KProperty<T>): T {
+            return parameterValues[property.name] as T
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        public operator fun <T> set(parameter: StatementParameter<T>, value: T) {
+            parameterValues[parameter.id] = value
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        public operator fun <T> set(property: KProperty<T>, value: T) {
+            parameterValues[property.name] = value
+        }
+
+        public fun sourceOf(parameter: StatementParameter<*>): SourceLink? {
+            return parameterSources[parameter.id]
+        }
+
+        public fun sourceOf(property: KProperty<*>): SourceLink? {
+            return parameterSources[property.name]
+        }
+
+        public fun sourceOfOrDefault(parameter: StatementParameter<*>): SourceLink {
+            return parameterSources[parameter.id] ?: source
+        }
+
+        public fun sourceOfOrDefault(property: KProperty<*>): SourceLink {
+            return parameterSources[property.name] ?: source
+        }
+
+        public fun build(): StatementInstance<S> {
+            return StatementInstance(prototype, scope, source, parameterValues, parameterSources)
+        }
     }
 }

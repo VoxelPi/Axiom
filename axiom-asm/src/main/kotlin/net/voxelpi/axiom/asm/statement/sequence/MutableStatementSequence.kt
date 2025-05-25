@@ -62,7 +62,7 @@ public class MutableStatementSequence(
         // Update scope of all variables.
         val scopeStack = ArrayDeque<Scope>(listOf(globalScope))
         transform { statementInstance ->
-            val statement = statementInstance.build()
+            val statement = statementInstance.create()
 
             when (statement) {
                 is ScopeStatement.Open.Named -> {

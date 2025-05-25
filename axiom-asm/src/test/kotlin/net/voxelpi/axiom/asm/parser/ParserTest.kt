@@ -38,7 +38,7 @@ class ParserTest {
         val globalScope = GlobalScope()
 
         val statementInstance = parser.parse(tokenizedStatement, globalScope).getOrThrow()
-        val statement = statementInstance.build()
+        val statement = statementInstance.create()
         assertIs<SimpleStatement>(statement)
         assertEquals(5, statement.number.value)
     }

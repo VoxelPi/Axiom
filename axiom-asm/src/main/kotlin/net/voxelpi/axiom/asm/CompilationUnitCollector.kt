@@ -4,7 +4,6 @@ import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.lexer.Lexer
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.scope.GlobalScope
-import net.voxelpi.axiom.asm.statement.StatementInstance
 import net.voxelpi.axiom.asm.statement.sequence.MutableStatementSequence
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.type.UnitLike
@@ -27,92 +26,125 @@ internal class CompilationUnitCollector private constructor(
     private val unitsStatements: MutableMap<String, MutableStatementSequence> = mutableMapOf(mainUnit.id to mainProgram)
 
     fun reduce(): Result<MutableStatementSequence> {
-        collect(mainProgram.copy()).getOrElse {
+        val program: MutableStatementSequence = mainProgram.copy()
+
+        collect(program).onFailure {
             return Result.failure(it)
         }
 
-        val program: MutableStatementSequence = mainProgram.copy()
+        var iStatement = 0
+        while (iStatement < program.statements.size) {
+            val statementInstance = program.statements[iStatement]
+            val statement = statementInstance.create()
+            if (statement !is IncludeStatement) {
+                ++iStatement
+                continue
+            }
 
-        program.transformType<IncludeStatement> { statementInstance ->
-            val includeStatement = statementInstance.build()
+            val unit = statement.unit
+            when (unit) {
+                is UnitLike.UnitName -> throw SourceCompilationException(statementInstance.source, "Encountered unresolved unit reference \"${unit.name}\" in include statement.")
+                is UnitLike.UnitReference -> {}
+            }
 
-            when (includeStatement) {
-                is IncludeStatement.Unit -> {
-                    val unitIdValue = includeStatement.unit
-                    val unitIdSource = statementInstance.sourceOfOrDefault(IncludeStatement::unit)
-                    require(unitIdValue is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
-                    val unitId = unitIdValue.name
-                    val unitStatements = unitsStatements[unitId] ?: throw SourceCompilationException(unitIdSource, "The unit $unitId was not found.")
-
-                    val unitScopes = unitStatements.scopes.mapValues { (_, scope) ->
-                        if (scope is GlobalScope) {
-                            // includeStatement.
-                        }
-                    }
-
-                    for (unitStatement in unitStatements.statements) {
-                        yield(
-                            StatementInstance(
-                                unitStatement.prototype,
-                                unitStatement.scope,
-                                unitStatement.source,
-                                unitStatement.parameterValues,
-                                unitStatement.parameterSources,
-                            )
-                        )
-                    }
-                }
+            when (statement) {
+                is IncludeStatement.Unit -> {}
                 is IncludeStatement.Scope.Direct -> {}
                 is IncludeStatement.Scope.WithAlias -> {}
             }
+
+            ++iStatement
         }
+
+        // program.transformType<IncludeStatement> { statementInstance ->
+        //     val includeStatement = statementInstance.create()
+        //
+        //     when (includeStatement) {
+        //         is IncludeStatement.Unit -> {
+        //             val unitIdValue = includeStatement.unit
+        //             val unitIdSource = statementInstance.sourceOfOrDefault(IncludeStatement::unit)
+        //             require(unitIdValue is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
+        //             val unitId = unitIdValue.name
+        //             val unitStatements = unitsStatements[unitId] ?: throw SourceCompilationException(unitIdSource, "The unit $unitId was not found.")
+        //
+        //             val unitScopes = unitStatements.scopes.mapValues { (_, scope) ->
+        //                 if (scope is GlobalScope) {
+        //                     scopes
+        //                 }
+        //             }
+        //
+        //             for (unitStatement in unitStatements.statements) {
+        //                 yield(
+        //                     StatementInstance(
+        //                         unitStatement.prototype,
+        //                         unitStatement.scope,
+        //                         unitStatement.source,
+        //                         unitStatement.parameterValues,
+        //                         unitStatement.parameterSources,
+        //                     )
+        //                 )
+        //             }
+        //         }
+        //         is IncludeStatement.Scope.Direct -> {}
+        //         is IncludeStatement.Scope.WithAlias -> {}
+        //     }
+        // }
         return Result.success(mainProgram)
     }
 
     private fun collect(program: MutableStatementSequence): Result<Unit> {
-        for (statementInstance in program.statements) {
-            val statement = statementInstance.build()
-            if (statement !is IncludeStatement) {
-                continue
-            }
+        program.transformType<IncludeStatement> { statementInstance ->
+            val statement = statementInstance.create()
 
             val unitNameArgument = statement.unit
             require(unitNameArgument is UnitLike.UnitName) { "Only unit names are allowed in include statements." }
             val unitName = unitNameArgument.name
 
             // Check if the unit is already resolved.
-            if (unitName in units) {
-                continue
-            }
-
-            // Resolve the unit.
-            val unitPaths = includeDirectories.mapNotNull {
-                val file = it / "${unitName}.${Assembler.AXIOM_ASM_EXTENSION}"
-                if (file.exists() && file.isRegularFile()) {
-                    file
-                } else {
-                    null
+            val unit = if (unitName in units) {
+                units[unitName]!!
+            } else {
+                // Resolve the unit.
+                val unitPaths = includeDirectories.mapNotNull {
+                    val file = it / "${unitName}.${Assembler.AXIOM_ASM_EXTENSION}"
+                    if (file.exists() && file.isRegularFile()) {
+                        file
+                    } else {
+                        null
+                    }
                 }
-            }
-            if (unitPaths.isEmpty()) {
-                return Result.failure(IllegalArgumentException("The unit $unitName was not found in any of the include directories."))
-            }
-            if (unitPaths.size > 1) {
-                return Result.failure(IllegalArgumentException("The unit $unitName was found in multiple include directories."))
-            }
-            val unitPath = unitPaths.first()
+                if (unitPaths.isEmpty()) {
+                    throw IllegalArgumentException("The unit $unitName was not found in any of the include directories.")
+                }
+                if (unitPaths.size > 1) {
+                    throw IllegalArgumentException("The unit $unitName was found in multiple include <= directories.")
+                }
+                val unitPath = unitPaths.first()
 
-            val unit = CompilationUnit(unitName, unitPath.toFile().readText())
-            units[unit.id] = unit
+                val unit = CompilationUnit(unitName, unitPath.toFile().readText())
+                units[unit.id] = unit
 
-            // Prepare the statements from the unit.
-            val unitStatements = prepareUnit(unit, parser).getOrElse {
-                return Result.failure(it)
+                // Prepare the statements from the unit.
+                val unitStatements = prepareUnit(unit, parser).getOrElse {
+                    throw SourceCompilationException(statementInstance.source, "Failed to prepare the unit $unitName.", it)
+                }
+                unitsStatements[unit.id] = unitStatements
+
+                // Collect the unit.
+                collect(unitStatements)
+
+                // Return the unit
+                unit
             }
-            unitsStatements[unit.id] = unitStatements
 
-            // Collect the unit.
-            collect(unitStatements)
+            // Yield the include statement, with the unit name replaced to a unit reference.
+            yield(
+                statementInstance.modifiedCopy {
+                    this[IncludeStatement::unit] = UnitLike.UnitReference(unit)
+                }
+            )
+        }.onFailure {
+            return Result.failure(it)
         }
 
         return Result.success(Unit)

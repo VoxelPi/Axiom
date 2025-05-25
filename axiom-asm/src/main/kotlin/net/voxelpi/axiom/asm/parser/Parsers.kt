@@ -1,7 +1,7 @@
 package net.voxelpi.axiom.asm.parser
 
-import net.voxelpi.axiom.asm.statement.types.IfStatement
 import net.voxelpi.axiom.asm.statement.types.ConditionalStatement
+import net.voxelpi.axiom.asm.statement.types.IfStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
 import net.voxelpi.axiom.asm.statement.types.LabelStatement
