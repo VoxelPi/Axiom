@@ -6,6 +6,7 @@ import net.voxelpi.axiom.asm.statement.types.InstructionStatement
 import net.voxelpi.axiom.asm.statement.types.LabelStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeJumpStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeStatement
+import net.voxelpi.axiom.asm.statement.types.VariableStatement
 import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ScopeLike
@@ -58,6 +59,14 @@ public object Parsers {
 
         transformation<LabelStatement.Definition>("label") {
             labelArgument(LabelStatement.Definition::name)
+        }
+
+        // Variables
+
+        transformation<VariableStatement.Definition>("variable") {
+            variableArgument(VariableStatement.Definition::name)
+            literal(":=")
+            valueLikeArgument(VariableStatement.Definition::value)
         }
 
         // Instruction statements. These are generated twice, once with and once without the condition part.
