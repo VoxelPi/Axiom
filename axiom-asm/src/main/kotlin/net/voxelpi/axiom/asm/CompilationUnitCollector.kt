@@ -48,6 +48,9 @@ internal class CompilationUnitCollector private constructor(
                 continue
             }
 
+            // Delete original include statement.
+            program.statements.removeAt(iStatement)
+
             val unit = statement.unit
             when (unit) {
                 is UnitLike.UnitName -> throw SourceCompilationException(statementInstance.source, "Encountered unresolved unit reference \"${unit.name}\" in include statement.")
@@ -128,6 +131,9 @@ internal class CompilationUnitCollector private constructor(
                                 }
                                 is ScopeLike.ScopeReference -> {
                                     ScopeLike.ScopeReference(program.scopes[value.scope.uniqueId]!!)
+                                }
+                                else -> {
+                                    value
                                 }
                             }
                         }

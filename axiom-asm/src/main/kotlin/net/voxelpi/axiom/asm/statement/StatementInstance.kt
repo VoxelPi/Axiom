@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.statement
 
 import net.voxelpi.axiom.asm.exception.ParseException
+import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.util.isInstanceOfType
@@ -18,10 +19,14 @@ public data class StatementInstance<S : Any>(
     init {
         // Validate parameter types.
         for (parameter in prototype.parameters.values) {
-            require(parameter.id in parameterValues) { "No value specified for parameter '${parameter.id}'." }
+            if (parameter.id !in parameterValues) {
+                throw SourceCompilationException(source, "No value specified for parameter '${parameter.id}'.")
+            }
 
             val parameterValue = parameterValues[parameter.id]
-            require(isInstanceOfType(parameterValue, parameter.type)) { "Invalid parameter value '$parameterValue' for parameter '${parameter.id}' of type ${parameter.type}" }
+            if (!isInstanceOfType(parameterValue, parameter.type)) {
+                throw SourceCompilationException(source, "Invalid parameter value '$parameterValue' for parameter '${parameter.id}' of type ${parameter.type}.")
+            }
         }
 
         // Validate parameter values
