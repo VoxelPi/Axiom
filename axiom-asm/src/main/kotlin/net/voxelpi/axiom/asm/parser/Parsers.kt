@@ -195,6 +195,41 @@ public object Parsers {
                 }
             }
 
+            val noInputWithOutputFunctions = mapOf(
+                "read" to Operation.IO_READ,
+                "poll" to Operation.IO_POLL,
+            )
+
+            for ((operator, operation) in noInputWithOutputFunctions) {
+                transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
+                    registerLikeArgument(InstructionStatement.WithOutput::output)
+                    literal("=")
+                    literal(operator)
+
+                    generateCondition(withConditionPart)
+
+                    parameter(InstructionStatement::operation) { operation }
+                    parameter(InstructionStatement::inputA) { IntegerValue(0) }
+                    parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                }
+            }
+
+            val aInputNoOutputFunctions = mapOf(
+                "write" to Operation.IO_WRITE,
+            )
+
+            for ((operator, operation) in aInputNoOutputFunctions) {
+                transformation<InstructionStatement.WithoutOutput>("${operator}_${transformationSuffix}") {
+                    literal(operator)
+                    valueLikeArgument(InstructionStatement::inputA)
+
+                    generateCondition(withConditionPart)
+
+                    parameter(InstructionStatement::operation) { operation }
+                    parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                }
+            }
+
             transformation<InstructionStatement.WithOutput>("increment_${transformationSuffix}") {
                 literal("inc")
                 val register = registerLikeArgument(InstructionStatement.WithOutput::output)
@@ -215,6 +250,40 @@ public object Parsers {
                 parameter(InstructionStatement::operation) { Operation.SUBTRACT }
                 parameter(InstructionStatement::inputA) { this[register] }
                 parameter(InstructionStatement::inputB) { IntegerValue(1) }
+            }
+
+            transformation<InstructionStatement.WithOutput>("call_${transformationSuffix}") {
+                literal("call")
+                valueLikeArgument(InstructionStatement::inputA)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.CALL }
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
+            }
+
+            transformation<InstructionStatement.WithOutput>("call_2_${transformationSuffix}") {
+                literal("call")
+                valueLikeArgument(InstructionStatement::inputA)
+                literal(",")
+                valueLikeArgument(InstructionStatement::inputB)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.CALL }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
+            }
+
+            transformation<InstructionStatement.WithOutput>("return_${transformationSuffix}") {
+                literal("return")
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.RETURN }
+                parameter(InstructionStatement::inputA) { IntegerValue(0) }
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
             }
         }
     }
