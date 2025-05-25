@@ -26,10 +26,6 @@ internal class CompilationUnitCollector private constructor(
     private val units: MutableMap<String, CompilationUnit> = mutableMapOf(mainUnit.id to mainUnit)
     private val unitsStatements: MutableMap<String, MutableStatementSequence> = mutableMapOf(mainUnit.id to mainProgram)
 
-    init {
-        collect(mainProgram)
-    }
-
     fun reduce(): Result<MutableStatementSequence> {
         collect(mainProgram.copy()).getOrElse {
             return Result.failure(it)
@@ -91,7 +87,7 @@ internal class CompilationUnitCollector private constructor(
 
             // Resolve the unit.
             val unitPaths = includeDirectories.mapNotNull {
-                val file = it / "${unitName}.asm"
+                val file = it / "${unitName}.${Assembler.AXIOM_ASM_EXTENSION}"
                 if (file.exists() && file.isRegularFile()) {
                     file
                 } else {

@@ -36,4 +36,8 @@ public class Assembler(
 
         return Result.failure(CompilationException("Not yet implemented"))
     }
+
+    public companion object {
+        public const val AXIOM_ASM_EXTENSION: String = "axm"
+    }
 }

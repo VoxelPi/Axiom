@@ -36,7 +36,7 @@ public class MutableStatementSequence(
 
         try {
             val newStatements = sequence {
-                for (previousStatement in statements) {
+                for (previousStatement in previousStatements) {
                     this.transformation(previousStatement)
                 }
             }.toList()
