@@ -26,8 +26,6 @@ fun main(args: Array<String>) {
         val output: String? by option(ArgType.String, "output", "o", description = "The output file.")
 
         override fun execute() {
-            val assembler = Assembler(emptyList())
-
             val inputFilePath = Path(input).absolute().normalize()
             if (!inputFilePath.exists() || !inputFilePath.isRegularFile()) {
                 println("The input file $inputFilePath does not exist.")
@@ -36,6 +34,8 @@ fun main(args: Array<String>) {
 
             val outputFilePath = output?.let { Path(it) } ?: inputFilePath.parent.resolve(inputFilePath.nameWithoutExtension + ".bin")
             println("Assembling \"${inputFilePath.normalize().absolutePathString()}\" to \"${outputFilePath.normalize().absolutePathString()}\"")
+
+            val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
 
             val program = assembler.assemble(inputFilePath).getOrElse { exception ->
                 when (exception) {
