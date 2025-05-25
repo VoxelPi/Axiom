@@ -88,7 +88,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
 
         override fun parse(token: Token): Result<ParsedValue<ScopeLike.ScopeName>> {
             if (token !is Token.Label) {
-                return Result.failure(ParseException(token.source, "Expected a label token but got ${token::class.simpleName}"))
+                return Result.failure(ParseException(token.source, "Expected a scope token but got ${token::class.simpleName}"))
             }
             return Result.success(ParsedValue.create(token.source, ScopeLike.ScopeName(token.value)))
         }

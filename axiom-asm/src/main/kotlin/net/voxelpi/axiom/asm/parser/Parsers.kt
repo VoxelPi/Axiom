@@ -3,6 +3,7 @@ package net.voxelpi.axiom.asm.parser
 import net.voxelpi.axiom.asm.statement.types.ConditionalStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
+import net.voxelpi.axiom.asm.statement.types.LabelStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeJumpStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeStatement
 import net.voxelpi.axiom.asm.type.IntegerValue
@@ -51,6 +52,12 @@ public object Parsers {
 
         transformation<ScopeStatement.Close>("scope/close") {
             curlyBracketsClose()
+        }
+
+        // Labels
+
+        transformation<LabelStatement.Definition>("label") {
+            labelArgument(LabelStatement.Definition::name)
         }
 
         // Instruction statements. These are generated twice, once with and once without the condition part.

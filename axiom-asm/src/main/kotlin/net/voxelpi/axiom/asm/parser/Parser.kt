@@ -12,12 +12,12 @@ public class Parser(
 ) {
 
     public fun parse(statement: TokenizedStatement, scope: Scope): Result<StatementInstance<*>> {
-        for (rule in transformations) {
-            if (!rule.isApplicable(statement)) {
+        for (transformation in transformations) {
+            if (!transformation.isApplicable(statement)) {
                 continue
             }
 
-            val statement = rule.apply(statement, scope)
+            val statement = transformation.apply(statement, scope)
             return statement
         }
 

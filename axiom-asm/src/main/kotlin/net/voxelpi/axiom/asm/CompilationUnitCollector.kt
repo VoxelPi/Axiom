@@ -13,16 +13,15 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 
-internal class CompilationUnitCollector(
+internal class CompilationUnitCollector private constructor(
     val mainUnit: CompilationUnit,
+    val mainProgram: MutableStatementSequence,
     val parser: Parser,
     val includeDirectories: Collection<Path>,
 ) {
     val lexer: Lexer = Lexer()
 
     val globalScope: GlobalScope = GlobalScope()
-
-    val mainProgram: MutableStatementSequence = prepareUnit(mainUnit).getOrThrow()
 
     private val units: MutableMap<String, CompilationUnit> = mutableMapOf(mainUnit.id to mainUnit)
     private val unitsStatements: MutableMap<String, MutableStatementSequence> = mutableMapOf(mainUnit.id to mainProgram)
@@ -111,7 +110,7 @@ internal class CompilationUnitCollector(
             units[unit.id] = unit
 
             // Prepare the statements from the unit.
-            val unitStatements = prepareUnit(unit).getOrElse {
+            val unitStatements = prepareUnit(unit, parser).getOrElse {
                 return Result.failure(it)
             }
             unitsStatements[unit.id] = unitStatements
@@ -123,24 +122,38 @@ internal class CompilationUnitCollector(
         return Result.success(Unit)
     }
 
-    private fun prepareUnit(unit: CompilationUnit): Result<MutableStatementSequence> {
-        // Tokenize input text.
-        val lexer = Lexer()
-        val tokenizedStatements = lexer.tokenize(unit)
+    companion object {
 
-        val unitGlobalScope = GlobalScope()
+        private fun prepareUnit(unit: CompilationUnit, parser: Parser): Result<MutableStatementSequence> {
+            // Tokenize input text.
+            val lexer = Lexer()
+            val tokenizedStatements = lexer.tokenize(unit)
 
-        // Parse tokenized statements
-        val statements = MutableStatementSequence(
-            unitGlobalScope,
-            tokenizedStatements.map {
-                parser.parse(it, unitGlobalScope).getOrElse { exception -> return Result.failure(exception) }
-            },
-        )
+            val unitGlobalScope = GlobalScope()
 
-        // Build scopes.
-        statements.buildScopes()
+            // Parse tokenized statements
+            val statements = MutableStatementSequence(
+                unitGlobalScope,
+                tokenizedStatements.map {
+                    parser.parse(it, unitGlobalScope).getOrElse { exception -> return Result.failure(exception) }
+                },
+            )
 
-        return Result.success(statements)
+            // Build scopes.
+            statements.buildScopes()
+
+            return Result.success(statements)
+        }
+
+        fun create(
+            mainUnit: CompilationUnit,
+            parser: Parser,
+            includeDirectories: Collection<Path>,
+        ): Result<CompilationUnitCollector> {
+            val mainProgram: MutableStatementSequence = prepareUnit(mainUnit, parser).getOrElse {
+                return Result.failure(it)
+            }
+            return Result.success(CompilationUnitCollector(mainUnit, mainProgram, parser, includeDirectories))
+        }
     }
 }

@@ -42,7 +42,16 @@ public class ParserTransformation<T : Any> internal constructor(
             return false
         }
 
-        return segments.zip(tokens).all { (part, token) -> part.isApplicable(token) }
+        val includeArgumentTypes = segments
+            .filterIsInstance<ParserTransformationLiteral>()
+            .none()
+
+        return segments.zip(tokens).all { (part, token) ->
+            if (includeArgumentTypes && part is ParserTransformationArgument<*> && !part.isValid(token)) {
+                return false
+            }
+            part.isApplicable(token)
+        }
     }
 
     /**

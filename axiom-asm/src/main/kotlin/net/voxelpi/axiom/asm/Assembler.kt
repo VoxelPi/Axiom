@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm
 
+import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.parser.Parsers
 import net.voxelpi.axiom.instruction.Program
@@ -21,16 +22,18 @@ public class Assembler(
             return Result.failure(IllegalArgumentException("The path $path is not a regular file."))
         }
 
-        val compilationUnit = CompilationUnit(path.absolutePathString(), path.toFile().readText())
+        val compilationUnit = CompilationUnit(path.normalize().absolutePathString(), path.toFile().readText())
         return assemble(compilationUnit)
     }
 
     public fun assemble(unit: CompilationUnit, parser: Parser = Parsers.AXIOM_ASM): Result<Program> {
-        val unitCollector = CompilationUnitCollector(unit, parser, includeDirectories)
+        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrElse {
+            return Result.failure(it)
+        }
         val statements = unitCollector.reduce().getOrElse {
             return Result.failure(it)
         }
 
-        TODO()
+        return Result.failure(CompilationException("Not yet implemented"))
     }
 }
