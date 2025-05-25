@@ -15,6 +15,43 @@ public sealed class LocalScope(
 
     public val endAnchor: ScopeAnchor.ScopeEnd = ScopeAnchor.ScopeEnd(scopeEndAnchorUniqueId, this)
 
+    override fun isLabelDefined(name: String): Boolean {
+        return labels.containsKey(name) || parent.isLabelDefined(name) || isLabelDefinedByChild(name)
+    }
+
+    override fun isVariableDefined(name: String): Boolean {
+        return variables.containsKey(name) || parent.isVariableDefined(name)
+    }
+
+    override fun findLabel(name: String): Pair<Label, Scope>? {
+        // Check the current scope.
+        labels[name]?.let { return it to this }
+
+        // Check parents downwards.
+        var parent: Scope? = this
+        while (parent != null) {
+            parent.labels[name]?.let { return it to parent }
+            parent = if (parent is LocalScope) parent.parent else null
+        }
+
+        // Check children upwards.
+        return findLabelInChild(name)
+    }
+
+    override fun findVariable(name: String): Pair<Variable, Scope>? {
+        // Check the current scope.
+        variables[name]?.let { return it to this }
+
+        // Check parents downwards.
+        var parent: Scope? = this
+        while (parent != null) {
+            parent.variables[name]?.let { return it to parent }
+            parent = if (parent is LocalScope) parent.parent else null
+        }
+
+        return null
+    }
+
     public class Named(
         parent: Scope,
         override val scopes: MutableList<Scope>,

@@ -12,4 +12,23 @@ public class GlobalScope(
 
     // The global scope has a unique id of 0.
     override val uniqueId: UUID = UUID(0, 0)
+
+    override fun isLabelDefined(name: String): Boolean {
+        return labels.containsKey(name) || isLabelDefinedByChild(name)
+    }
+
+    override fun isVariableDefined(name: String): Boolean {
+        return variables.containsKey(name)
+    }
+
+    override fun findLabel(name: String): Pair<Label, Scope>? {
+        if (labels.containsKey(name)) {
+            return labels[name]!! to this
+        }
+        return findLabelInChild(name)
+    }
+
+    override fun findVariable(name: String): Pair<Variable, Scope>? {
+        return variables[name]?.let { it to this }
+    }
 }

@@ -4,6 +4,7 @@ import net.voxelpi.axiom.ImmediateValue
 import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.ValueProvider
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.parser.Parsers
@@ -51,12 +52,30 @@ public class Assembler(
 
         program.transformType<VariableStatement.Definition> { statementInstance ->
             val statement = statementInstance.create()
-            statementInstance.scope.defineVariable(statement.name.name, statement.value)
-        }
+            statementInstance.scope.defineVariable(statement.name.name, statement.value).getOrElse {
+                throw SourceCompilationException(statementInstance.source, it.message ?: "")
+            }
+        }.getOrElse { return Result.failure(it) }
         program.transformType<LabelStatement.Definition> { statementInstance ->
             val statement = statementInstance.create()
-            val label = statementInstance.scope.defineLabel(statement.name.name)
+            val label = statementInstance.scope.defineLabel(statement.name.name).getOrElse {
+                throw SourceCompilationException(statementInstance.source, it.message ?: "")
+            }
+            program.anchors[label.uniqueId] = label
+
+            // Create the corresponding anchor statement.
             yield(ANCHOR_STATEMENT_PROTOTYPE.createInstance(AnchorStatement(label), statementInstance.scope, statementInstance.source))
+        }.getOrElse { return Result.failure(it) }
+
+        // Define the start label if it is not yet defined
+        if (!program.globalScope.isLabelDefined(START_LABEL_NAME)) {
+            val label = program.globalScope.defineLabel(START_LABEL_NAME).getOrElse {
+                return Result.failure(CompilationException("Unable to define implicit start label. ${it.message}"))
+            }
+            program.anchors[label.uniqueId] = label
+
+            // Create the corresponding anchor statement.
+            program.statements.add(0, ANCHOR_STATEMENT_PROTOTYPE.createInstance(AnchorStatement(label), program.globalScope, SourceLink.Generated("@start", "implicit start label")))
         }
 
         // Calculate anchors indices.
@@ -157,6 +176,8 @@ public class Assembler(
 
     public companion object {
         public const val AXIOM_ASM_EXTENSION: String = "axm"
+
+        public const val START_LABEL_NAME: String = "global:start"
 
         private val ANCHOR_STATEMENT_PROTOTYPE = StatementPrototype.fromType<AnchorStatement>().getOrThrow()
     }
