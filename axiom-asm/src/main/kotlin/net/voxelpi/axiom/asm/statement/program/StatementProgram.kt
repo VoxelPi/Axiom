@@ -1,4 +1,4 @@
-package net.voxelpi.axiom.asm.statement.sequence
+package net.voxelpi.axiom.asm.statement.program
 
 import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.scope.GlobalScope
@@ -7,7 +7,7 @@ import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
 import java.util.UUID
 
-public interface StatementSequence {
+public interface StatementProgram {
 
     public val globalScope: GlobalScope
 
@@ -17,8 +17,8 @@ public interface StatementSequence {
 
     public val anchors: Map<UUID, Anchor>
 
-    public fun mutableCopy(): MutableStatementSequence {
-        return MutableStatementSequence(globalScope, statements.toMutableList(), scopes.toMutableMap(), anchors.toMutableMap())
+    public fun mutableCopy(): MutableStatementProgram {
+        return MutableStatementProgram(globalScope, statements.toMutableList(), scopes.toMutableMap(), anchors.toMutableMap())
     }
 
     public fun sortedScopes(): List<Scope> {

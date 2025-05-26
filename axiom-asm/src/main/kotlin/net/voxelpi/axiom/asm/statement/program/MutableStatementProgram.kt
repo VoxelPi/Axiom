@@ -1,4 +1,4 @@
-package net.voxelpi.axiom.asm.statement.sequence
+package net.voxelpi.axiom.asm.statement.program
 
 import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.scope.GlobalScope
@@ -11,12 +11,12 @@ import net.voxelpi.axiom.asm.statement.types.ScopeStatement
 import java.util.UUID
 import kotlin.reflect.full.isSubclassOf
 
-public class MutableStatementSequence(
+public class MutableStatementProgram(
     override val globalScope: GlobalScope,
     override val statements: MutableList<StatementInstance<*>>,
     override val scopes: MutableMap<UUID, Scope> = mutableMapOf(),
     override val anchors: MutableMap<UUID, Anchor> = mutableMapOf(),
-) : StatementSequence {
+) : StatementProgram {
 
     public constructor(
         globalScope: GlobalScope,

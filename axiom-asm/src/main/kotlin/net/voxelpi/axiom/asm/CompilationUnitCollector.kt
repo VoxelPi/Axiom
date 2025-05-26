@@ -9,8 +9,8 @@ import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
-import net.voxelpi.axiom.asm.statement.sequence.MutableStatementSequence
-import net.voxelpi.axiom.asm.statement.sequence.StatementSequence
+import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
+import net.voxelpi.axiom.asm.statement.program.StatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.IncludeStatement
 import net.voxelpi.axiom.asm.type.ScopeLike
@@ -23,7 +23,7 @@ import kotlin.io.path.isRegularFile
 
 internal class CompilationUnitCollector private constructor(
     val mainUnit: CompilationUnit,
-    val mainProgram: MutableStatementSequence,
+    val mainProgram: MutableStatementProgram,
     val parser: Parser,
     val includeDirectories: Collection<Path>,
 ) {
@@ -32,9 +32,9 @@ internal class CompilationUnitCollector private constructor(
     val globalScope: GlobalScope = GlobalScope()
 
     private val units: MutableMap<String, CompilationUnit> = mutableMapOf(mainUnit.id to mainUnit)
-    private val unitsStatements: MutableMap<String, MutableStatementSequence> = mutableMapOf(mainUnit.id to mainProgram)
+    private val unitsStatements: MutableMap<String, MutableStatementProgram> = mutableMapOf(mainUnit.id to mainProgram)
 
-    fun reduce(): Result<MutableStatementSequence> {
+    fun reduce(): Result<MutableStatementProgram> {
         collect(mainProgram).onFailure {
             return Result.failure(it)
         }
@@ -42,8 +42,8 @@ internal class CompilationUnitCollector private constructor(
         return reduceProgram(mainProgram, setOf(mainUnit.id))
     }
 
-    private fun reduceProgram(inputProgram: StatementSequence, unitTrace: Set<String>): Result<MutableStatementSequence> {
-        val program: MutableStatementSequence = inputProgram.mutableCopy()
+    private fun reduceProgram(inputProgram: StatementProgram, unitTrace: Set<String>): Result<MutableStatementProgram> {
+        val program: MutableStatementProgram = inputProgram.mutableCopy()
 
         var iStatement = 0
         while (iStatement < program.statements.size) {
@@ -314,7 +314,7 @@ internal class CompilationUnitCollector private constructor(
         return Result.success(program)
     }
 
-    private fun collect(program: MutableStatementSequence): Result<Unit> {
+    private fun collect(program: MutableStatementProgram): Result<Unit> {
         program.transformType<IncludeStatement> { statementInstance ->
             val statement = statementInstance.create()
 
@@ -376,7 +376,7 @@ internal class CompilationUnitCollector private constructor(
 
     companion object {
 
-        private fun prepareUnit(unit: CompilationUnit, parser: Parser): Result<MutableStatementSequence> {
+        private fun prepareUnit(unit: CompilationUnit, parser: Parser): Result<MutableStatementProgram> {
             // Tokenize input text.
             val lexer = Lexer()
             val tokenizedStatements = lexer.tokenize(unit)
@@ -384,7 +384,7 @@ internal class CompilationUnitCollector private constructor(
             val unitGlobalScope = GlobalScope()
 
             // Parse tokenized statements
-            val statements = MutableStatementSequence(
+            val statements = MutableStatementProgram(
                 unitGlobalScope,
                 tokenizedStatements.map {
                     parser.parse(it, unitGlobalScope).getOrElse { exception -> return Result.failure(exception) }
@@ -402,7 +402,7 @@ internal class CompilationUnitCollector private constructor(
             parser: Parser,
             includeDirectories: Collection<Path>,
         ): Result<CompilationUnitCollector> {
-            val mainProgram: MutableStatementSequence = prepareUnit(mainUnit, parser).getOrElse {
+            val mainProgram: MutableStatementProgram = prepareUnit(mainUnit, parser).getOrElse {
                 return Result.failure(it)
             }
             return Result.success(CompilationUnitCollector(mainUnit, mainProgram, parser, includeDirectories))

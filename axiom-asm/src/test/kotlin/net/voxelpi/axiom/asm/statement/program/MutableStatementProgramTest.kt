@@ -1,4 +1,4 @@
-package net.voxelpi.axiom.asm.statement.sequence
+package net.voxelpi.axiom.asm.statement.program
 
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-class MutableStatementSequenceTest {
+class MutableStatementProgramTest {
 
     @Test
     fun `test scope sorting`() {
         val globalScope = GlobalScope()
-        val program = MutableStatementSequence(globalScope, emptyList())
+        val program = MutableStatementProgram(globalScope, emptyList())
 
         val scope1 = globalScope.createScope("scope1")
         val scope11 = scope1.createScope("scope11")
@@ -55,7 +55,7 @@ class MutableStatementSequenceTest {
     @Test
     fun `test randomized scope sorting`() {
         val globalScope = GlobalScope()
-        val program = MutableStatementSequence(globalScope, emptyList())
+        val program = MutableStatementProgram(globalScope, emptyList())
 
         // Register 100 scopes with random parent scopes.
         repeat(1000) { index ->

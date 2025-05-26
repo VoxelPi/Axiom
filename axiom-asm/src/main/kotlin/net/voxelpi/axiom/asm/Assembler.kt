@@ -108,7 +108,7 @@ public class Assembler(
                     statement.output,
                     statementInstance.sourceOfOrDefault(InstructionStatement.WithOutput::output),
                     architecture,
-                ).getOrElse {  return Result.failure(it) }
+                ).getOrElse { return Result.failure(it) }
             } else {
                 architecture.registers().first()
             }
