@@ -4,16 +4,18 @@ import net.voxelpi.axiom.ImmediateValue
 import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.ValueProvider
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.parser.Parsers
+import net.voxelpi.axiom.asm.pipeline.step.ApplyAnchorIndicesStep
+import net.voxelpi.axiom.asm.pipeline.step.DefineImplicitStartLabelStep
+import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
+import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.asm.statement.StatementPrototype
+import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
+import net.voxelpi.axiom.asm.statement.program.StatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
-import net.voxelpi.axiom.asm.statement.types.LabelStatement
-import net.voxelpi.axiom.asm.statement.types.VariableStatement
 import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ValueLike
@@ -42,60 +44,55 @@ public class Assembler(
         return assemble(compilationUnit, architecture)
     }
 
-    public fun assemble(unit: CompilationUnit, architecture: Architecture<*>, parser: Parser = Parsers.AXIOM_ASM): Result<Program> {
-        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrElse {
-            return Result.failure(it)
-        }
-        val program = unitCollector.reduce().getOrElse {
-            return Result.failure(it)
-        }
+    public fun assemble(unit: CompilationUnit, architecture: Architecture<*>, parser: Parser = Parsers.AXIOM_ASM): Result<Program> = runCatching {
+        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
+        val program = unitCollector.reduce().getOrThrow()
 
-        program.transformType<VariableStatement.Definition> { statementInstance ->
-            val statement = statementInstance.create()
-            statementInstance.scope.defineVariable(statement.name.name, statement.value).getOrElse {
-                throw SourceCompilationException(statementInstance.source, it.message ?: "")
-            }
-        }.getOrElse { return Result.failure(it) }
-        program.transformType<LabelStatement.Definition> { statementInstance ->
-            val statement = statementInstance.create()
-            val label = statementInstance.scope.defineLabel(statement.name.name).getOrElse {
-                throw SourceCompilationException(statementInstance.source, it.message ?: "")
-            }
-            program.anchors[label.uniqueId] = label
+        // Define variables.
+        DefineVariablesStep.transform(program).getOrThrow()
 
-            // Create the corresponding anchor statement.
-            yield(ANCHOR_STATEMENT_PROTOTYPE.createInstance(AnchorStatement(label), statementInstance.scope, statementInstance.source))
-        }.getOrElse { return Result.failure(it) }
+        // Define labels.
+        DefineLabelsStep.transform(program).getOrThrow()
+        DefineImplicitStartLabelStep.transform(program).getOrThrow()
 
-        // Define the start label if it is not yet defined
-        if (!program.globalScope.isLabelDefined(START_LABEL_NAME)) {
-            val label = program.globalScope.defineLabel(START_LABEL_NAME).getOrElse {
-                return Result.failure(CompilationException("Unable to define implicit start label. ${it.message}"))
-            }
-            program.anchors[label.uniqueId] = label
+        // TODO: Replace register names
 
-            // Create the corresponding anchor statement.
-            program.statements.add(0, ANCHOR_STATEMENT_PROTOTYPE.createInstance(AnchorStatement(label), program.globalScope, SourceLink.Generated("@start", "implicit start label")))
-        }
+        // TODO: Resolve variables
 
-        // Calculate anchors indices.
+        // TODO: Insert start jump
+
+        // Generate anchors indices and use them for all anchor reference parameters.
+        val anchorIndices = generateAnchorIndices(program).getOrThrow()
+        ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
+
+        val instructions = generateInstructions(program, architecture).getOrThrow()
+        val compiledProgram = Program(instructions)
+        return Result.success(compiledProgram)
+    }
+
+    private fun generateAnchorIndices(program: MutableStatementProgram): Result<Map<UUID, Int>> {
         val anchorIndices = mutableMapOf<UUID, Int>()
-        var iStatement = 0
-        for (statementInstance in program.statements) {
+        var iInstruction = 0
+        program.transform { statementInstance ->
             val statement = statementInstance.create()
             when (statement) {
                 is InstructionStatement -> {
-                    ++iStatement
+                    yield(statementInstance)
+                    ++iInstruction
                 }
                 is AnchorStatement -> {
-                    anchorIndices[statement.anchor.uniqueId] = iStatement
+                    anchorIndices[statement.anchor.uniqueId] = iInstruction
+                    // The anchor statement is removed, as it is already resolved and therefore no longer required.
                 }
                 else -> {
                     throw SourceCompilationException(statementInstance.source, "Unresolved statement type ${statementInstance.prototype.id}")
                 }
             }
-        }
+        }.onFailure { return Result.failure(it) }
+        return Result.success(anchorIndices)
+    }
 
+    private fun generateInstructions(program: StatementProgram, architecture: Architecture<*>): Result<List<Instruction>> {
         val instructions = mutableListOf<Instruction>()
         for (statementInstance in program.statements) {
             val statement = statementInstance.create()
@@ -138,9 +135,7 @@ public class Assembler(
                 inputB,
             )
         }
-
-        val compiledProgram = Program(instructions)
-        return Result.success(compiledProgram)
+        return Result.success(instructions)
     }
 
     private fun parseInstructionRegister(value: ValueLike, source: SourceLink, architecture: Architecture<*>): Result<Register> {
@@ -178,7 +173,5 @@ public class Assembler(
         public const val AXIOM_ASM_EXTENSION: String = "axm"
 
         public const val START_LABEL_NAME: String = "global:start"
-
-        private val ANCHOR_STATEMENT_PROTOTYPE = StatementPrototype.fromType<AnchorStatement>().getOrThrow()
     }
 }
