@@ -65,6 +65,7 @@ fun main(args: Array<String>) {
                     }
                     return@measureTimeMillis
                 }
+                println(program )
             }
 
             println("Compilation took ${compilationTime}ms.")
