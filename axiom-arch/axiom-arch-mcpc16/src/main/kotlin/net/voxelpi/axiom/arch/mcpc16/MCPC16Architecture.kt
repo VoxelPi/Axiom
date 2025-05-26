@@ -6,8 +6,6 @@ import net.voxelpi.axiom.instruction.Instruction
 
 public object MCPC16Architecture : Architecture16("mcpc16") {
 
-    override val programCounter: Register = Register("PC")
-
     override fun createRegisters(): Collection<Register> {
         val registers = mutableListOf<Register>()
         registers.add(programCounter)
@@ -15,6 +13,10 @@ public object MCPC16Architecture : Architecture16("mcpc16") {
             registers.add(Register("R$i"))
         }
         return registers
+    }
+
+    override fun createProgramCounter(): Register {
+        return Register("PC")
     }
 
     override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {

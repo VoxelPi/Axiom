@@ -155,7 +155,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
         override fun parse(token: Token): Result<ParsedValue<RegisterLike>> {
             val value: RegisterLike = when (token) {
                 is Token.Variable -> VariableLike.VariableName(token.value)
-                is Token.Text -> RegisterLike.UnparsedRegister(token.value)
+                is Token.Text -> RegisterLike.RegisterName(token.value)
                 else -> return Result.failure(
                     ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
                 )

@@ -11,6 +11,7 @@ import net.voxelpi.axiom.asm.pipeline.step.ApplyAnchorIndicesStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineImplicitStartLabelStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.program.StatementProgram
@@ -55,7 +56,7 @@ public class Assembler(
         DefineLabelsStep.transform(program).getOrThrow()
         DefineImplicitStartLabelStep.transform(program).getOrThrow()
 
-        // TODO: Replace register names
+        ReplaceRegisterNamesStep(architecture).transform(program).getOrThrow()
 
         // TODO: Resolve variables
 

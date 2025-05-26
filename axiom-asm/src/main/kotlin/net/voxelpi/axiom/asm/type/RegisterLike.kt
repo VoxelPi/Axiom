@@ -4,8 +4,8 @@ import net.voxelpi.axiom.Register
 
 public sealed interface RegisterLike : ValueLike {
 
-    public data class UnparsedRegister(
-        public val value: String,
+    public data class RegisterName(
+        public val name: String,
     ) : RegisterLike
 
     public data object PC : RegisterLike

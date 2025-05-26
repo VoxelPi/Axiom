@@ -360,7 +360,7 @@ public object Parsers {
     }
 
     private fun ParserTransformation.Builder<out ConditionalStatement>.withoutCondition() {
-        parameter(ConditionalStatement::conditionValue) { RegisterLike.UnparsedRegister("R1") }
+        parameter(ConditionalStatement::conditionValue) { RegisterLike.RegisterName("R1") }
         parameter(ConditionalStatement::condition) { Condition.ALWAYS }
     }
 }

@@ -6,7 +6,11 @@ public abstract class Architecture16(
     override val id: String,
 ) : Architecture<UShort> {
 
-    private val registers: MutableMap<String, Register> = mutableMapOf()
+    override val programCounter: Register = createProgramCounter()
+
+    private val registers: Map<String, Register> = createRegisters().associateBy { it.id }
+
+    protected abstract fun createProgramCounter(): Register
 
     protected abstract fun createRegisters(): Collection<Register>
 
