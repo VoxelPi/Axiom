@@ -5,6 +5,7 @@ import net.voxelpi.axiom.asm.anchor.ScopeAnchor
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.lexer.Lexer
 import net.voxelpi.axiom.asm.parser.Parser
+import net.voxelpi.axiom.asm.pipeline.step.BuildScopesStep
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
@@ -384,7 +385,7 @@ internal class CompilationUnitCollector private constructor(
             val unitGlobalScope = GlobalScope()
 
             // Parse tokenized statements
-            val statements = MutableStatementProgram(
+            val program = MutableStatementProgram(
                 unitGlobalScope,
                 tokenizedStatements.map {
                     parser.parse(it, unitGlobalScope).getOrElse { exception -> return Result.failure(exception) }
@@ -392,9 +393,9 @@ internal class CompilationUnitCollector private constructor(
             )
 
             // Build scopes.
-            statements.buildScopes()
+            BuildScopesStep.transform(program).getOrElse { return Result.failure(it) }
 
-            return Result.success(statements)
+            return Result.success(program)
         }
 
         fun create(
