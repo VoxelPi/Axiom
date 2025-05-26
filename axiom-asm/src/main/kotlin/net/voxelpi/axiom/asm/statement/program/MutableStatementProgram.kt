@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.statement.program
 
 import net.voxelpi.axiom.asm.anchor.Anchor
+import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
@@ -52,6 +53,34 @@ public class MutableStatementProgram(
             } else {
                 yield(statement)
             }
+        }
+    }
+
+    public inline fun <reified T> transformArgumentsOfType(noinline transformation: (value: T) -> Any?): Result<Unit> {
+        return transform { statementInstance ->
+            val parameterValues = statementInstance.parameterValues.mapValues { (parameterId, value) ->
+                if (value is T) {
+                    val newValue = transformation(value)
+                    if (!statementInstance.prototype.isValidParameterValue(parameterId, newValue)) {
+                        throw SourceCompilationException(
+                            statementInstance.sourceOfOrDefault(parameterId),
+                            "Invalid value \"${newValue}\" for parameter $parameterId of type ${statementInstance.prototype.parameters[parameterId]?.type}.",
+                        )
+                    }
+                    newValue
+                } else {
+                    value
+                }
+            }
+            yield(
+                StatementInstance(
+                    statementInstance.prototype,
+                    statementInstance.scope,
+                    statementInstance.source,
+                    parameterValues,
+                    statementInstance.parameterSources,
+                )
+            )
         }
     }
 

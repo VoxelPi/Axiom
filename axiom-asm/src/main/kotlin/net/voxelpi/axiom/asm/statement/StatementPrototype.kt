@@ -3,6 +3,7 @@ package net.voxelpi.axiom.asm.statement
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.annotation.StatementType
+import net.voxelpi.axiom.asm.util.isInstanceOfType
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
@@ -36,6 +37,11 @@ public class StatementPrototype<T : Any> internal constructor(
             parameterValues,
             emptyMap(),
         )
+    }
+
+    public fun isValidParameterValue(parameterId: String, value: Any?): Boolean {
+        val parameter = parameters[parameterId] ?: return false
+        return isInstanceOfType(value, parameter.type)
     }
 
     public companion object {

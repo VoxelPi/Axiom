@@ -62,6 +62,10 @@ public data class StatementInstance<S : Any>(
         return parameterSources[property.name] ?: source
     }
 
+    public fun sourceOfOrDefault(propertyId: String): SourceLink {
+        return parameterSources[propertyId] ?: source
+    }
+
     public fun create(): S {
         prototype.type.objectInstance?.let {
             return it

@@ -61,7 +61,7 @@ public class Assembler(
 
         // TODO: Insert start jump
 
-        // Generate anchors indices and use them for all anchor reference parameters.
+        // Generate anchors indices and use them to replace all anchor reference parameters.
         val anchorIndices = generateAnchorIndices(program).getOrThrow()
         ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
 
