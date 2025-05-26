@@ -1,22 +1,25 @@
 package net.voxelpi.axiom.arch.mcpc8
 
-import net.voxelpi.axiom.Register
-import net.voxelpi.axiom.arch.Architecture8
+import net.voxelpi.axiom.WordType
+import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.instruction.Instruction
+import net.voxelpi.axiom.register.RegisterFile
 
-public object MCPC8Architecture : Architecture8("mcpc8") {
+public object MCPC8Architecture : Architecture<UByte>("mcpc8", 256U, 256U) {
 
-    override fun createRegisters(): Collection<Register> {
-        val registers = mutableListOf<Register>()
-        registers.add(programCounter)
-        for (i in 1..7) {
-            registers.add(Register("R$i"))
+    override val registers: RegisterFile<UByte> = RegisterFile.create("program_counter", WordType.INT8) {
+        programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)
+
+        for (registerIndex in 1..7) {
+            val isConditional = registerIndex == 7
+            val conditionSourceIndex = 1
+
+            val register = createRegister("R$registerIndex", WordType.INT8)
+            createVariable("R$registerIndex", register, registerIndex, readable = true, writeable = true, conditionable = isConditional)
+            if (isConditional) {
+                createVariable("C$conditionSourceIndex", register, registerIndex, readable = true, writeable = true, conditionable = false)
+            }
         }
-        return registers
-    }
-
-    override fun createProgramCounter(): Register {
-        return Register("PC")
     }
 
     override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {

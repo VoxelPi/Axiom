@@ -4,7 +4,11 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
+import kotlinx.cli.default
+import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
+import net.voxelpi.axiom.arch.mcpc8.MCPC8Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.ParseException
@@ -23,9 +27,22 @@ import kotlin.system.measureTimeMillis
 fun main(args: Array<String>) {
     val parser = ArgParser("axiom")
 
+    val architectures: Map<String, Architecture<*>> = listOf(
+        MCPC8Architecture,
+        MCPC16Architecture,
+        AX08Architecture,
+    ).associateBy(Architecture<*>::id)
+
     class Assemble : Subcommand("assemble", "Assembles a program.") {
-        val input: String by argument(ArgType.String, description = "The input file.")
-        val output: String? by option(ArgType.String, "output", "o", description = "The output file.")
+        val input by argument(ArgType.String, description = "The input file.")
+        val output by option(ArgType.String, "output", "o", description = "The output file.")
+
+        val architecture by option(
+            ArgType.Choice(choices = architectures.values.toList(), toVariant = { architectures[it]!! }),
+            fullName = "architecture",
+            shortName = "a",
+            description = "The architecture to use."
+        ).default(AX08Architecture)
 
         override fun execute() {
             val inputFilePath = Path(input).absolute().normalize()
@@ -40,7 +57,7 @@ fun main(args: Array<String>) {
             val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
 
             val compilationTime = measureTimeMillis {
-                val program = assembler.assemble(inputFilePath, MCPC16Architecture).getOrElse { exception ->
+                val program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
                     when (exception) {
                         is ParseException -> {
                             println(exception.message)
@@ -65,7 +82,7 @@ fun main(args: Array<String>) {
                     }
                     return@measureTimeMillis
                 }
-                println(program )
+                println(program)
             }
 
             println("Compilation took ${compilationTime}ms.")

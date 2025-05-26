@@ -1,9 +1,7 @@
 package net.voxelpi.axiom.asm
 
-import net.voxelpi.axiom.ImmediateValue
-import net.voxelpi.axiom.Register
-import net.voxelpi.axiom.ValueProvider
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.parser.Parser
 import net.voxelpi.axiom.asm.parser.Parsers
@@ -21,7 +19,9 @@ import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ValueLike
 import net.voxelpi.axiom.instruction.Instruction
+import net.voxelpi.axiom.instruction.InstructionValue
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.register.RegisterVariable
 import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.absolutePathString
@@ -102,16 +102,16 @@ public class Assembler(
             }
 
             val output = if (statement is InstructionStatement.WithOutput) {
-                parseInstructionRegister(
+                parseOutputRegister(
                     statement.output,
                     statementInstance.sourceOfOrDefault(InstructionStatement.WithOutput::output),
                     architecture,
                 ).getOrElse { return Result.failure(it) }
             } else {
-                architecture.registers().first()
+                findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) }
             }
 
-            val conditionRegister = parseInstructionRegister(
+            val conditionRegister = parseConditionRegister(
                 statement.conditionValue,
                 statementInstance.sourceOfOrDefault(InstructionStatement::conditionValue),
                 architecture,
@@ -139,35 +139,81 @@ public class Assembler(
         return Result.success(instructions)
     }
 
-    private fun parseInstructionRegister(value: ValueLike, source: SourceLink, architecture: Architecture<*>): Result<Register> {
+    private fun parseConditionRegister(value: RegisterLike, source: SourceLink, architecture: Architecture<*>): Result<RegisterVariable<*, *>> {
         return when (value) {
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
             }
             is RegisterLike.PC -> {
-                Result.success(architecture.programCounter)
+                Result.success(architecture.registers.programCounterVariable)
+            }
+            is RegisterLike.AnyRegister -> {
+                findRegister(architecture, value)
             }
             else -> {
-                Result.failure(SourceCompilationException(source, "Invalid register: $value"))
+                Result.failure(SourceCompilationException(source, "Invalid condition register: $value"))
             }
         }
     }
 
-    private fun parseInstructionValue(value: ValueLike, source: SourceLink, architecture: Architecture<*>): Result<ValueProvider> {
+    private fun parseOutputRegister(value: RegisterLike, source: SourceLink, architecture: Architecture<*>): Result<RegisterVariable<*, *>> {
         return when (value) {
-            is IntegerValue -> {
-                Result.success(ImmediateValue(value.value))
-            }
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
             }
             is RegisterLike.PC -> {
-                Result.success(architecture.programCounter)
+                Result.success(architecture.registers.programCounterVariable)
+            }
+            is RegisterLike.AnyRegister -> {
+                findRegister(architecture, value)
+            }
+            else -> {
+                Result.failure(SourceCompilationException(source, "Invalid output register: $value"))
+            }
+        }
+    }
+
+    private fun parseInstructionValue(value: ValueLike, source: SourceLink, architecture: Architecture<*>): Result<InstructionValue> {
+        return when (value) {
+            is IntegerValue -> {
+                Result.success(InstructionValue.ImmediateValue(value.value))
+            }
+            is RegisterLike.RegisterReference -> {
+                Result.success(InstructionValue.RegisterReference(value.register))
+            }
+            is RegisterLike.PC -> {
+                Result.success(InstructionValue.RegisterReference(architecture.registers.programCounterVariable))
+            }
+            is RegisterLike.AnyRegister -> {
+                val register = findRegister(architecture, value).getOrElse { return Result.failure(it) }
+                Result.success(InstructionValue.RegisterReference(register))
             }
             else -> {
                 Result.failure(SourceCompilationException(source, "Invalid value: $value"))
             }
         }
+    }
+
+    private fun findRegister(architecture: Architecture<*>, specification: RegisterLike.AnyRegister): Result<RegisterVariable<*, *>> {
+        val register = architecture.registers.variables.values.firstOrNull {
+            if (it.register.id == architecture.registers.programCounter.id) {
+                return@firstOrNull false
+            }
+            if (specification.readable && !it.readable) {
+                return@firstOrNull false
+            }
+            if (specification.writable && !it.writable) {
+                return@firstOrNull false
+            }
+            if (specification.conditionable && !it.conditionable) {
+                return@firstOrNull false
+            }
+            true
+        }
+        if (register == null) {
+            return Result.failure(CompilationException("No register found with $specification."))
+        }
+        return Result.success(register)
     }
 
     public companion object {

@@ -16,6 +16,7 @@ dependencies {
     // Project
     api(projects.axiomCore)
     api(projects.axiomAsm)
+    api(projects.axiomArch.axiomArchAx08)
     api(projects.axiomArch.axiomArchMcpc8)
     api(projects.axiomArch.axiomArchMcpc16)
 

@@ -1,39 +1,37 @@
 package net.voxelpi.axiom.arch
 
-import net.voxelpi.axiom.Register
 import net.voxelpi.axiom.instruction.Instruction
+import net.voxelpi.axiom.register.RegisterFile
 
-public interface Architecture<W> {
+/**
+ * @property id The id of the architecture.
+ * @property memorySize The size of the memory.
+ * @property stackSize The size of the stack.
+ */
+public abstract class Architecture<P : Comparable<P>>(
+    public val id: String,
+    public val memorySize: UInt,
+    public val stackSize: UInt,
+) {
 
     /**
-     * The id of the architecture.
+     * The register file of the architecture.
      */
-    public val id: String
+    public abstract val registers: RegisterFile<P>
+
+    /**
+     * The maximum size of a program on this architecture.
+     */
+    public val programSize: ULong
+        get() = 1UL shl registers.programCounter.type.bits
 
     /**
      * Encodes the given [instruction] into the architecture-specific format.
      */
-    public fun encodeInstruction(instruction: Instruction): Result<UByteArray>
+    public abstract fun encodeInstruction(instruction: Instruction): Result<UByteArray>
 
     /**
      * Decodes the given architecture-specific [encodedInstruction] into an instruction.
      */
-    public fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction>
-
-    /**
-     * Returns the number of bits in a word of the architecture.
-     */
-    public fun wordSize(): Int
-
-    /**
-     * Returns all registers of the architecture.
-     */
-    public fun registers(): Collection<Register>
-
-    /**
-     * Returns the register with the given [id] or null if no such register exists.
-     */
-    public fun register(id: String): Register?
-
-    public val programCounter: Register
+    public abstract fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction>
 }

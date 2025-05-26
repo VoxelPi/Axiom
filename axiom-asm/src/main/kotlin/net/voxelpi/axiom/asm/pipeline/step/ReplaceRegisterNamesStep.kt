@@ -12,14 +12,14 @@ public class ReplaceRegisterNamesStep(public val architecture: Architecture<*>) 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Transform register names.
         program.transformArgumentsOfType<RegisterLike.RegisterName> { value, source ->
-            val register = architecture.register(value.name)
-                ?: throw SourceCompilationException(source, "Unknown register \"${value.name}\". Available registers: ${architecture.registers().map { it.id }}.")
+            val register = architecture.registers.variable(value.name)
+                ?: throw SourceCompilationException(source, "Unknown register \"${value.name}\". Available registers: ${architecture.registers.variables().map { it.id }}.")
             RegisterLike.RegisterReference(register)
         }.getOrElse { return Result.failure(it) }
 
         // Transform unparsed values.
         program.transformArgumentsOfType<ValueLike.UnparsedValue> { value, _ ->
-            architecture.register(value.value)?.let { RegisterLike.RegisterReference(it) } ?: value
+            architecture.registers.variable(value.value)?.let { RegisterLike.RegisterReference(it) } ?: value
         }.getOrElse { return Result.failure(it) }
 
         // Success.
