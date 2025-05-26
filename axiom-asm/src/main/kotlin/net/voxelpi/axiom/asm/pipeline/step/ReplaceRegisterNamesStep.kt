@@ -7,7 +7,7 @@ import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ValueLike
 
-public class ReplaceRegisterNamesStep(public val architecture: Architecture<*>) : ProgramPipelineStep {
+public class ReplaceRegisterNamesStep(public val architecture: Architecture<*, *>) : ProgramPipelineStep {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Transform register names.

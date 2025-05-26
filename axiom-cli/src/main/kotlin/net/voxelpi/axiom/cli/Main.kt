@@ -17,9 +17,12 @@ import net.voxelpi.axiom.asm.source.SourceLink
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.writeBytes
+import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -27,11 +30,11 @@ import kotlin.system.measureTimeMillis
 fun main(args: Array<String>) {
     val parser = ArgParser("axiom")
 
-    val architectures: Map<String, Architecture<*>> = listOf(
+    val architectures: Map<String, Architecture<*, *>> = listOf(
         MCPC8Architecture,
         MCPC16Architecture,
         AX08Architecture,
-    ).associateBy(Architecture<*>::id)
+    ).associateBy(Architecture<*, *>::id)
 
     class Assemble : Subcommand("assemble", "Assembles a program.") {
         val input by argument(ArgType.String, description = "The input file.")
@@ -51,8 +54,10 @@ fun main(args: Array<String>) {
                 exitProcess(1)
             }
 
-            val outputFilePath = output?.let { Path(it) } ?: inputFilePath.parent.resolve(inputFilePath.nameWithoutExtension + ".bin")
-            println("Assembling \"${inputFilePath.normalize().absolutePathString()}\" to \"${outputFilePath.normalize().absolutePathString()}\"")
+            val outputFilePath = (output?.let { Path(it) } ?: inputFilePath.parent.resolve(inputFilePath.nameWithoutExtension + ".bin")).normalize()
+            println("Assembling \"${inputFilePath.absolutePathString()}\" to \"${outputFilePath.absolutePathString()}\"")
+
+            val rawFile = outputFilePath.parent / "${outputFilePath.nameWithoutExtension}.raw.${Assembler.AXIOM_ASM_EXTENSION}"
 
             val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
 
@@ -82,10 +87,15 @@ fun main(args: Array<String>) {
                     }
                     return@measureTimeMillis
                 }
-                println(program)
+
+                rawFile.writeText(program.toString())
+
+                val encodedProgram = architecture.encodeProgram(program).getOrThrow()
+                outputFilePath.writeBytes(encodedProgram.toByteArray())
+                print("Assembled ${program.instructions.size} instructions (${encodedProgram.size} bytes)")
             }
 
-            println("Compilation took ${compilationTime}ms.")
+            println(" in ${compilationTime}ms.")
         }
     }
 

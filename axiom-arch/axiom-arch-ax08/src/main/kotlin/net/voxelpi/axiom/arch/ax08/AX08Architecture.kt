@@ -10,7 +10,7 @@ import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.register.RegisterVariable
 import net.voxelpi.axiom.util.biMapOf
 
-public object AX08Architecture : Architecture<UShort>("ax08", 256U, 16U) {
+public object AX08Architecture : Architecture<UShort, UInt>("ax08", WordType.INT32, 256U, 16U) {
 
     override val registers: RegisterFile<UShort> = RegisterFile.create("program_counter", WordType.INT16) {
         // Create the PC variables.
@@ -25,7 +25,7 @@ public object AX08Architecture : Architecture<UShort>("ax08", 256U, 16U) {
         }
     }
 
-    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
+    override fun encodeInstruction(instruction: Instruction): Result<UInt> {
         var encodedInstruction = 0.toUInt()
 
         // Encode operation.
@@ -62,22 +62,11 @@ public object AX08Architecture : Architecture<UShort>("ax08", 256U, 16U) {
             }
         }
 
-        // Convert to a UInt8 array.
-        return Result.success(
-            ubyteArrayOf(
-                ((encodedInstruction shr 0) and 0xFFu).toUByte(),
-                ((encodedInstruction shr 8) and 0xFFu).toUByte(),
-                ((encodedInstruction shr 16) and 0xFFu).toUByte(),
-                ((encodedInstruction shr 24) and 0xFFu).toUByte(),
-            )
-        )
+        // Return encoded instruction.
+        return Result.success(encodedInstruction)
     }
 
-    override fun decodeInstruction(encodedInstructionBytes: UByteArray): Result<Instruction> {
-        // Convert to an UInt32.
-        require(encodedInstructionBytes.size == 4) { "Expected 4 bytes, got ${encodedInstructionBytes.size}." }
-        val encodedInstruction = (encodedInstructionBytes[0].toUInt() shl 0) or (encodedInstructionBytes[1].toUInt() shl 8) or (encodedInstructionBytes[2].toUInt() shl 16) or (encodedInstructionBytes[3].toUInt() shl 24)
-
+    override fun decodeInstruction(encodedInstruction: UInt): Result<Instruction> {
         // Decode the operation.
         val operation = operationMapping[((encodedInstruction shr 27) and 0b11111u)]
             ?: return Result.failure(IllegalArgumentException("Invalid opcode ${((encodedInstruction shr 27) and 0b11111u)}"))

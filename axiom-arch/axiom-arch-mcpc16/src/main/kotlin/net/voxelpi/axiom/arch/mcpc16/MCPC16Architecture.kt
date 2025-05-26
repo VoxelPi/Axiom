@@ -5,7 +5,7 @@ import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.register.RegisterFile
 
-public object MCPC16Architecture : Architecture<UShort>("mcpc16", 256U, 16U) {
+public object MCPC16Architecture : Architecture<UShort, ULong>("mcpc16", WordType.INT64, 256U, 16U) {
 
     override val registers: RegisterFile<UShort> = RegisterFile.create("program_counter", WordType.INT16) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)
@@ -22,11 +22,11 @@ public object MCPC16Architecture : Architecture<UShort>("mcpc16", 256U, 16U) {
         }
     }
 
-    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
+    override fun encodeInstruction(instruction: Instruction): Result<ULong> {
         TODO("Not yet implemented")
     }
 
-    override fun decodeInstruction(encodedInstructionBytes: UByteArray): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: ULong): Result<Instruction> {
         TODO("Not yet implemented")
     }
 }
