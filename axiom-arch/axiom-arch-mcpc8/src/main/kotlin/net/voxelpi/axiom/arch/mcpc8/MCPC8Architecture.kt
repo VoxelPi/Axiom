@@ -26,7 +26,7 @@ public object MCPC8Architecture : Architecture<UByte>("mcpc8", 256U, 256U) {
         TODO("Not yet implemented")
     }
 
-    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
+    override fun decodeInstruction(encodedInstructionBytes: UByteArray): Result<Instruction> {
         TODO("Not yet implemented")
     }
 }

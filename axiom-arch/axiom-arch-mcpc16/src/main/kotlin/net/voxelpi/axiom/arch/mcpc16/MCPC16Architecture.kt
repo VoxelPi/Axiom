@@ -26,7 +26,7 @@ public object MCPC16Architecture : Architecture<UShort>("mcpc16", 256U, 16U) {
         TODO("Not yet implemented")
     }
 
-    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
+    override fun decodeInstruction(encodedInstructionBytes: UByteArray): Result<Instruction> {
         TODO("Not yet implemented")
     }
 }

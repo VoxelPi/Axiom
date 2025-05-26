@@ -31,7 +31,7 @@ public abstract class Architecture<P : Comparable<P>>(
     public abstract fun encodeInstruction(instruction: Instruction): Result<UByteArray>
 
     /**
-     * Decodes the given architecture-specific [encodedInstruction] into an instruction.
+     * Decodes the given architecture-specific [encodedInstructionBytes] into an instruction.
      */
-    public abstract fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction>
+    public abstract fun decodeInstruction(encodedInstructionBytes: UByteArray): Result<Instruction>
 }
