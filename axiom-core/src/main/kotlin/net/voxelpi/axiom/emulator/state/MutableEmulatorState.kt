@@ -2,6 +2,7 @@ package net.voxelpi.axiom.emulator.state
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.emulator.EmulatedStack
 import net.voxelpi.axiom.register.Register
 import net.voxelpi.axiom.register.RegisterVariable
 
@@ -16,8 +17,7 @@ public class MutableEmulatorState<P : Comparable<P>>(
     }.toMutableMap()
 
     public val memoryState: ULongArray = ULongArray(architecture.memorySize) { 0UL }
-    public val stackState: ULongArray = ULongArray(architecture.stackSize) { 0UL }
-    public var stackPointer: Int = 0
+    public val stackState: EmulatedStack = EmulatedStack(architecture.stackSize)
 
     override fun <R : Comparable<R>> registerState(register: Register<R>): R {
         return castToWordType(registerValues[register.id]!!, register.type)
@@ -91,24 +91,16 @@ public class MutableEmulatorState<P : Comparable<P>>(
     }
 
     public fun stackPeek(): ULong {
-        return stackState[if (stackPointer == 0) stackState.size - 1 else stackPointer - 1]
+        return stackState.peek()
     }
 
     public fun makeStackPush(value: ULong): EmulatorStateChange.StackPush {
-        stackState[stackPointer] = value
-        stackPointer++
-        if (stackPointer >= stackState.size) {
-            stackPointer = 0
-        }
+        stackState.push(value)
         return EmulatorStateChange.StackPush(value)
     }
 
     public fun makeStackPop(): Pair<EmulatorStateChange.StackPop, ULong> {
-        stackPointer--
-        if (stackPointer < 0) {
-            stackPointer = stackState.size - 1
-        }
-        val value = stackState[stackPointer]
+        val value = stackState.pop()
         return Pair(EmulatorStateChange.StackPop(value), value)
     }
 
@@ -125,17 +117,10 @@ public class MutableEmulatorState<P : Comparable<P>>(
                     registerValues[change.register.id] = change.newValue
                 }
                 is EmulatorStateChange.StackPop -> {
-                    stackPointer--
-                    if (stackPointer < 0) {
-                        stackPointer = stackState.size - 1
-                    }
+                    stackState.pop()
                 }
                 is EmulatorStateChange.StackPush -> {
-                    stackState[stackPointer] = change.value
-                    stackPointer++
-                    if (stackPointer >= stackState.size) {
-                        stackPointer = 0
-                    }
+                    stackState.push(change.value)
                 }
             }
         }
@@ -154,17 +139,10 @@ public class MutableEmulatorState<P : Comparable<P>>(
                     registerValues[change.register.id] = change.previousValue
                 }
                 is EmulatorStateChange.StackPop -> {
-                    stackState[stackPointer] = change.value
-                    stackPointer++
-                    if (stackPointer >= stackState.size) {
-                        stackPointer = 0
-                    }
+                    stackState.push(change.value)
                 }
                 is EmulatorStateChange.StackPush -> {
-                    stackPointer--
-                    if (stackPointer < 0) {
-                        stackPointer = stackState.size - 1
-                    }
+                    stackState.pop()
                 }
             }
         }
