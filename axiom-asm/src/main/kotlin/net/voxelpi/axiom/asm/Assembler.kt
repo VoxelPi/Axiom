@@ -9,6 +9,7 @@ import net.voxelpi.axiom.asm.pipeline.step.ApplyAnchorIndicesStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineImplicitStartLabelStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
+import net.voxelpi.axiom.asm.pipeline.step.InsertStartJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
@@ -60,7 +61,8 @@ public class Assembler(
 
         // TODO: Resolve variables
 
-        // TODO: Insert start jump
+        // Insert start jump if neccessary.
+        InsertStartJumpStep(architecture).transform(program).getOrThrow()
 
         // Generate anchors indices and use them to replace all anchor reference parameters.
         val anchorIndices = generateAnchorIndices(program).getOrThrow()
