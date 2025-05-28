@@ -7,6 +7,7 @@ import kotlinx.cli.Subcommand
 import kotlinx.cli.default
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
+import net.voxelpi.axiom.arch.dev64.DEV64Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
 import net.voxelpi.axiom.arch.mcpc8.MCPC8Architecture
 import net.voxelpi.axiom.asm.Assembler
@@ -31,9 +32,10 @@ fun main(args: Array<String>) {
     val parser = ArgParser("axiom")
 
     val architectures: Map<String, Architecture<*, *>> = listOf(
+        AX08Architecture,
+        DEV64Architecture,
         MCPC8Architecture,
         MCPC16Architecture,
-        AX08Architecture,
     ).associateBy(Architecture<*, *>::id)
 
     class Assemble : Subcommand("assemble", "Assembles a program.") {
@@ -90,9 +92,13 @@ fun main(args: Array<String>) {
 
                 rawFile.writeText(program.toString())
 
-                val encodedProgram = architecture.encodeProgram(program).getOrThrow()
-                outputFilePath.writeBytes(encodedProgram.toByteArray())
-                print("Assembled ${program.instructions.size} instructions (${encodedProgram.size} bytes)")
+                if (architecture.hasEncodedFormat) {
+                    val encodedProgram = architecture.encodeProgram(program).getOrThrow()
+                    outputFilePath.writeBytes(encodedProgram.toByteArray())
+                    print("Assembled ${program.instructions.size} instructions (${encodedProgram.size} bytes)")
+                } else {
+                    print("Assembled ${program.instructions.size} instructions")
+                }
             }
 
             println(" in ${compilationTime}ms.")

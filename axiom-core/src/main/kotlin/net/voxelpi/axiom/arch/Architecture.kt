@@ -31,6 +31,12 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
         get() = 1UL shl registers.programCounter.type.bits
 
     /**
+     * If the architecture has an encoded instruction format.
+     */
+    public open val hasEncodedFormat: Boolean
+        get() = true
+
+    /**
      * All operations that are supported by this architecture.
      */
     public abstract val supportedOperations: Set<Operation>
@@ -44,6 +50,11 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
      * Encodes the given [instruction] into the architecture-specific format.
      */
     public fun encodeInstructionPacked(instruction: Instruction): Result<UByteArray> {
+        // Check if the architecture supports encoded programs.
+        if (!hasEncodedFormat) {
+            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
+        }
+
         return encodeInstruction(instruction).map { instructionWordType.pack(it) }
     }
 
@@ -56,6 +67,11 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
      * Decodes the given architecture-specific [encodedInstruction] into an instruction.
      */
     public fun decodeInstructionPacked(encodedInstruction: UByteArray): Result<Instruction> {
+        // Check if the architecture supports encoded programs.
+        if (!hasEncodedFormat) {
+            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
+        }
+
         return decodeInstruction(instructionWordType.unpack(encodedInstruction))
     }
 
@@ -63,6 +79,11 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
      * Encodes the program to an [UByteArray].
      */
     public fun encodeProgram(program: Program): Result<UByteArray> = runCatching {
+        // Check if the architecture supports encoded programs.
+        if (!hasEncodedFormat) {
+            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
+        }
+
         // Calculate encoded program length.
         val encodedProgram = UByteArray(program.instructions.size * instructionWordType.bytes)
 
@@ -80,6 +101,11 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
      * Decodes a program from the given [encodedProgram].
      */
     public fun decodedProgram(encodedProgram: UByteArray): Result<Program> = runCatching {
+        // Check if the architecture supports encoded programs.
+        if (!hasEncodedFormat) {
+            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
+        }
+
         // Check encoded program length.
         require(encodedProgram.size % instructionWordType.bytes == 0) { "The encoded program must be a multiple of the instruction word size." }
         val nInstructions = encodedProgram.size / instructionWordType.bytes
