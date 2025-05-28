@@ -58,7 +58,7 @@ public object AX08Architecture : Architecture<UShort, UInt>("ax08", WordType.INT
                 encodedInstruction or ((value.value.toUInt() and 0xFFu) shl 8)
             }
             is InstructionValue.RegisterReference -> {
-                encodedInstruction or ((value.register.address.toUInt() and 0xFFu) shl 0) or (1u shl 17)
+                encodedInstruction or ((value.register.address.toUInt() and 0xFFu) shl 8) or (1u shl 17)
             }
         }
 
