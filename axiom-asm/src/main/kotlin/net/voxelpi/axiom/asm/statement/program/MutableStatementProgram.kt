@@ -4,8 +4,8 @@ import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.Scope
-import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.StatementInstance
+import net.voxelpi.axiom.asm.statement.StatementParameter
 import java.util.UUID
 import kotlin.reflect.full.isSubclassOf
 
@@ -53,11 +53,13 @@ public class MutableStatementProgram(
         }
     }
 
-    public inline fun <reified T> transformArgumentsOfType(noinline transformation: (value: T, source: SourceLink) -> Any?): Result<Unit> {
+    public inline fun <reified T> transformArgumentsOfType(noinline transformation: (statement: StatementInstance<*>, parameter: StatementParameter<T>, value: T) -> Any?): Result<Unit> {
         return transform { statementInstance ->
             val parameterValues = statementInstance.parameterValues.mapValues { (parameterId, value) ->
                 if (value is T) {
-                    val newValue = transformation(value, statementInstance.sourceOfOrDefault(parameterId))
+                    @Suppress("UNCHECKED_CAST")
+                    val parameter = statementInstance.prototype.parameters[parameterId]!! as StatementParameter<T>
+                    val newValue = transformation(statementInstance, parameter, value)
                     if (!statementInstance.prototype.isValidParameterValue(parameterId, newValue)) {
                         throw SourceCompilationException(
                             statementInstance.sourceOfOrDefault(parameterId),

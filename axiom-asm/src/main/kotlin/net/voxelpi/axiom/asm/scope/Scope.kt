@@ -46,16 +46,15 @@ public sealed interface Scope {
             return Result.failure(CompilationException("The variable $name is already defined in this scope stack."))
         }
 
-        val variable = Variable(name, value)
+        val variable = Variable(UUID.randomUUID(), name, value)
         this.variables[name] = variable
         return Result.success(variable)
     }
 
     public fun updateVariable(name: String, value: ValueLike): Result<Variable> {
-        if (name !in variables) {
-            return Result.failure(CompilationException("The variable $name is not defined in this scope."))
-        }
-        val variable = Variable(name, value)
+        val existingVariable = variables[name]
+            ?: return Result.failure(CompilationException("The variable $name is not defined in this scope."))
+        val variable = Variable(existingVariable.uniqueId, existingVariable.name, value)
         this.variables[name] = variable
         return Result.success(variable)
     }
@@ -100,4 +99,6 @@ public sealed interface Scope {
     }
 
     public fun findVariable(name: String): Pair<Variable, Scope>?
+
+    public fun findVariable(uniqueId: UUID): Pair<Variable, Scope>?
 }

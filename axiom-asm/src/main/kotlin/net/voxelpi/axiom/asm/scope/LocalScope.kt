@@ -52,6 +52,19 @@ public sealed class LocalScope(
         return null
     }
 
+    override fun findVariable(uniqueId: UUID): Pair<Variable, Scope>? {
+        variables.values.find { it.uniqueId == uniqueId }?.let { return it to this }
+
+        // Check parents downwards.
+        var parent: Scope? = this
+        while (parent != null) {
+            parent.variables.values.find { it.uniqueId == uniqueId }?.let { return it to parent }
+            parent = if (parent is LocalScope) parent.parent else null
+        }
+
+        return null
+    }
+
     public class Named(
         parent: Scope,
         override val scopes: MutableList<Scope>,

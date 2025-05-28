@@ -10,7 +10,8 @@ import java.util.UUID
 public class ApplyAnchorIndicesStep(public val anchorIndices: Map<UUID, Int>) : ProgramPipelineStep {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
-        return program.transformArgumentsOfType<AnchorLike.AnchorReference> { anchorReference, source ->
+        return program.transformArgumentsOfType<AnchorLike.AnchorReference> { statementInstance, parameter, anchorReference ->
+            val source = statementInstance.sourceOfOrDefault(parameter)
             val anchorIndex = anchorIndices[anchorReference.anchor.uniqueId]
                 ?: throw SourceCompilationException(source, "Unknown anchor ${anchorReference.anchor.uniqueId}")
             IntegerValue(anchorIndex.toLong())

@@ -31,4 +31,8 @@ public class GlobalScope(
     override fun findVariable(name: String): Pair<Variable, Scope>? {
         return variables[name]?.let { it to this }
     }
+
+    override fun findVariable(uniqueId: UUID): Pair<Variable, Scope>? {
+        return variables.values.find { it.uniqueId == uniqueId }?.let { it to this }
+    }
 }

@@ -11,6 +11,8 @@ import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
 import net.voxelpi.axiom.asm.pipeline.step.InsertStartJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceVariableNamesStep
+import net.voxelpi.axiom.asm.pipeline.step.ResolveVariableValuesStep
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.program.StatementProgram
@@ -52,14 +54,17 @@ public class Assembler(
 
         // Define variables.
         DefineVariablesStep.transform(program).getOrThrow()
+        ReplaceVariableNamesStep.transform(program).getOrThrow()
 
         // Define labels.
         DefineLabelsStep.transform(program).getOrThrow()
         DefineImplicitStartLabelStep.transform(program).getOrThrow()
 
+        // Replace register names with references to actual registers.
         ReplaceRegisterNamesStep(architecture).transform(program).getOrThrow()
 
-        // TODO: Resolve variables
+        // Resolve variable values.
+        ResolveVariableValuesStep.transform(program).getOrThrow()
 
         // Insert start jump if neccessary.
         InsertStartJumpStep(architecture).transform(program).getOrThrow()

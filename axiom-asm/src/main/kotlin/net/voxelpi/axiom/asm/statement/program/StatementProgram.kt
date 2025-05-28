@@ -5,6 +5,8 @@ import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
+import net.voxelpi.axiom.asm.type.ValueLike
+import net.voxelpi.axiom.asm.variable.Variable
 import java.util.UUID
 
 public interface StatementProgram {
@@ -16,6 +18,10 @@ public interface StatementProgram {
     public val scopes: Map<UUID, Scope>
 
     public val anchors: Map<UUID, Anchor>
+
+    // public val variables: Map<UUID, Variable>
+    //
+    // public val variableValues: Map<UUID, ValueLike>
 
     public fun mutableCopy(): MutableStatementProgram {
         return MutableStatementProgram(globalScope, statements.toMutableList(), scopes.toMutableMap(), anchors.toMutableMap())
