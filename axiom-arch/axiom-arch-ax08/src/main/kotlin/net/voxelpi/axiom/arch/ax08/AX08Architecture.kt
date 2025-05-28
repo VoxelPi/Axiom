@@ -25,6 +25,9 @@ public object AX08Architecture : Architecture<UShort, UInt>("ax08", WordType.INT
         }
     }
 
+    override val supportedOperations: Set<Operation>
+        get() = operationMapping.values
+
     override fun encodeInstruction(instruction: Instruction): Result<UInt> {
         var encodedInstruction = 0.toUInt()
 

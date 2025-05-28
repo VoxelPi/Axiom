@@ -2,6 +2,7 @@ package net.voxelpi.axiom.arch
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.instruction.Instruction
+import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.register.RegisterFile
 
@@ -28,6 +29,11 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
      */
     public val programSize: ULong
         get() = 1UL shl registers.programCounter.type.bits
+
+    /**
+     * All operations that are supported by this architecture.
+     */
+    public abstract val supportedOperations: Set<Operation>
 
     /**
      * Encodes the given [instruction] into the architecture-specific format.

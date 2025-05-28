@@ -26,6 +26,9 @@ public object MCPC16Architecture : Architecture<UShort, ULong>("mcpc16", WordTyp
         }
     }
 
+    override val supportedOperations: Set<Operation>
+        get() = operationMapping.values
+
     override fun encodeInstruction(instruction: Instruction): Result<ULong> {
         var encodedInstruction = 0.toULong()
 
