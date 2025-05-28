@@ -15,8 +15,9 @@ import net.voxelpi.axiom.register.RegisterFile
 public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
     public val id: String,
     public val instructionWordType: WordType<I>,
-    public val memorySize: UInt,
-    public val stackSize: UInt,
+    public val dataWordType: WordType<*>,
+    public val memorySize: Int,
+    public val stackSize: Int,
 ) {
 
     /**

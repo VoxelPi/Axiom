@@ -6,7 +6,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 
-public object DEV64Architecture : Architecture<ULong, ULong>("dev64", WordType.INT64, 1_000_000u, 0x10000u) {
+public object DEV64Architecture : Architecture<ULong, ULong>("dev64", WordType.INT64, WordType.INT64, 1_000_000, 0x1_00_00) {
 
     override val registers: RegisterFile<ULong> = RegisterFile.create("program_counter", WordType.INT64) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = true)

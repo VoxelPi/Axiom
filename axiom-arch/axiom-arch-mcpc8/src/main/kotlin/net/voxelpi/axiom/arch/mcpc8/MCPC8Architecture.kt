@@ -9,7 +9,7 @@ import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.util.biMapOf
 
-public object MCPC8Architecture : Architecture<UByte, UShort>("mcpc8", WordType.INT16, 256U, 256U) {
+public object MCPC8Architecture : Architecture<UByte, UShort>("mcpc8", WordType.INT16, WordType.INT8, 256, 256) {
 
     override val registers: RegisterFile<UByte> = RegisterFile.create("program_counter", WordType.INT8) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)

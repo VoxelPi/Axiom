@@ -10,6 +10,8 @@ public sealed class WordType<T : Comparable<T>>(
     public val bits: Int
         get() = bytes * 8
 
+    public abstract val mask: ULong
+
     override fun compareTo(other: WordType<*>): Int {
         return bytes.compareTo(other.bytes)
     }
@@ -19,6 +21,9 @@ public sealed class WordType<T : Comparable<T>>(
     public abstract fun unpack(value: UByteArray): T
 
     public data object INT8 : WordType<UByte>(1, UByte::class) {
+
+        override val mask: ULong
+            get() = UByte.MAX_VALUE.toULong()
 
         override fun pack(value: UByte): UByteArray {
             return ubyteArrayOf(value)
@@ -31,6 +36,9 @@ public sealed class WordType<T : Comparable<T>>(
     }
 
     public data object INT16 : WordType<UShort>(2, UShort::class) {
+
+        override val mask: ULong
+            get() = UShort.MAX_VALUE.toULong()
 
         override fun pack(value: UShort): UByteArray {
             return ubyteArrayOf(
@@ -46,6 +54,9 @@ public sealed class WordType<T : Comparable<T>>(
     }
 
     public data object INT32 : WordType<UInt>(4, UInt::class) {
+
+        override val mask: ULong
+            get() = UInt.MAX_VALUE.toULong()
 
         override fun pack(value: UInt): UByteArray {
             return ubyteArrayOf(
@@ -68,6 +79,9 @@ public sealed class WordType<T : Comparable<T>>(
     }
 
     public data object INT64 : WordType<ULong>(8, ULong::class) {
+
+        override val mask: ULong
+            get() = ULong.MAX_VALUE
 
         override fun pack(value: ULong): UByteArray {
             return ubyteArrayOf(

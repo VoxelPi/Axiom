@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.lexer
 
 import net.voxelpi.axiom.asm.CompilationUnit
 import net.voxelpi.axiom.asm.source.SourceLink
+import net.voxelpi.axiom.util.parseInteger
 
 /**
  * The lexer converts the string content of a compilation unit into a series of tokens.
@@ -113,53 +114,10 @@ public class Lexer() {
                 continue
             }
 
-            // Base-16 integer.
-            if ("^[+-]?(0[xX][0-9a-fA-F_]+)$".toRegex().matches(tokenText)) {
-                val (explicitSign, sign) = parseNumberSign(tokenText)
-                val start = if (explicitSign) 3 else 2
-                val integerText = tokenText.substring(start).replace("_", "")
-                val integer = integerText.toLong(16) * sign
-                statement.add(Token.Integer(integer, wordSource))
-                continue
-            }
-
-            // Base-10 integer.
-            if ("^[+-]?(0[dD]?[0-9_]+)$".toRegex().matches(tokenText)) {
-                val (explicitSign, sign) = parseNumberSign(tokenText)
-                val start = if (explicitSign) 3 else 2
-                val integerText = tokenText.substring(start).replace("_", "")
-                val integer = integerText.toLong(10) * sign
-                statement.add(Token.Integer(integer, wordSource))
-                continue
-            }
-
-            // Base-8 integer.
-            if ("^[+-]?(0[oO][0-7_]+)$".toRegex().matches(tokenText)) {
-                val (explicitSign, sign) = parseNumberSign(tokenText)
-                val start = if (explicitSign) 3 else 2
-                val integerText = tokenText.substring(start).replace("_", "")
-                val integer = integerText.toLong(8) * sign
-                statement.add(Token.Integer(integer, wordSource))
-                continue
-            }
-
-            // Base-2 integer.
-            if ("^[+-]?(0[bB][01_]+)$".toRegex().matches(tokenText)) {
-                val (explicitSign, sign) = parseNumberSign(tokenText)
-                val start = if (explicitSign) 3 else 2
-                val integerText = tokenText.substring(start).replace("_", "")
-                val integer = integerText.toLong(2) * sign
-                statement.add(Token.Integer(integer, wordSource))
-                continue
-            }
-
-            // Base-10 integer (implicit).
-            if ("^[+-]?([0-9][0-9_]*)$".toRegex().matches(tokenText)) {
-                val (explicitSign, sign) = parseNumberSign(tokenText)
-                val start = if (explicitSign) 1 else 0
-                val integerText = tokenText.substring(start).replace("_", "")
-                val integer = integerText.toLong(10) * sign
-                statement.add(Token.Integer(integer, wordSource))
+            // Integers.
+            val parsedInteger = parseInteger(tokenText)
+            if (parsedInteger != null) {
+                statement.add(Token.Integer(parsedInteger, wordSource))
                 continue
             }
 
@@ -175,15 +133,5 @@ public class Lexer() {
 
         // Return the list of all generated tokens.
         return statements.map { TokenizedStatement(it) }
-    }
-
-    private fun parseNumberSign(text: String): Pair<Boolean, Int> {
-        if (text.startsWith("-")) {
-            return Pair(true, -1)
-        }
-        if (text.startsWith("+")) {
-            return Pair(true, 1)
-        }
-        return Pair(false, 1)
     }
 }

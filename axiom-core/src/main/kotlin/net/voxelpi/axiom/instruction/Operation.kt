@@ -19,6 +19,7 @@ public enum class Operation(public val type: OperationType) {
     MULTIPLY(OperationType.AB_INPUT_WITH_OUTPUT),
     DIVIDE(OperationType.AB_INPUT_WITH_OUTPUT),
     MODULO(OperationType.AB_INPUT_WITH_OUTPUT),
+    SQRT(OperationType.A_INPUT_WITH_OUTPUT),
     SHIFT_LEFT(OperationType.A_INPUT_WITH_OUTPUT),
     SHIFT_RIGHT(OperationType.A_INPUT_WITH_OUTPUT),
     ROTATE_LEFT(OperationType.A_INPUT_WITH_OUTPUT),
