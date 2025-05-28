@@ -14,6 +14,8 @@ public enum class Operation(public val type: OperationType) {
     SUBTRACT(OperationType.AB_INPUT_WITH_OUTPUT),
     ADD_WITH_CARRY(OperationType.AB_INPUT_WITH_OUTPUT),
     SUBTRACT_WITH_CARRY(OperationType.AB_INPUT_WITH_OUTPUT),
+    INCREMENT(OperationType.A_INPUT_WITH_OUTPUT),
+    DECREMENT(OperationType.A_INPUT_WITH_OUTPUT),
     MULTIPLY(OperationType.AB_INPUT_WITH_OUTPUT),
     DIVIDE(OperationType.AB_INPUT_WITH_OUTPUT),
     MODULO(OperationType.AB_INPUT_WITH_OUTPUT),
@@ -33,5 +35,8 @@ public enum class Operation(public val type: OperationType) {
     CALL(OperationType.A_INPUT_WITH_OUTPUT),
     CALL_2(OperationType.AB_INPUT_WITH_OUTPUT),
     RETURN(OperationType.NO_INPUT_WITH_OUTPUT),
+    STACK_PUSH(OperationType.A_INPUT_NO_OUTPUT),
+    STACK_POP(OperationType.NO_INPUT_WITH_OUTPUT),
+    STACK_PEEK(OperationType.NO_INPUT_WITH_OUTPUT),
     BREAK(OperationType.NO_INPUT_NO_OUTPUT),
 }
