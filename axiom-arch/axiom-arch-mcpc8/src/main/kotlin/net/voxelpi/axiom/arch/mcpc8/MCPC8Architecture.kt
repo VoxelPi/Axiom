@@ -14,10 +14,10 @@ public object MCPC8Architecture : Architecture<UByte, UShort>("mcpc8", WordType.
             val isConditional = registerIndex == 7
             val conditionSourceIndex = 1
 
-            val register = createRegister("R$registerIndex", WordType.INT8)
+            val register = createRegister("register_$registerIndex", WordType.INT8)
             createVariable("R$registerIndex", register, registerIndex, readable = true, writeable = true, conditionable = isConditional)
             if (isConditional) {
-                createVariable("C$conditionSourceIndex", register, registerIndex, readable = true, writeable = true, conditionable = false)
+                createVariable("C$conditionSourceIndex", register, registerIndex, readable = true, writeable = true, conditionable = true)
             }
         }
     }

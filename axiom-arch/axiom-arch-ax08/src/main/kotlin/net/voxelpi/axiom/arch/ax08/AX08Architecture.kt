@@ -20,7 +20,7 @@ public object AX08Architecture : Architecture<UShort, UInt>("ax08", WordType.INT
 
         // Create general purpose registers.
         repeat(8) { registerIndex ->
-            val register = createRegister("R${registerIndex}", WordType.INT8)
+            val register = createRegister("register_${registerIndex}", WordType.INT8)
             createVariable("R${registerIndex}", register, registerIndex, readable = true, writeable = true, conditionable = true)
         }
     }
