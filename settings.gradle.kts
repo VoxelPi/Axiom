@@ -10,7 +10,7 @@ rootProject.name = "axiom"
 include("axiom-core")
 include("axiom-arch:axiom-arch-ax08")
 include("axiom-arch:axiom-arch-dev64")
-include("axiom-arch:axiom-arch-mcpc8")
+include("axiom-arch:axiom-arch-mcpc08")
 include("axiom-arch:axiom-arch-mcpc16")
 include("axiom-asm")
 include("axiom-cli")

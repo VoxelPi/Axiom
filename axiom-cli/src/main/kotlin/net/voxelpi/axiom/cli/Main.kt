@@ -13,8 +13,8 @@ import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
+import net.voxelpi.axiom.arch.mcpc08.MCPC08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
-import net.voxelpi.axiom.arch.mcpc8.MCPC8Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.ParseException
@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
     val architectures: Map<String, Architecture<*, *>> = listOf(
         AX08Architecture,
         DEV64Architecture,
-        MCPC8Architecture,
+        MCPC08Architecture,
         MCPC16Architecture,
     ).associateBy(Architecture<*, *>::id)
 
