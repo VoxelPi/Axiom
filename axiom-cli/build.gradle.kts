@@ -25,6 +25,9 @@ dependencies {
     implementation(libs.kotlin.logging.jvm)
     runtimeOnly(libs.slf4j.api)
     runtimeOnly(libs.log4j.slf4j.impl)
+
+    // Other
+    implementation(libs.mordant)
 }
 
 application {
