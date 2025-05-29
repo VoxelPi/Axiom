@@ -1,7 +1,6 @@
 package net.voxelpi.axiom.asm.scope
 
 import net.voxelpi.axiom.asm.anchor.Anchor
-import net.voxelpi.axiom.asm.anchor.Label
 import net.voxelpi.axiom.asm.variable.Variable
 import java.util.UUID
 

@@ -85,7 +85,6 @@ class LexerTest {
 
         assertEquals("namespace:folder/folder/value.thing", token.value)
 
-
         assertEquals(3, tokenStatements[1].tokens.size, "Invalid number of tokens in statement 2")
     }
 }
