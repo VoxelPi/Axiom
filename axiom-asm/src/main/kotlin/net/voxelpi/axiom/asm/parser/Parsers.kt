@@ -296,9 +296,9 @@ public object Parsers {
 
             transformation<InstructionStatement.WithOutput>("call_2_${transformationSuffix}") {
                 literal("call")
-                valueLikeArgument(InstructionStatement::inputA)
-                literal(",")
                 valueLikeArgument(InstructionStatement::inputB)
+                literal(",")
+                valueLikeArgument(InstructionStatement::inputA)
 
                 generateCondition(withConditionPart)
 
@@ -360,9 +360,9 @@ public object Parsers {
             transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
                 registerLikeArgument(InstructionStatement.WithOutput::output)
                 literal("=")
-                valueLikeArgument(InstructionStatement::inputA)
-                literal(",")
                 valueLikeArgument(InstructionStatement::inputB)
+                literal(",")
+                valueLikeArgument(InstructionStatement::inputA)
 
                 generateCondition(withConditionPart)
 
