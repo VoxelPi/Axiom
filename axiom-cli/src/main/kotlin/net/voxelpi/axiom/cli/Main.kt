@@ -5,6 +5,7 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.default
+import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
@@ -156,8 +157,8 @@ fun main(args: Array<String>) {
 
             val inputProvider: () -> ULong = {
                 var result: ULong
-                print("INPUT: ")
                 while (true) {
+                    print("[INPUT] > ")
                     val input = readln()
 
                     if (input.length == 3 && input[0] == '\'' && input[2] == '\'') {
@@ -170,13 +171,23 @@ fun main(args: Array<String>) {
                         result = integer.toULong()
                         break
                     }
-                    println("INVALID INPUT: \"$input\". Please enter a valid integer or character.")
+                    println("[ERROR] INVALID INPUT: \"$input\". Please enter a valid integer or character.")
                 }
 
                 result
             }
 
-            val emulator = EmulatedComputer(architecture, program, inputProvider)
+            val outputHandler: (ULong) -> Unit = { value ->
+                val signedValue = when (architecture.dataWordType) {
+                    WordType.INT8 -> value.toByte()
+                    WordType.INT16 -> value.toShort()
+                    WordType.INT32 -> value.toInt()
+                    WordType.INT64 -> value.toLong()
+                }
+                println("[OUTPUT] uint: $value   int: $signedValue   char: '${value.toInt().toChar()}'")
+            }
+
+            val emulator = EmulatedComputer(architecture, program, { true }, inputProvider, outputHandler)
             while (true) {
                 emulator.runUntilBreak()
                 readlnOrNull() ?: break

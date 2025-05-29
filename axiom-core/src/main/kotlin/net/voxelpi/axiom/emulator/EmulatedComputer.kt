@@ -14,7 +14,9 @@ import kotlin.math.sqrt
 public class EmulatedComputer<P : Comparable<P>>(
     public val architecture: Architecture<P, *>,
     public val program: Program,
+    public val inputAvailableProvider: () -> Boolean,
     public val inputProvider: () -> ULong,
+    public val outputHandler: (ULong) -> Unit,
 ) {
 
     private val state: MutableEmulatorState<P> = MutableEmulatorState(architecture)
@@ -223,7 +225,7 @@ public class EmulatedComputer<P : Comparable<P>>(
                     result = inputProvider() and outputRegister.type.mask
                 }
                 Operation.IO_WRITE -> {
-                    println("OUTPUT: $a '${a.toInt().toChar()}'")
+                    outputHandler.invoke(a)
                     hasResult = false
                 }
                 Operation.CALL -> {
