@@ -44,7 +44,7 @@ public class RegisterFile<P : Comparable<P>>(
         public val programCounter: Register<P> = Register(programCounterId, programCounterType)
         public lateinit var programCounterVariable: RegisterVariable.Direct<P>
 
-        private var registers: MutableMap<String, Register<*>> = mutableMapOf()
+        private var registers: MutableMap<String, Register<*>> = mutableMapOf(programCounter.id to programCounter)
         private var variables: MutableMap<String, RegisterVariable<*, *>> = mutableMapOf()
 
         public fun createRegister(id: String, type: WordType<*>): Register<*> {
