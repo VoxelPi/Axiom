@@ -41,6 +41,8 @@ public sealed interface Scope {
         return scope
     }
 
+    public fun findScope(name: String): Scope?
+
     public fun defineVariable(name: String, value: ValueLike): Result<Variable> {
         // Check if the variable is already defined in this scope.
         if (name in variables) {

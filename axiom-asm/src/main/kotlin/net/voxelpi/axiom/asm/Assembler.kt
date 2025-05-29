@@ -11,8 +11,10 @@ import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
 import net.voxelpi.axiom.asm.pipeline.step.InsertStartJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceScopeNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceVariableNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveIfBlockStep
+import net.voxelpi.axiom.asm.pipeline.step.ResolveScopeJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveVariableValuesStep
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
@@ -53,6 +55,9 @@ public class Assembler(
         val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
         val program = unitCollector.reduce().getOrThrow()
 
+        // Replace scope names with references.
+        ReplaceScopeNamesStep.transform(program).getOrElse { return Result.failure(it) }
+
         // Replace register names with references to actual registers.
         ReplaceRegisterNamesStep(architecture).transform(program).getOrThrow()
 
@@ -64,8 +69,11 @@ public class Assembler(
         DefineLabelsStep.transform(program).getOrThrow()
         DefineImplicitStartLabelStep.transform(program).getOrThrow()
 
-        // Transform if blocks to jumps.
+        // Transform if blocks to jump instructions.
         ResolveIfBlockStep.transform(program).getOrThrow()
+
+        // Transform scope jumps to jump instructions.
+        ResolveScopeJumpStep.transform(program).getOrThrow()
 
         // Resolve variable values.
         ResolveVariableValuesStep.transform(program).getOrThrow()
