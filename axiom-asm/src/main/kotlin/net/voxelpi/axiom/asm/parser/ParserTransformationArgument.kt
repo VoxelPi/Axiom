@@ -120,7 +120,7 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
             }
 
             val condition = Condition.entries.find { it.symbol == token.value }
-                ?: return Result.failure(ParseException(token.source, "Unknown condition '${token.value}'"))
+                ?: return Result.failure(ParseException(token.source, "Unknown condition \"${token.value}\""))
 
             return Result.success(ParsedValue.create(token.source, condition))
         }
