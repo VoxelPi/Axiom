@@ -262,7 +262,7 @@ public class EmulatedComputer<P : Comparable<P>>(
         }
 
         // INCREMENT
-        if (outputRegister.register.id != architecture.registers.programCounter.id) {
+        if (!conditionValid || !hasResult || outputRegister.register.id != architecture.registers.programCounter.id) {
             val nextProgramCounter = (instructionIndex + 1UL) and architecture.registers.programCounter.type.mask
             val change = state.makeRegisterModification(architecture.registers.programCounter, nextProgramCounter)
             changes += change
