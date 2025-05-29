@@ -10,6 +10,7 @@ import net.voxelpi.axiom.asm.pipeline.step.DefineImplicitStartLabelStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineLabelsStep
 import net.voxelpi.axiom.asm.pipeline.step.DefineVariablesStep
 import net.voxelpi.axiom.asm.pipeline.step.InsertStartJumpStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceLabelNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceScopeNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceVariableNamesStep
@@ -68,6 +69,7 @@ public class Assembler(
         // Define labels.
         DefineLabelsStep.transform(program).getOrThrow()
         DefineImplicitStartLabelStep.transform(program).getOrThrow()
+        ReplaceLabelNamesStep.transform(program).getOrThrow()
 
         // Transform if blocks to jump instructions.
         ResolveIfBlockStep.transform(program).getOrThrow()
