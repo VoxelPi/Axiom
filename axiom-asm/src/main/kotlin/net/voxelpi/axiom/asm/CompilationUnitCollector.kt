@@ -128,7 +128,7 @@ internal class CompilationUnitCollector private constructor(
 
                     // Copy over all statements.
                     val includedStatements = unitProgram.statements.map { includedStatementInstance ->
-                        val scope = includedScopeMapping[statementInstance.scope.uniqueId]!!
+                        val scope = includedScopeMapping[includedStatementInstance.scope.uniqueId]!!
 
                         val parameterValues = includedStatementInstance.parameterValues.mapValues { (_, value) ->
                             when (value) {
@@ -257,7 +257,7 @@ internal class CompilationUnitCollector private constructor(
                     val includedStatements = unitProgram.statements
                         .subList(firstIncludedStatementIndex, lastIncludedStatementIndex + 1)
                         .map { includedStatementInstance ->
-                            val scope = includedScopeMapping[statementInstance.scope.uniqueId]!!
+                            val scope = includedScopeMapping[includedStatementInstance.scope.uniqueId]!!
 
                             val parameterValues = includedStatementInstance.parameterValues.mapValues { (_, value) ->
                                 when (value) {
