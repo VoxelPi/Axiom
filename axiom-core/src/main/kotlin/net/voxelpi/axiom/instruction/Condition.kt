@@ -3,7 +3,7 @@ package net.voxelpi.axiom.instruction
 public enum class Condition(public val symbol: String) {
     ALWAYS("true"),
     NEVER("false"),
-    EQUAL("="),
+    EQUAL("=="),
     NOT_EQUAL("!="),
     LESS("<"),
     GREATER_OR_EQUAL(">="),
