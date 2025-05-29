@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.scope
 
+import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.anchor.Label
 import net.voxelpi.axiom.asm.anchor.ScopeAnchor
 import net.voxelpi.axiom.asm.variable.Variable
@@ -38,7 +39,7 @@ public sealed class LocalScope(
         return variables.containsKey(name) || parent.isVariableDefined(name)
     }
 
-    override fun findLabel(name: String): Pair<Label, Scope>? {
+    override fun findLabel(name: String): Pair<Anchor.Named, Scope>? {
         // Check the current scope.
         labels[name]?.let { return it to this }
 
@@ -86,7 +87,7 @@ public sealed class LocalScope(
         override val uniqueId: UUID,
         public val name: String,
         override val variables: MutableMap<String, Variable>,
-        override val labels: MutableMap<String, Label>,
+        override val labels: MutableMap<String, Anchor.Named>,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
@@ -96,7 +97,7 @@ public sealed class LocalScope(
         override val scopes: MutableList<Scope>,
         override val uniqueId: UUID,
         override val variables: MutableMap<String, Variable>,
-        override val labels: MutableMap<String, Label>,
+        override val labels: MutableMap<String, Anchor.Named>,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)

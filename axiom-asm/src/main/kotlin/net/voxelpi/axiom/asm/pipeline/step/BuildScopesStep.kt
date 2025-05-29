@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.pipeline.step
 
+import net.voxelpi.axiom.asm.anchor.Label
 import net.voxelpi.axiom.asm.pipeline.ProgramPipelineStep
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
@@ -8,6 +9,7 @@ import net.voxelpi.axiom.asm.statement.StatementPrototype
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.ScopeStatement
+import java.util.UUID
 import kotlin.collections.set
 
 public object BuildScopesStep : ProgramPipelineStep {
@@ -20,8 +22,15 @@ public object BuildScopesStep : ProgramPipelineStep {
 
             when (statement) {
                 is ScopeStatement.Open.Named -> {
-                    // Create a new name scope and push it to the scope stack.
                     val parentScope = scopeStack.last()
+
+                    // Create a label.
+                    val label = Label(UUID.randomUUID(), statement.name.name)
+                    program.anchors[label.uniqueId] = label
+                    parentScope.labels[label.name] = label
+                    yield(ANCHOR_PROTOTYPE.createInstance(AnchorStatement(label), parentScope, statementInstance.source))
+
+                    // Create a new name scope and push it to the scope stack.
                     val scope = parentScope.createScope(statement.name.name)
                     program.scopes[scope.uniqueId] = scope
                     program.anchors[scope.startAnchor.uniqueId] = scope.startAnchor

@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.scope
 
+import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.anchor.Label
 import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.type.ValueLike
@@ -14,12 +15,12 @@ public sealed interface Scope {
 
     public val variables: MutableMap<String, Variable>
 
-    public val labels: MutableMap<String, Label>
+    public val labels: MutableMap<String, Anchor.Named>
 
     public fun createScope(
         uniqueId: UUID = UUID.randomUUID(),
         variables: MutableMap<String, Variable> = mutableMapOf(),
-        labels: MutableMap<String, Label> = mutableMapOf(),
+        labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ): LocalScope.Unnamed {
@@ -32,7 +33,7 @@ public sealed interface Scope {
         name: String,
         uniqueId: UUID = UUID.randomUUID(),
         variables: MutableMap<String, Variable> = mutableMapOf(),
-        labels: MutableMap<String, Label> = mutableMapOf(),
+        labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ): LocalScope.Named {
@@ -80,9 +81,9 @@ public sealed interface Scope {
 
     public fun isVariableDefined(name: String): Boolean
 
-    public fun findLabel(name: String): Pair<Label, Scope>?
+    public fun findLabel(name: String): Pair<Anchor.Named, Scope>?
 
-    public fun findLabelInChild(name: String): Pair<Label, Scope>? {
+    public fun findLabelInChild(name: String): Pair<Anchor.Named, Scope>? {
         // BFS to find the label in the child scopes.
         var scopesToCheckNext = scopes.toMutableList()
         while (scopesToCheckNext.isNotEmpty()) {

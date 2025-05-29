@@ -80,6 +80,15 @@ internal class CompilationUnitCollector private constructor(
                         when (includedScope) {
                             is GlobalScope -> {
                                 includedScopeMapping[includedScope.uniqueId] = statementInstance.scope
+
+                                // Copy over all labels.
+                                for (label in includedScope.labels.values) {
+                                    statementInstance.scope.labels[label.name] = label
+                                }
+                                // Copy over all variables (should be not necessary).
+                                for (variable in includedScope.variables.values) {
+                                    statementInstance.scope.variables[variable.name] = variable
+                                }
                             }
                             is LocalScope.Named -> {
                                 val parentScope = includedScopeMapping[includedScope.parent.uniqueId]!!

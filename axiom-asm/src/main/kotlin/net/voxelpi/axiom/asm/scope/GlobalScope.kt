@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.scope
 
+import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.anchor.Label
 import net.voxelpi.axiom.asm.variable.Variable
 import java.util.UUID
@@ -7,7 +8,7 @@ import java.util.UUID
 public class GlobalScope(
     override val scopes: MutableList<Scope> = mutableListOf(),
     override val variables: MutableMap<String, Variable> = mutableMapOf(),
-    override val labels: MutableMap<String, Label> = mutableMapOf(),
+    override val labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
 ) : Scope {
 
     // The global scope has a unique id of 0.
@@ -25,7 +26,7 @@ public class GlobalScope(
         return variables.containsKey(name)
     }
 
-    override fun findLabel(name: String): Pair<Label, Scope>? {
+    override fun findLabel(name: String): Pair<Anchor.Named, Scope>? {
         if (labels.containsKey(name)) {
             return labels[name]!! to this
         }
