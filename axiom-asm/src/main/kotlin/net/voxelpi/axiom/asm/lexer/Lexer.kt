@@ -13,7 +13,7 @@ public class Lexer() {
      * Convert tokens
      */
     public fun tokenize(unit: CompilationUnit): List<TokenizedStatement> {
-        val statements: MutableList<List<Token>> = mutableListOf()
+        val statements: MutableList<TokenizedStatement> = mutableListOf()
 
         val text = unit.content
         val lines = text.split("\n")
@@ -31,14 +31,14 @@ public class Lexer() {
         }
 
         // Remove all empty statements.
-        statements.removeAll { it.isEmpty() }
+        statements.removeAll { it.tokens.isEmpty() }
 
-        // Return the list of all generated tokens.
-        return statements.map { TokenizedStatement(it) }
+        // Return the list of all generated token statements.
+        return statements
     }
 
-    private fun tokenizeLine(text: String, lineStartIndex: Int, lineNumber: Int, unit: CompilationUnit): List<List<Token>> {
-        val statements: MutableList<List<Token>> = mutableListOf()
+    private fun tokenizeLine(text: String, lineStartIndex: Int, lineNumber: Int, unit: CompilationUnit): List<TokenizedStatement> {
+        val statements: MutableList<TokenizedStatement> = mutableListOf()
 
         val statementTexts = text.split(";")
         var iStartColumn = 0
@@ -57,7 +57,7 @@ public class Lexer() {
         return statements
     }
 
-    private fun tokenizeStatement(text: String, statementIndex: Int, lineNumber: Int, columnNumber: Int, unit: CompilationUnit): List<Token> {
+    private fun tokenizeStatement(text: String, statementIndex: Int, lineNumber: Int, columnNumber: Int, unit: CompilationUnit): TokenizedStatement {
         val statement: MutableList<Token> = mutableListOf()
 
         var iSymbol = 0
@@ -144,7 +144,7 @@ public class Lexer() {
         }
 
         // Add the statement.
-        return statement
+        return TokenizedStatement(SourceLink.CompilationUnitSlice(unit, statementIndex, lineNumber, columnNumber, text.length), statement)
     }
 
     public companion object {

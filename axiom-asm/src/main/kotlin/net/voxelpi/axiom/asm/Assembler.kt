@@ -33,7 +33,6 @@ import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.register.RegisterVariable
 import java.nio.file.Path
 import java.util.UUID
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.isRegularFile
 
 public class Assembler(
@@ -41,7 +40,7 @@ public class Assembler(
 ) {
 
     public fun assemble(text: String, architecture: Architecture<*, *>): Result<Program> {
-        val compilationUnit = CompilationUnit("__provided__", text)
+        val compilationUnit = CompilationUnit("__main__", text)
         return assemble(compilationUnit, architecture)
     }
 
@@ -50,7 +49,7 @@ public class Assembler(
             return Result.failure(IllegalArgumentException("The path $path is not a regular file."))
         }
 
-        val compilationUnit = CompilationUnit(path.normalize().absolutePathString(), path.toFile().readText())
+        val compilationUnit = CompilationUnit("__main__", path.toFile().readText())
         return assemble(compilationUnit, architecture)
     }
 

@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm
 
 import net.voxelpi.axiom.asm.anchor.Anchor
 import net.voxelpi.axiom.asm.anchor.ScopeAnchor
+import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.lexer.Lexer
 import net.voxelpi.axiom.asm.parser.Parser
@@ -348,10 +349,10 @@ internal class CompilationUnitCollector private constructor(
                     }
                 }
                 if (unitPaths.isEmpty()) {
-                    throw IllegalArgumentException("The unit $unitName was not found in any of the include directories.")
+                    throw CompilationException("The unit $unitName was not found in any of the include directories.")
                 }
                 if (unitPaths.size > 1) {
-                    throw IllegalArgumentException("The unit $unitName was found in multiple include <= directories.")
+                    throw CompilationException("The unit $unitName was found in multiple include <= directories.")
                 }
                 val unitPath = unitPaths.first()
 
@@ -360,12 +361,14 @@ internal class CompilationUnitCollector private constructor(
 
                 // Prepare the statements from the unit.
                 val unitStatements = prepareUnit(unit, parser).getOrElse {
-                    throw SourceCompilationException(statementInstance.source, "Failed to prepare the unit $unitName.", it)
+                    throw SourceCompilationException(statementInstance.source, "Failed to include unit $unitName.", it)
                 }
                 unitsStatements[unit.id] = unitStatements
 
                 // Collect the unit.
-                collect(unitStatements).getOrThrow()
+                collect(unitStatements).getOrElse {
+                    throw SourceCompilationException(statementInstance.source, "Failed to include unit $unitName.", it)
+                }
 
                 // Return the unit
                 unit
