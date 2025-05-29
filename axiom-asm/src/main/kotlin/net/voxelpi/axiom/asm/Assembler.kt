@@ -52,6 +52,9 @@ public class Assembler(
         val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
         val program = unitCollector.reduce().getOrThrow()
 
+        // Replace register names with references to actual registers.
+        ReplaceRegisterNamesStep(architecture).transform(program).getOrThrow()
+
         // Define variables.
         DefineVariablesStep.transform(program).getOrThrow()
         ReplaceVariableNamesStep.transform(program).getOrThrow()
@@ -59,9 +62,6 @@ public class Assembler(
         // Define labels.
         DefineLabelsStep.transform(program).getOrThrow()
         DefineImplicitStartLabelStep.transform(program).getOrThrow()
-
-        // Replace register names with references to actual registers.
-        ReplaceRegisterNamesStep(architecture).transform(program).getOrThrow()
 
         // Resolve variable values.
         ResolveVariableValuesStep.transform(program).getOrThrow()

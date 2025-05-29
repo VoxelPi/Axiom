@@ -42,8 +42,9 @@ public sealed interface Scope {
     }
 
     public fun defineVariable(name: String, value: ValueLike): Result<Variable> {
-        if (isVariableDefined(name)) {
-            return Result.failure(CompilationException("The variable $name is already defined in this scope stack."))
+        // Check if the variable is already defined in this scope.
+        if (name in variables) {
+            return Result.failure(CompilationException("The variable $name is already defined in this scope."))
         }
 
         val variable = Variable(UUID.randomUUID(), name, value)
@@ -60,8 +61,8 @@ public sealed interface Scope {
     }
 
     public fun defineLabel(name: String): Result<Label> {
-        if (isVariableDefined(name)) {
-            return Result.failure(CompilationException("The variable $name is already defined in this scope stack."))
+        if (isLabelDefined(name)) {
+            return Result.failure(CompilationException("The label $name is already defined in this scope stack."))
         }
 
         val label = Label(UUID.randomUUID(), name)
