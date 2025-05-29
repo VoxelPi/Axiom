@@ -223,7 +223,7 @@ public class EmulatedComputer<P : Comparable<P>>(
                     result = inputProvider() and outputRegister.type.mask
                 }
                 Operation.IO_WRITE -> {
-                    println("OUTPUT: $b '${b.toInt().toChar()}'")
+                    println("OUTPUT: $a '${a.toInt().toChar()}'")
                     hasResult = false
                 }
                 Operation.CALL -> {
