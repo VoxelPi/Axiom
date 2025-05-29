@@ -5,7 +5,6 @@ import net.voxelpi.axiom.asm.pipeline.ProgramPipelineStep
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.type.AnchorLike
 import net.voxelpi.axiom.asm.type.LabelLike
-import net.voxelpi.axiom.asm.type.VariableLike
 
 public object ReplaceLabelNamesStep : ProgramPipelineStep {
 

@@ -23,6 +23,11 @@ public class ReplaceRegisterNamesStep(public val architecture: Architecture<*, *
             architecture.registers.variable(value.value)?.let { RegisterLike.RegisterReference(it) } ?: value
         }.getOrElse { return Result.failure(it) }
 
+        // Transform program counter.
+        program.transformArgumentsOfType<RegisterLike.PC> { statementInstance, parameter, value ->
+            RegisterLike.RegisterReference(architecture.registers.programCounterVariable)
+        }
+
         // Success.
         return Result.success(Unit)
     }

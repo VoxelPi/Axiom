@@ -13,10 +13,12 @@ import net.voxelpi.axiom.asm.pipeline.step.InsertStartJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceLabelNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceScopeNamesStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceSpecialRegistersStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceVariableNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveIfBlockStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveScopeJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveVariableValuesStep
+import net.voxelpi.axiom.asm.pipeline.step.UpcastLoadsStep
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.program.StatementProgram
@@ -86,6 +88,12 @@ public class Assembler(
         // Generate anchors indices and use them to replace all anchor reference parameters.
         val anchorIndices = generateAnchorIndices(program).getOrThrow()
         ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
+
+        // Replace special registers with references to actual registers.
+        ReplaceSpecialRegistersStep(architecture).transform(program).getOrThrow()
+
+        // Platform-dependent compatibility transformations.
+        UpcastLoadsStep(architecture).transform(program).getOrThrow()
 
         val instructions = generateInstructions(program, architecture).getOrThrow()
         val compiledProgram = Program(instructions)
@@ -165,9 +173,6 @@ public class Assembler(
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
             }
-            is RegisterLike.PC -> {
-                Result.success(architecture.registers.programCounterVariable)
-            }
             is RegisterLike.AnyRegister -> {
                 findRegister(architecture, value)
             }
@@ -181,9 +186,6 @@ public class Assembler(
         return when (value) {
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
-            }
-            is RegisterLike.PC -> {
-                Result.success(architecture.registers.programCounterVariable)
             }
             is RegisterLike.AnyRegister -> {
                 findRegister(architecture, value)
@@ -201,9 +203,6 @@ public class Assembler(
             }
             is RegisterLike.RegisterReference -> {
                 Result.success(InstructionValue.RegisterReference(value.register))
-            }
-            is RegisterLike.PC -> {
-                Result.success(InstructionValue.RegisterReference(architecture.registers.programCounterVariable))
             }
             is RegisterLike.AnyRegister -> {
                 val register = findRegister(architecture, value).getOrElse { return Result.failure(it) }

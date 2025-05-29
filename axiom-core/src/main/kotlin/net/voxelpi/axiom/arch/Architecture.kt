@@ -90,6 +90,9 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
 
         // Encode instructions.
         for ((iInstruction, instruction) in program.instructions.withIndex()) {
+            if (instruction.operation !in supportedOperations) {
+                throw IllegalArgumentException("The operation \"${instruction.operation}\" is not supported by the architecture \"${id}\".")
+            }
             val encodedInstruction = encodeInstructionPacked(instruction).getOrThrow()
             encodedInstruction.copyInto(encodedProgram, iInstruction * instructionWordType.bytes)
         }
