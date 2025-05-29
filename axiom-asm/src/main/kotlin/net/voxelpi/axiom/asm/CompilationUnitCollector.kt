@@ -365,7 +365,7 @@ internal class CompilationUnitCollector private constructor(
                 unitsStatements[unit.id] = unitStatements
 
                 // Collect the unit.
-                collect(unitStatements)
+                collect(unitStatements).getOrThrow()
 
                 // Return the unit
                 unit
