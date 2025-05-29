@@ -2,14 +2,25 @@ package net.voxelpi.axiom
 
 import kotlin.reflect.KClass
 
+/**
+ * The type of data word.
+ * @property bytes the number of bytes the word type uses.
+ * @property type the kotlin type of the word.
+ */
 public sealed class WordType<T : Comparable<T>>(
     public val bytes: Int,
     public val type: KClass<T>,
 ) : Comparable<WordType<*>> {
 
+    /**
+     * The number of bits of the word type.
+     */
     public val bits: Int
         get() = bytes * 8
 
+    /**
+     * The mask that should be applied to convert any uint64 to this word type.
+     */
     public abstract val mask: ULong
 
     override fun compareTo(other: WordType<*>): Int {
