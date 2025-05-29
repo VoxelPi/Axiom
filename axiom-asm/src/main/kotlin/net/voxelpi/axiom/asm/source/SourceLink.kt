@@ -26,7 +26,7 @@ public sealed interface SourceLink {
     ) : SourceLink {
 
         override val text: String
-            get() = unit.content.substring(index, index + length)
+            get() = unit.content.substring(index, (index + length).coerceAtMost(unit.content.length - 1))
     }
 
     /**

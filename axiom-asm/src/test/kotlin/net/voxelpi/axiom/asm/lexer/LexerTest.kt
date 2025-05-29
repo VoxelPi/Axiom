@@ -44,13 +44,16 @@ class LexerTest {
 
         // Statement 3.
         val statement3 = tokenStatements[2]
-        assertEquals(2, statement3.tokens.size, "Invalid number of tokens in statement 3")
+        assertEquals(3, statement3.tokens.size, "Invalid number of tokens in statement 3")
 
-        assertIs<Token.Directive>(statement3.tokens[0])
-        assertEquals("include", (statement3.tokens[0] as Token.Directive).value)
+        assertIs<Token.Text>(statement3.tokens[0])
+        assertEquals("!", (statement3.tokens[0] as Token.Text).value)
 
         assertIs<Token.Text>(statement3.tokens[1])
-        assertEquals("stuff", (statement3.tokens[1] as Token.Text).value)
+        assertEquals("include", (statement3.tokens[1] as Token.Text).value)
+
+        assertIs<Token.Text>(statement3.tokens[2])
+        assertEquals("stuff", (statement3.tokens[2] as Token.Text).value)
     }
 
     @Test
@@ -61,9 +64,28 @@ class LexerTest {
         val tokenStatements = lexer.tokenize(unit)
         assertEquals(3, tokenStatements.size, "Invalid number of statements")
 
-        val token = tokenStatements[2].tokens[0]
-        val source = SourceLink.CompilationUnitSlice(unit, 36, 1, 18, 8)
+        val token = tokenStatements[2].tokens[1]
+        val source = SourceLink.CompilationUnitSlice(unit, 37, 1, 19, 7)
 
         assertEquals(source, token.source)
+    }
+
+    @Test
+    fun `test namespaced keys`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit("test", "namespace:folder/folder/value.thing\n2 / 3")
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(2, tokenStatements.size, "Invalid number of statements")
+
+        assertEquals(1, tokenStatements[0].tokens.size, "Invalid number of tokens in statement 1")
+        val token = tokenStatements[0].tokens[0]
+
+        assertIs<Token.Text>(token)
+
+        assertEquals("namespace:folder/folder/value.thing", token.value)
+
+
+        assertEquals(3, tokenStatements[1].tokens.size, "Invalid number of tokens in statement 2")
     }
 }

@@ -122,33 +122,32 @@ public class ParserTransformation<T : Any> internal constructor(
         public fun literal(text: String) {
             val words = text.split("\\s+".toRegex())
             for (word in words) {
-                val part = ParserTransformationLiteral.Text(word)
+                val part = ParserTransformationLiteral(word)
                 segments += part
             }
         }
 
         public fun directive(text: String) {
-            val part = ParserTransformationLiteral.Directive(text)
-            segments += part
+            segments += ParserTransformationLiteral("!")
+            segments += ParserTransformationLiteral(text)
         }
 
         public fun curlyBracketsOpen() {
-            val part = ParserTransformationLiteral.CurlyBrackets.Open
+            val part = ParserTransformationLiteral("{")
             segments += part
         }
 
         public fun curlyBracketsClose() {
-            val part = ParserTransformationLiteral.CurlyBrackets.Close
+            val part = ParserTransformationLiteral("}")
             segments += part
         }
 
         public fun squareBracketsOpen() {
-            val part = ParserTransformationLiteral.SquareBrackets.Open
-            segments += part
+            val part = ParserTransformationLiteral("[")
         }
 
         public fun squareBracketsClose() {
-            val part = ParserTransformationLiteral.SquareBrackets.Close
+            val part = ParserTransformationLiteral("]")
             segments += part
         }
 

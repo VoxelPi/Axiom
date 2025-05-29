@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.pipeline.step
 
 import net.voxelpi.axiom.asm.exception.CompilationException
+import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.pipeline.ProgramPipelineStep
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.type.AnchorLike
@@ -12,7 +13,7 @@ public object ReplaceLabelNamesStep : ProgramPipelineStep {
         // Replace label names in statements.
         program.transformArgumentsOfType<LabelLike.LabelName> { statementInstance, parameter, value ->
             val (label, _) = statementInstance.scope.findLabel(value.name)
-                ?: throw IllegalArgumentException("Unknown label \"${value.name}\".")
+                ?: throw SourceCompilationException(statementInstance.sourceOfOrDefault(parameter), "Unknown label \"${value.name}\".")
             AnchorLike.AnchorReference(label)
         }.getOrElse { return Result.failure(it) }
 
