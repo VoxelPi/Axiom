@@ -5,6 +5,7 @@ import net.voxelpi.axiom.emulator.state.EmulatorStateChange
 import net.voxelpi.axiom.emulator.state.EmulatorStatePatch
 import net.voxelpi.axiom.emulator.state.MutableEmulatorState
 import net.voxelpi.axiom.instruction.Condition
+import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
@@ -35,7 +36,23 @@ public class EmulatedComputer<P : Comparable<P>>(
 
         // FETCH
         val instructionIndex = state.rawRegisterState(architecture.registers.programCounter)
-        val instruction = program.instructions[instructionIndex.toInt()]
+        val instruction = if (instructionIndex.toInt() in program.instructions.indices) {
+            program.instructions[instructionIndex.toInt()]
+        } else {
+            val operation = if (architecture.dataWordType < architecture.registers.programCounterVariable.type) {
+                Operation.LOAD_2
+            } else {
+                Operation.LOAD
+            }
+            Instruction(
+                operation,
+                Condition.ALWAYS,
+                architecture.registers.variables.values.firstOrNull { it.conditionable }!!,
+                architecture.registers.programCounterVariable,
+                InstructionValue.ImmediateValue(0),
+                InstructionValue.ImmediateValue(0),
+            )
+        }
 
         // DECODE
         val operation = instruction.operation
