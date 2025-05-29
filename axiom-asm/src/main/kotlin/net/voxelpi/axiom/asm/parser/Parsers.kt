@@ -113,31 +113,6 @@ public object Parsers {
                 generateCondition(withConditionPart)
             }
 
-            // LOAD, '<register> = <value>'
-            transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
-                registerLikeArgument(InstructionStatement.WithOutput::output)
-                literal("=")
-                valueLikeArgument(InstructionStatement::inputA)
-
-                generateCondition(withConditionPart)
-
-                parameter(InstructionStatement::inputB) { IntegerValue(0) }
-                parameter(InstructionStatement::operation) { Operation.LOAD }
-            }
-
-            // LOAD 2, '<register> = <value1>, <value2>'
-            transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
-                registerLikeArgument(InstructionStatement.WithOutput::output)
-                literal("=")
-                valueLikeArgument(InstructionStatement::inputA)
-                literal(",")
-                valueLikeArgument(InstructionStatement::inputB)
-
-                generateCondition(withConditionPart)
-
-                parameter(InstructionStatement::operation) { Operation.LOAD_2 }
-            }
-
             // JUMP, 'jump <value>'
             transformation<InstructionStatement.WithOutput>("jump_${transformationSuffix}") {
                 literal("jump")
@@ -340,6 +315,31 @@ public object Parsers {
                 parameter(InstructionStatement::inputA) { IntegerValue(0) }
                 parameter(InstructionStatement::inputB) { IntegerValue(0) }
                 parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
+            }
+
+            // LOAD, '<register> = <value>'
+            transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
+                registerLikeArgument(InstructionStatement.WithOutput::output)
+                literal("=")
+                valueLikeArgument(InstructionStatement::inputA)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement::operation) { Operation.LOAD }
+            }
+
+            // LOAD 2, '<register> = <value1>, <value2>'
+            transformation<InstructionStatement.WithOutput>("load_2_${transformationSuffix}") {
+                registerLikeArgument(InstructionStatement.WithOutput::output)
+                literal("=")
+                valueLikeArgument(InstructionStatement::inputA)
+                literal(",")
+                valueLikeArgument(InstructionStatement::inputB)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.LOAD_2 }
             }
         }
     }
