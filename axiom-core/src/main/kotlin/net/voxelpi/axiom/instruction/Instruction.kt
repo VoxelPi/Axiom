@@ -22,12 +22,11 @@ public data class Instruction(
     }
 
     override fun toString(): String {
-        val operationPart = "${outputRegister.id} = ${operation.name} $inputA $inputB"
         return when (condition) {
-            Condition.ALWAYS -> operationPart
+            Condition.ALWAYS -> operation.asString(outputRegister, inputA, inputB)
             Condition.NEVER -> "nop"
             else -> {
-                "$operationPart if $conditionRegister ${condition.symbol} 0"
+                "${operation.asString(outputRegister, inputA, inputB)} if $conditionRegister ${condition.symbol} 0"
             }
         }
     }
