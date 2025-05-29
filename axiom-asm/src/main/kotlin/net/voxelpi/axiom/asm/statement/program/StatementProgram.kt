@@ -5,8 +5,6 @@ import net.voxelpi.axiom.asm.scope.GlobalScope
 import net.voxelpi.axiom.asm.scope.LocalScope
 import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.statement.StatementInstance
-import net.voxelpi.axiom.asm.type.ValueLike
-import net.voxelpi.axiom.asm.variable.Variable
 import java.util.UUID
 
 public interface StatementProgram {

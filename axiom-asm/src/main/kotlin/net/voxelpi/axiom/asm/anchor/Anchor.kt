@@ -11,5 +11,7 @@ public sealed interface Anchor {
         public val name: String
     }
 
-    public interface Unnamed : Anchor
+    public data class Unnamed(
+        override val uniqueId: UUID,
+    ) : Anchor
 }

@@ -29,6 +29,10 @@ public sealed interface RegisterVariable<V : Comparable<V>, R : Comparable<R>> {
 
         override val type: WordType<V>
             get() = register.type
+
+        override fun toString(): String {
+            return id
+        }
     }
 
     public data class Part<V : Comparable<V>, R : Comparable<R>>(
@@ -44,6 +48,10 @@ public sealed interface RegisterVariable<V : Comparable<V>, R : Comparable<R>> {
 
         init {
             require(type.bits * part < register.type.bits)
+        }
+
+        override fun toString(): String {
+            return id
         }
     }
 }
