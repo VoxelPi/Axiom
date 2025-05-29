@@ -317,6 +317,33 @@ public object Parsers {
                 parameter(InstructionStatement.WithOutput::output) { RegisterLike.PC }
             }
 
+            // MEMORY LOAD, '<register> = [<address>]'
+            transformation<InstructionStatement.WithOutput>("memory_load_${transformationSuffix}") {
+                registerLikeArgument(InstructionStatement.WithOutput::output)
+                literal("=")
+                literal("[")
+                valueLikeArgument(InstructionStatement::inputA)
+                literal("]")
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                parameter(InstructionStatement::operation) { Operation.MEMORY_LOAD }
+            }
+
+            // MEMORY STORE, '[<address>] = <value>'
+            transformation<InstructionStatement.WithoutOutput>("memory_store_${transformationSuffix}") {
+                literal("[")
+                valueLikeArgument(InstructionStatement::inputA)
+                literal("]")
+                literal("=")
+                valueLikeArgument(InstructionStatement::inputB)
+
+                generateCondition(withConditionPart)
+
+                parameter(InstructionStatement::operation) { Operation.MEMORY_STORE }
+            }
+
             // LOAD, '<register> = <value>'
             transformation<InstructionStatement.WithOutput>("load_${transformationSuffix}") {
                 registerLikeArgument(InstructionStatement.WithOutput::output)
