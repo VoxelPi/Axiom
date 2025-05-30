@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
+import net.voxelpi.axiom.cli.emulator.command.EmulatorRegisterCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStopCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.emulator.EmulatedComputer
@@ -42,6 +43,7 @@ class Emulator(
     }.build()
 
     val commandManager = AxiomCommandManager().apply {
+        registerCommands(EmulatorRegisterCommand(this@Emulator))
         registerCommands(EmulatorStopCommand(this@Emulator))
         registerCommands(EmulatorVersionCommand())
     }
