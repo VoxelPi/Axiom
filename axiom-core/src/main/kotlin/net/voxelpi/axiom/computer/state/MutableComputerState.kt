@@ -116,9 +116,10 @@ public class MutableComputerState<P : Comparable<P>>(
     }
 
     public fun makeMemoryModification(address: Int, value: ULong): ComputerStateChange.MemoryChange {
+        val newValue = value and architecture.memoryWordType.mask
         val previousValue = memoryState[address]
-        memoryState[address] = value
-        return ComputerStateChange.MemoryChange(address, previousValue, value)
+        memoryState[address] = newValue
+        return ComputerStateChange.MemoryChange(address, previousValue, newValue)
     }
 
     public fun stackPeek(): ULong {
@@ -126,8 +127,9 @@ public class MutableComputerState<P : Comparable<P>>(
     }
 
     public fun makeStackPush(value: ULong): ComputerStateChange.StackPush {
-        stackState.push(value)
-        return ComputerStateChange.StackPush(value)
+        val newValue = value and architecture.stackWordType.mask
+        stackState.push(newValue)
+        return ComputerStateChange.StackPush(newValue)
     }
 
     public fun makeStackPop(): Pair<ComputerStateChange.StackPop, ULong> {

@@ -17,7 +17,9 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
     public val instructionWordType: WordType<I>,
     public val dataWordType: WordType<*>,
     public val memorySize: Int,
+    public val memoryWordType: WordType<*>,
     public val stackSize: Int,
+    public val stackWordType: WordType<*>,
 ) {
 
     /**

@@ -10,7 +10,15 @@ import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.register.RegisterVariable
 import net.voxelpi.axiom.util.biMapOf
 
-public object AX08Architecture : Architecture<UShort, UInt>("ax08", WordType.INT32, WordType.INT8, 256, 16) {
+public object AX08Architecture : Architecture<UShort, UInt>(
+    "ax08",
+    WordType.INT32,
+    WordType.INT8,
+    256,
+    WordType.INT8,
+    16,
+    WordType.INT16,
+) {
 
     override val registers: RegisterFile<UShort> = RegisterFile.create("program_counter", WordType.INT16) {
         // Create the PC variables.
