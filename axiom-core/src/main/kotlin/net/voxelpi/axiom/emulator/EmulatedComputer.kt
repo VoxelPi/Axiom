@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.emulator
 
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.emulator.state.EmulatorState
 import net.voxelpi.axiom.emulator.state.EmulatorStateChange
 import net.voxelpi.axiom.emulator.state.EmulatorStatePatch
 import net.voxelpi.axiom.emulator.state.MutableEmulatorState
@@ -24,6 +25,10 @@ public class EmulatedComputer<P : Comparable<P>>(
     private var iStep = 0
     private val steps: MutableList<EmulatorStatePatch> = mutableListOf()
 
+    public fun currentState(): EmulatorState<P> {
+        return state
+    }
+
     public fun runUntilBreak() {
         while (true) {
             val breakHit = runInstructionWithHistory()
@@ -37,7 +42,7 @@ public class EmulatedComputer<P : Comparable<P>>(
         val changes: MutableList<EmulatorStateChange> = mutableListOf()
 
         // FETCH
-        val instructionIndex = state.rawRegisterState(architecture.registers.programCounter)
+        val instructionIndex = state.registerStateUInt64(architecture.registers.programCounter)
         val instruction = if (instructionIndex.toInt() in program.instructions.indices) {
             program.instructions[instructionIndex.toInt()]
         } else {
@@ -61,13 +66,13 @@ public class EmulatedComputer<P : Comparable<P>>(
         val condition = instruction.condition
         val a: ULong = when (val value = instruction.inputA) {
             is InstructionValue.ImmediateValue -> value.value.toULong()
-            is InstructionValue.RegisterReference -> state.rawRegisterVariableState(value.register)
+            is InstructionValue.RegisterReference -> state.registerVariableStateUInt64(value.register)
         }
         val b: ULong = when (val value = instruction.inputB) {
             is InstructionValue.ImmediateValue -> value.value.toULong()
-            is InstructionValue.RegisterReference -> state.rawRegisterVariableState(value.register)
+            is InstructionValue.RegisterReference -> state.registerVariableStateUInt64(value.register)
         }
-        val c: ULong = state.rawRegisterVariableState(instruction.conditionRegister)
+        val c: ULong = state.registerVariableStateUInt64(instruction.conditionRegister)
         val cSize = instruction.conditionRegister.type
 
         val outputRegister = instruction.outputRegister
@@ -229,12 +234,12 @@ public class EmulatedComputer<P : Comparable<P>>(
                     hasResult = false
                 }
                 Operation.CALL -> {
-                    val currentProgramCounter = state.rawRegisterState(architecture.registers.programCounter)
+                    val currentProgramCounter = state.registerStateUInt64(architecture.registers.programCounter)
                     changes += state.makeStackPush(currentProgramCounter + 1UL)
                     result = a
                 }
                 Operation.CALL_2 -> {
-                    val currentProgramCounter = state.rawRegisterState(architecture.registers.programCounter)
+                    val currentProgramCounter = state.registerStateUInt64(architecture.registers.programCounter)
                     val combinedValue = (a and architecture.dataWordType.mask) or ((b and architecture.dataWordType.mask) shl architecture.dataWordType.bits)
                     changes += state.makeStackPush(currentProgramCounter + 1UL)
                     result = combinedValue

@@ -8,7 +8,7 @@ import net.voxelpi.axiom.register.RegisterVariable
 
 public class MutableEmulatorState<P : Comparable<P>>(
     public val architecture: Architecture<P, *>,
-) : EmulatorState {
+) : EmulatorState<P> {
 
     public var carryState: Boolean = false
 
@@ -23,8 +23,17 @@ public class MutableEmulatorState<P : Comparable<P>>(
         return castToWordType(registerValues[register.id]!!, register.type)
     }
 
-    public fun rawRegisterState(register: Register<*>): ULong {
-        return registerValues[register.id]!!
+    override fun registerStateUInt64(register: Register<*>): ULong {
+        return registerValues[register.id]!! and register.type.mask
+    }
+
+    override fun registerStateInt64(register: Register<*>): Long {
+        var value = registerStateUInt64(register)
+        val negative = value and (1UL shl (register.type.bits - 1)) != 0UL
+        if (negative) {
+            value = value or register.type.mask.inv()
+        }
+        return value.toLong()
     }
 
     public fun makeRegisterModification(register: Register<*>, value: ULong): EmulatorStateChange.RegisterChange {
@@ -34,14 +43,23 @@ public class MutableEmulatorState<P : Comparable<P>>(
         return EmulatorStateChange.RegisterChange(register, previousValue, newValue)
     }
 
-    public fun rawRegisterVariableState(variable: RegisterVariable<*, *>): ULong {
+    override fun registerVariableStateUInt64(variable: RegisterVariable<*, *>): ULong {
         return when (variable) {
-            is RegisterVariable.Direct<*> -> rawRegisterState(variable.register)
+            is RegisterVariable.Direct<*> -> registerStateUInt64(variable.register)
             is RegisterVariable.Part<*, *> -> {
-                val registerState = rawRegisterState(variable.register)
+                val registerState = registerStateUInt64(variable.register)
                 return (registerState shr (variable.part * variable.type.bits)) and variable.type.mask
             }
         }
+    }
+
+    override fun registerVariableStateInt64(variable: RegisterVariable<*, *>): Long {
+        var value = registerVariableStateUInt64(variable)
+        val negative = value and (1UL shl (variable.type.bits - 1)) != 0UL
+        if (negative) {
+            value = value or variable.type.mask.inv()
+        }
+        return value.toLong()
     }
 
     @Suppress("UNCHECKED_CAST")
