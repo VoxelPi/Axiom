@@ -16,10 +16,10 @@ public object DEV64Architecture : Architecture<ULong, ULong>(
     WordType.INT64,
 ) {
 
-    override val registers: RegisterFile<ULong> = RegisterFile.create("program_counter", WordType.INT64) {
+    override val registers: RegisterFile<ULong> = RegisterFile.create("PC", WordType.INT64) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = true)
         for (iRegister in 1..255) {
-            val register = createRegister("register_$iRegister", WordType.INT64)
+            val register = createRegister("R$iRegister", WordType.INT64)
             createVariable("R$iRegister", register, iRegister, readable = true, writeable = true, conditionable = true)
         }
     }

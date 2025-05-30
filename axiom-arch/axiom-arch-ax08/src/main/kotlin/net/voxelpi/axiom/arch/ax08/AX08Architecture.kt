@@ -20,7 +20,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
     WordType.INT16,
 ) {
 
-    override val registers: RegisterFile<UShort> = RegisterFile.create("program_counter", WordType.INT16) {
+    override val registers: RegisterFile<UShort> = RegisterFile.create("PC", WordType.INT16) {
         // Create the PC variables.
         programCounterVariable = createVariable("PC", programCounter, 14, readable = false, writeable = true, conditionable = false)
         createVariable("PC_0", programCounter, WordType.INT8, 0, 14, readable = true, writeable = false, conditionable = false)
@@ -28,7 +28,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
 
         // Create general purpose registers.
         repeat(8) { registerIndex ->
-            val register = createRegister("register_${registerIndex}", WordType.INT8)
+            val register = createRegister("R${registerIndex}", WordType.INT8)
             createVariable("R${registerIndex}", register, registerIndex, readable = true, writeable = true, conditionable = true)
         }
     }
