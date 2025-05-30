@@ -27,5 +27,11 @@ class EmulatorLoadCommand(val emulator: Emulator) : AxiomCommandProvider {
                 emulator.loadProgram(inputFile)
             }
         }
+
+        commandManager.buildAndRegister("reload") {
+            handler {
+                emulator.reloadProgram()
+            }
+        }
     }
 }

@@ -2,7 +2,6 @@ package net.voxelpi.axiom.cli.emulator
 
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
-import com.github.ajalt.mordant.widgets.Text
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.AxiomBuildParameters
@@ -39,6 +38,7 @@ import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.InfoCmp
+import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
@@ -85,8 +85,12 @@ class Emulator(
 
     private var shouldRun = true
 
+    private var lastInputFilePath: Path? = null
+
     fun loadProgram(filename: String) {
         val inputFilePath = Path(filename).absolute().normalize()
+        lastInputFilePath = inputFilePath
+
         if (!inputFilePath.exists() || !inputFilePath.isRegularFile()) {
             terminal.writer().println("$PREFIX_EMULATOR The input file $inputFilePath does not exist.")
             return
@@ -99,7 +103,7 @@ class Emulator(
         )
 
         val program: Program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
-            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED"))))
+            terminal.writer().println(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED")))
             terminal.writer().println(generateCompilationStackTraceMessage(exception))
             return
         }
@@ -113,6 +117,15 @@ class Emulator(
         }
 
         terminal.writer().println("$PREFIX_EMULATOR Loaded program \"${inputFilePath.absolutePathString()}\"")
+    }
+
+    fun reloadProgram() {
+        val path = lastInputFilePath
+        if (path == null) {
+            terminal.writer().println("$PREFIX_EMULATOR No program was loaded yet.")
+            return
+        }
+        loadProgram(path.absolutePathString())
     }
 
     init {
