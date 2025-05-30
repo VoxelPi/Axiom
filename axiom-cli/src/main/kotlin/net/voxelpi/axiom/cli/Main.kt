@@ -9,7 +9,6 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.default
-import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
@@ -20,9 +19,8 @@ import net.voxelpi.axiom.asm.exception.CompilationException
 import net.voxelpi.axiom.asm.exception.ParseException
 import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.source.SourceLink
-import net.voxelpi.axiom.emulator.EmulatedComputer
+import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.instruction.Program
-import net.voxelpi.axiom.util.parseInteger
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
@@ -115,43 +113,46 @@ fun main(args: Array<String>) {
                 exitProcess(1)
             }
 
-            val inputProvider: () -> ULong = {
-                var result: ULong
-                while (true) {
-                    print("[INPUT] > ")
-                    val input = readln()
+            val emulator = Emulator(architecture, program)
+            emulator.start()
 
-                    if (input.length == 3 && input[0] == '\'' && input[2] == '\'') {
-                        result = input[1].code.toULong()
-                        break
-                    }
-
-                    val integer = parseInteger(input)
-                    if (integer != null) {
-                        result = integer.toULong()
-                        break
-                    }
-                    println("[ERROR] INVALID INPUT: \"$input\". Please enter a valid integer or character.")
-                }
-
-                result
-            }
-
-            val outputHandler: (ULong) -> Unit = { value ->
-                val signedValue = when (architecture.dataWordType) {
-                    WordType.INT8 -> value.toByte()
-                    WordType.INT16 -> value.toShort()
-                    WordType.INT32 -> value.toInt()
-                    WordType.INT64 -> value.toLong()
-                }
-                println("[OUTPUT] uint: $value   int: $signedValue   char: '${value.toInt().toChar()}'")
-            }
-
-            val emulator = EmulatedComputer(architecture, program, { true }, inputProvider, outputHandler)
-            while (true) {
-                emulator.runUntilBreak()
-                readlnOrNull() ?: break
-            }
+            // val inputProvider: () -> ULong = {
+            //     var result: ULong
+            //     while (true) {
+            //         print("[INPUT] > ")
+            //         val input = readln()
+            //
+            //         if (input.length == 3 && input[0] == '\'' && input[2] == '\'') {
+            //             result = input[1].code.toULong()
+            //             break
+            //         }
+            //
+            //         val integer = parseInteger(input)
+            //         if (integer != null) {
+            //             result = integer.toULong()
+            //             break
+            //         }
+            //         println("[ERROR] INVALID INPUT: \"$input\". Please enter a valid integer or character.")
+            //     }
+            //
+            //     result
+            // }
+            //
+            // val outputHandler: (ULong) -> Unit = { value ->
+            //     val signedValue = when (architecture.dataWordType) {
+            //         WordType.INT8 -> value.toByte()
+            //         WordType.INT16 -> value.toShort()
+            //         WordType.INT32 -> value.toInt()
+            //         WordType.INT64 -> value.toLong()
+            //     }
+            //     println("[OUTPUT] uint: $value   int: $signedValue   char: '${value.toInt().toChar()}'")
+            // }
+            //
+            // val emulator = EmulatedComputer(architecture, program, { true }, inputProvider, outputHandler)
+            // while (true) {
+            //     emulator.runUntilBreak()
+            //     readlnOrNull() ?: break
+            // }
         }
     }
 

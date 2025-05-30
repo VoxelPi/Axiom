@@ -27,6 +27,9 @@ dependencies {
     runtimeOnly(libs.log4j.slf4j.impl)
 
     // Other
+    implementation(libs.cloud.core)
+    implementation(libs.cloud.kotlin)
+    implementation(libs.jline)
     implementation(libs.mordant)
 }
 
