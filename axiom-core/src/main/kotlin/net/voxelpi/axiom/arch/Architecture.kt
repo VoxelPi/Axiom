@@ -129,4 +129,8 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
         // Return decoded program.
         Program(instructions)
     }
+
+    override fun toString(): String {
+        return id
+    }
 }
