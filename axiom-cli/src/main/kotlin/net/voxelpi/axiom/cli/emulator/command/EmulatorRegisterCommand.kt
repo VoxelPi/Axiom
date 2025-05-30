@@ -1,15 +1,18 @@
 package net.voxelpi.axiom.cli.emulator.command
 
 import com.github.ajalt.mordant.rendering.TextColors
+import com.github.ajalt.mordant.table.table
+import com.github.ajalt.mordant.terminal.Terminal
 import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandProvider
 import net.voxelpi.axiom.cli.command.parser.registerParser
-import net.voxelpi.axiom.cli.emulator.Emulator.Companion.PREFIX_EMULATOR
+import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.register.Register
 import org.incendo.cloud.kotlin.extension.buildAndRegister
+import org.incendo.cloud.kotlin.extension.getOrNull
 import org.incendo.cloud.parser.standard.EnumParser.enumParser
 
 class EmulatorRegisterCommand(
@@ -24,7 +27,8 @@ class EmulatorRegisterCommand(
                 val register: Register<*> = context["register"]
 
                 val computerState = runBlocking { computer.state() }
-                printRegisterState(register, computerState, RegisterPrintFormat.DECIMAL)
+                val value = formattedRegisterState(register, computerState, RegisterPrintFormat.DECIMAL)
+                println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
             }
         }
 
@@ -38,13 +42,65 @@ class EmulatorRegisterCommand(
                 val format: RegisterPrintFormat = context.getOrDefault("format", RegisterPrintFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                printRegisterState(register, computerState, format)
+                val value = formattedRegisterState(register, computerState, format)
+                println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
+            }
+        }
+
+        commandManager.buildAndRegister("registers") {
+            literal("dump")
+            optional("format", enumParser(RegisterPrintFormat::class.java))
+
+            handler { context ->
+                val format: RegisterPrintFormat? = context.getOrNull("format")
+
+                val computerState = runBlocking { computer.state() }
+
+                val terminal = Terminal()
+                terminal.println("${Emulator.PREFIX_EMULATOR} Register dump:")
+                if (format == null) {
+                    terminal.println(
+                        table {
+                            header {
+                                row("REGISTER", "DECIMAL", "DECIMAL (signed)", "HEXADECIMAL", "BINARY", "CHARACTER")
+                            }
+                            body {
+                                for (register in computer.architecture.registers.registers.values) {
+                                    row {
+                                        cell(register.id)
+                                        cell(formattedRegisterState(register, computerState, RegisterPrintFormat.DECIMAL))
+                                        cell(formattedRegisterState(register, computerState, RegisterPrintFormat.DECIMAL_SIGNED))
+                                        cell(formattedRegisterState(register, computerState, RegisterPrintFormat.HEXADECIMAL))
+                                        cell(formattedRegisterState(register, computerState, RegisterPrintFormat.BINARY))
+                                        cell(formattedRegisterState(register, computerState, RegisterPrintFormat.CHARACTER))
+                                    }
+                                }
+                            }
+                        }
+                    )
+                } else {
+                    terminal.println(
+                        table {
+                            header {
+                                row("Register", "Value")
+                            }
+                            body {
+                                for (register in computer.architecture.registers.registers.values) {
+                                    row {
+                                        cell(register.id)
+                                        cell(formattedRegisterState(register, computerState, format))
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     }
 
-    private fun printRegisterState(register: Register<*>, computerState: ComputerState<*>, format: RegisterPrintFormat) {
-        val value: String = when (format) {
+    private fun formattedRegisterState(register: Register<*>, computerState: ComputerState<*>, format: RegisterPrintFormat): String {
+        return when (format) {
             RegisterPrintFormat.BINARY -> {
                 val state = computerState.registerStateUInt64(register)
                 "${TextColors.brightCyan("0b")}${TextColors.brightGreen(state.toString(2).padStart(register.type.bits, '0').chunked(4).joinToString("_"))}"
@@ -63,11 +119,17 @@ class EmulatorRegisterCommand(
             }
             RegisterPrintFormat.CHARACTER -> {
                 val state = computerState.registerStateUInt64(register).toUInt().toInt()
-                "${TextColors.brightCyan("'")}${TextColors.brightGreen(Character.toChars(state).concatToString())}${TextColors.brightCyan("'")}"
+                val symbol = Character.toChars(state).concatToString()
+                    .replace(0.toChar().toString(), "\\0")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t")
+                    .replace("\b", "\\b")
+                    .replace(12.toChar().toString(), "\\f")
+                    .replace(11.toChar().toString(), "\\v")
+                "${TextColors.brightCyan("'")}${TextColors.brightGreen(symbol)}${TextColors.brightCyan("'")}"
             }
         }
-
-        println("$PREFIX_EMULATOR Register ${TextColors.brightYellow(register.id)} is set to $value")
     }
 
     enum class RegisterPrintFormat {
