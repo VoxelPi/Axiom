@@ -6,6 +6,7 @@ import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStopCommand
+import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.emulator.EmulatedComputer
 import net.voxelpi.axiom.instruction.Program
 import org.incendo.cloud.exception.ArgumentParseException
@@ -42,6 +43,7 @@ class Emulator(
 
     val commandManager = AxiomCommandManager().apply {
         registerCommands(EmulatorStopCommand(this@Emulator))
+        registerCommands(EmulatorVersionCommand())
     }
 
     private var shouldRun = true
