@@ -207,9 +207,9 @@ public object Parsers {
 
             val aInputWithOutputFunctions = mapOf(
                 "shift left" to Pair(Operation.SHIFT_LEFT, 0L),
-                "shift right" to Pair(Operation.SHIFT_LEFT, 0L),
-                "rotate left" to Pair(Operation.SHIFT_LEFT, 0L),
-                "rotate right" to Pair(Operation.SHIFT_LEFT, 0L),
+                "shift right" to Pair(Operation.SHIFT_RIGHT, 0L),
+                "rotate left" to Pair(Operation.ROTATE_LEFT, 0L),
+                "rotate right" to Pair(Operation.ROTATE_RIGHT, 0L),
                 "inc" to Pair(Operation.ADD, 1L),
                 "dec" to Pair(Operation.SUBTRACT, 1L),
             )
