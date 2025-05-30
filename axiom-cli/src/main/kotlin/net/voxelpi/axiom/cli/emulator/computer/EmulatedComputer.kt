@@ -16,7 +16,6 @@ import kotlin.coroutines.CoroutineContext
 
 class EmulatedComputer(
     architecture: Architecture<*, *>,
-    program: Program,
     val inputRequestHandler: () -> Unit,
     val outputHandler: (ULong) -> Unit,
 ) : CoroutineScope {
@@ -24,7 +23,7 @@ class EmulatedComputer(
     private val coroutineExecutor = ComputerExecutor()
     override val coroutineContext: CoroutineContext = SupervisorJob() + coroutineExecutor.asCoroutineDispatcher()
 
-    val computer = Computer(architecture, program, ::handleInputPoll, ::provideInput, outputHandler)
+    val computer = Computer(architecture, ::handleInputPoll, ::provideInput, outputHandler)
 
     val architecture: Architecture<*, *>
         get() = computer.architecture
@@ -69,13 +68,22 @@ class EmulatedComputer(
         }
     }
 
-    fun run(nInstructions: Int = Int.MAX_VALUE, callback: (Int) -> Unit) {
+    fun load(program: Program): Result<Unit> {
         if (isExecuting()) {
-            throw IllegalStateException("The computer is already running.")
+            return Result.failure(IllegalStateException("The computer is already running."))
+        }
+        computer.loadProgram(program)
+        return Result.success(Unit)
+    }
+
+    fun run(nInstructions: Int = Int.MAX_VALUE, callback: (Int) -> Unit): Result<Unit> {
+        if (isExecuting()) {
+            return Result.failure(IllegalStateException("The computer is already running."))
         }
         doneCallback = callback
         nExecutedInstructions = 0
         remainingInstructions = nInstructions
+        return Result.success(Unit)
     }
 
     fun isExecuting(): Boolean {

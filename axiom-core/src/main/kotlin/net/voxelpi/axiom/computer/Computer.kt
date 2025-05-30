@@ -14,16 +14,23 @@ import kotlin.math.sqrt
 
 public class Computer<P : Comparable<P>>(
     public val architecture: Architecture<P, *>,
-    public val program: Program,
     public val inputAvailableProvider: () -> Boolean,
     public val inputProvider: () -> ULong,
     public val outputHandler: (ULong) -> Unit,
 ) {
 
+    public var program: Program = Program(emptyList())
+        private set
+
     private val state: MutableComputerState<P> = MutableComputerState(architecture)
 
     private var iStep = 0
     private val steps: MutableList<ComputerStatePatch> = mutableListOf()
+
+    public fun loadProgram(program: Program) {
+        this.program = program
+        this.state.clear()
+    }
 
     public fun currentState(): ComputerState<P> {
         return state

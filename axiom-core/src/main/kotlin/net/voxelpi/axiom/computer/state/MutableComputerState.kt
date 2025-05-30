@@ -19,6 +19,19 @@ public class MutableComputerState<P : Comparable<P>>(
     public val memoryState: ULongArray = ULongArray(architecture.memorySize) { 0UL }
     public val stackState: ComputerStack = ComputerStack(architecture.stackSize)
 
+    public fun clear() {
+        carryState = false
+        registerValues.putAll(
+            architecture.registers.registers().associate {
+                it.id to 0UL
+            }
+        )
+        for (i in memoryState.indices) {
+            memoryState[i] = 0UL
+        }
+        stackState.clear()
+    }
+
     override fun <R : Comparable<R>> registerState(register: Register<R>): R {
         return castToWordType(registerValues[register.id]!!, register.type)
     }

@@ -2,19 +2,23 @@ package net.voxelpi.axiom.cli.emulator
 
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
+import com.github.ajalt.mordant.widgets.Text
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.AxiomBuildParameters
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
 import net.voxelpi.axiom.cli.emulator.command.EmulatorClearCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorInputCommand
+import net.voxelpi.axiom.cli.emulator.command.EmulatorLoadCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorRegisterCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorRunCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStopCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
+import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.instruction.Program
 import org.incendo.cloud.exception.ArgumentParseException
 import org.incendo.cloud.exception.InvalidSyntaxException
@@ -25,13 +29,19 @@ import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.terminal.TerminalBuilder
+import org.jline.utils.InfoCmp
+import kotlin.io.path.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
 
 class Emulator(
     val architecture: Architecture<*, *>,
-    val program: Program,
+    initialProgram: String? = null,
 ) {
 
-    val computer = EmulatedComputer(architecture, program, ::handleInputRequest, ::handleOutput)
+    val computer = EmulatedComputer(architecture, ::handleInputRequest, ::handleOutput)
 
     val terminal = TerminalBuilder.builder().apply {
         system(true)
@@ -44,13 +54,14 @@ class Emulator(
             val suggestions = commandManager.suggestionFactory().suggestImmediately(AxiomCommandSender(terminal, commandLineReader), line.line())
             candidates += suggestions.list().map { Candidate(it.suggestion()) }
         }
-        option(LineReader.Option.DISABLE_EVENT_EXPANSION, false)
+        option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
         option(LineReader.Option.INSERT_TAB, false)
     }.build()
 
     val commandManager = AxiomCommandManager().apply {
         registerCommands(EmulatorClearCommand)
         registerCommands(EmulatorInputCommand(computer))
+        registerCommands(EmulatorLoadCommand(this@Emulator))
         registerCommands(EmulatorRegisterCommand(computer))
         registerCommands(EmulatorRunCommand(computer))
         registerCommands(EmulatorStopCommand(this@Emulator))
@@ -59,8 +70,41 @@ class Emulator(
 
     private var shouldRun = true
 
+    fun loadProgram(filename: String) {
+        val inputFilePath = Path(filename).absolute().normalize()
+        if (!inputFilePath.exists() || !inputFilePath.isRegularFile()) {
+            terminal.writer().println("$PREFIX_EMULATOR The input file $inputFilePath does not exist.")
+            return
+        }
+
+        val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
+
+        val program: Program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
+            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED"))))
+            terminal.writer().println(generateCompilationStackTraceMessage(exception))
+            return
+        }
+        if (computer.isExecuting()) {
+            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("Failed to load program, because the computer is currently running"))))
+            return
+        }
+        computer.load(program).getOrElse {
+            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("Failed to load program, ${it.message}"))))
+            return
+        }
+
+        terminal.writer().println("$PREFIX_EMULATOR Loaded program \"${inputFilePath.absolutePathString()}\"")
+    }
+
     init {
+        terminal.puts(InfoCmp.Capability.clear_screen)
+        terminal.flush()
+
         terminal.writer().println(HEADER_MESSAGE)
+
+        if (initialProgram != null) {
+            loadProgram(initialProgram)
+        }
 
         while (shouldRun) {
             try {
@@ -85,10 +129,10 @@ class Emulator(
                     }
                 }
             } catch (_: UserInterruptException) {
-                terminal.writer().println("$PREFIX_EMULATOR Interrupted.")
+                terminal.writer().println("$PREFIX_EMULATOR Stopping the emulator (Interrupted).")
                 break
             } catch (_: EndOfFileException) {
-                terminal.writer().println("$PREFIX_EMULATOR EOF")
+                terminal.writer().println("$PREFIX_EMULATOR Stopping the emulator (EOF).")
                 break
             }
         }

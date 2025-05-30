@@ -8,6 +8,13 @@ public class ComputerStack(public val capacity: Int) {
     public val size: Int
         get() = pointer
 
+    public fun clear() {
+        for (i in 0 until capacity) {
+            data[i] = 0UL
+        }
+        pointer = 0
+    }
+
     public fun push(value: ULong) {
         data[pointer] = value
         pointer++
