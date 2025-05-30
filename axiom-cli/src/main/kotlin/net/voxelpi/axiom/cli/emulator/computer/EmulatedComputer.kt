@@ -6,6 +6,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.computer.Computer
+import net.voxelpi.axiom.computer.InstructionExecutionResult
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.instruction.Program
 import java.util.concurrent.BlockingQueue
@@ -16,6 +17,7 @@ import kotlin.coroutines.CoroutineContext
 
 class EmulatedComputer(
     architecture: Architecture<*, *>,
+    val traceHandler: (instruction: InstructionExecutionResult) -> Unit,
     val inputRequestHandler: () -> Unit,
     val outputHandler: (ULong) -> Unit,
 ) : CoroutineScope {
@@ -34,6 +36,8 @@ class EmulatedComputer(
 
     val inputQueue: ArrayDeque<ULong> = ArrayDeque()
     private var shouldHalt = false
+    var trace = false
+        private set
 
     val computerThread = thread(start = true, name = "Axiom Emulator Computer Thread", isDaemon = true) {
         try {
@@ -42,6 +46,7 @@ class EmulatedComputer(
                     remainingInstructions = 0
                     doneCallback.invoke(nExecutedInstructions)
                     doneCallback = {}
+                    trace = false
                     shouldHalt = false
                 }
 
@@ -49,6 +54,9 @@ class EmulatedComputer(
 
                     // Run instruction
                     val result = computer.runSingleInstruction()
+                    if (trace) {
+                        traceHandler.invoke(result)
+                    }
                     ++nExecutedInstructions
 
                     if (result.hitBreak) {
@@ -60,6 +68,7 @@ class EmulatedComputer(
                     if (remainingInstructions == 0) {
                         doneCallback.invoke(nExecutedInstructions)
                         doneCallback = {}
+                        trace = false
                     }
                 }
 
@@ -85,13 +94,14 @@ class EmulatedComputer(
         return Result.success(Unit)
     }
 
-    fun run(nInstructions: Int = Int.MAX_VALUE, callback: (Int) -> Unit): Result<Unit> {
+    fun run(nInstructions: Int = Int.MAX_VALUE, trace: Boolean = false, callback: (Int) -> Unit): Result<Unit> {
         if (isExecuting()) {
             return Result.failure(IllegalStateException("The computer is already running."))
         }
         if (nInstructions <= 0) {
             return Result.success(Unit)
         }
+        this.trace = trace
         doneCallback = callback
         nExecutedInstructions = 0
         remainingInstructions = nInstructions

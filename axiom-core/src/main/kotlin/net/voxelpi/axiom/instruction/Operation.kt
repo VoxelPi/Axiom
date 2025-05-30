@@ -22,10 +22,10 @@ public enum class Operation(public val type: OperationType, public val format: S
     DIVIDE(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} / {b}"),
     MODULO(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} % {b}"),
     SQRT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = sqrt {a}"),
-    SHIFT_LEFT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = {a} shift left 1"),
-    SHIFT_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = {a} shift right 1"),
-    ROTATE_LEFT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = {a} rotate left 1"),
-    ROTATE_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = {a} rotate right 1"),
+    SHIFT_LEFT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = shift left {a}"),
+    SHIFT_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = shift right {a}"),
+    ROTATE_LEFT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = rotate left {a}"),
+    ROTATE_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = rotate right {a}"),
     BIT_GET(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit get {b}"),
     BIT_SET(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit set {b}"),
     BIT_CLEAR(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit clear {b}"),
@@ -49,5 +49,12 @@ public enum class Operation(public val type: OperationType, public val format: S
             .replace("{out}", output.id)
             .replace("{a}", a.toString())
             .replace("{b}", b.toString())
+    }
+
+    public fun asString(output: String, a: String, b: String): String {
+        return format
+            .replace("{out}", output)
+            .replace("{a}", a)
+            .replace("{b}", b)
     }
 }

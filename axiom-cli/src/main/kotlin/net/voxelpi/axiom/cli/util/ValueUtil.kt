@@ -3,6 +3,13 @@ package net.voxelpi.axiom.cli.util
 import com.github.ajalt.mordant.rendering.TextColors
 import net.voxelpi.axiom.WordType
 
+fun visibleLength(s: String): Int {
+    // Regex to match ANSI escape codes
+    val ansiRegex = Regex("""\u001B\[[0-9;]*[mK]""")
+    // Remove ANSI codes, then measure length
+    return ansiRegex.replace(s, "").length
+}
+
 fun formattedValue(value: ULong, type: WordType<*>, format: ValueFormat): String {
     return when (format) {
         ValueFormat.BINARY -> {

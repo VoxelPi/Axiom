@@ -26,6 +26,11 @@ import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import net.voxelpi.axiom.cli.util.codePointFromString
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.cli.util.stringFromCodePoint
+import net.voxelpi.axiom.cli.util.visibleLength
+import net.voxelpi.axiom.computer.InstructionExecutionResult
+import net.voxelpi.axiom.computer.state.ComputerStateChange
+import net.voxelpi.axiom.instruction.Condition
+import net.voxelpi.axiom.instruction.InstructionValue
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.util.parseInteger
 import org.incendo.cloud.exception.ArgumentParseException
@@ -50,7 +55,7 @@ class Emulator(
     initialProgram: String? = null,
 ) {
 
-    val computer = EmulatedComputer(architecture, ::handleInputRequest, ::handleOutput)
+    val computer = EmulatedComputer(architecture, ::handleTrace, ::handleInputRequest, ::handleOutput)
 
     val terminal = TerminalBuilder.builder().apply {
         system(true)
@@ -196,7 +201,55 @@ class Emulator(
     }
 
     private fun handleOutput(value: ULong) {
-        commandLineReader.printAbove("$PREFIX_COMPUTER output: ${TextColors.brightGreen(value.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(value))}${TextColors.brightCyan("'")}")
+        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightMagenta("[OUTPUT]")} ${TextColors.brightGreen(value.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(value))}${TextColors.brightCyan("'")}")
+    }
+
+    private fun handleTrace(result: InstructionExecutionResult) {
+        val instruction = result.instruction
+        val condition = instruction.condition
+        if (condition == Condition.NEVER) {
+            var description = ""
+            description += TextColors.brightMagenta("nop")
+            description = description + (TextColors.gray(" ").repeat((160 - visibleLength(description)).coerceAtLeast(0)))
+            description = "${(TextColors.gray + TextStyles.underline)("  ")}${TextStyles.underline(description)}"
+
+            commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}$description")
+            return
+        }
+
+        var description = ""
+
+        val inputA = instruction.inputA
+        val inputB = instruction.inputB
+        val a = "${TextColors.brightGreen("$inputA")}${if (inputA !is InstructionValue.ImmediateValue) TextColors.yellow(":${result.valueA}") else ""}"
+        val b = "${TextColors.brightGreen("$inputB")}${if (inputB !is InstructionValue.ImmediateValue) TextColors.yellow(":${result.valueB}") else ""}"
+        val outputRegister = TextColors.brightGreen(instruction.outputRegister.id)
+        description += instruction.operation.asString(outputRegister, a, b)
+        description = description + (TextColors.gray(" ").repeat((59 - visibleLength(description)).coerceAtLeast(0)))
+
+        if (instruction.condition != Condition.ALWAYS) {
+            val c = "${TextColors.brightGreen("${instruction.conditionRegister}")}${TextColors.yellow(":${result.valueConditionRegister}")}"
+            val conditionResult = if (result.conditionMet) TextColors.brightGreen("(true)") else TextColors.brightRed("(false)")
+            description += "${TextColors.brightMagenta("if")} $c ${instruction.condition.symbol} 0 $conditionResult"
+        }
+        description = description + (TextColors.gray(" ").repeat((100 - visibleLength(description)).coerceAtLeast(0)))
+
+        description += result.changes
+            .filter { it !is ComputerStateChange.RegisterChange || it.register != architecture.registers.programCounter || instruction.outputRegister.register == architecture.registers.programCounter }
+            .joinToString(TextColors.gray("  ")) { change ->
+                val changeDescription = when (change) {
+                    is ComputerStateChange.CarryChange -> "carry = ${change.newValue}"
+                    is ComputerStateChange.MemoryChange -> "[${change.address}] = ${change.newValue}"
+                    is ComputerStateChange.RegisterChange -> "${change.register} = ${change.newValue}"
+                    is ComputerStateChange.StackPop -> "pop ${change.value}"
+                    is ComputerStateChange.StackPush -> "push ${change.value}"
+                }
+                TextColors.brightBlue(changeDescription)
+            }
+        description = description + (TextColors.gray(" ").repeat((160 - visibleLength(description)).coerceAtLeast(0)))
+        description = "${(TextColors.gray + TextStyles.underline)("  ")}$description"
+
+        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}${TextStyles.underline(description)}")
     }
 
     companion object {

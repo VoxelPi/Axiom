@@ -315,8 +315,13 @@ public class Computer<P : Comparable<P>>(
 
         // Create and return execution result.
         return InstructionExecutionResult(
-            changes,
+            instruction,
+            a,
+            b,
+            if (conditionValid && hasResult) result else null,
+            c,
             conditionMet = conditionValid,
+            changes,
             hitBreak = hitBreak,
         )
     }

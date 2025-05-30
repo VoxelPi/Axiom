@@ -12,15 +12,35 @@ class EmulatorRunCommand(val computer: EmulatedComputer) : AxiomCommandProvider 
 
     override fun registerCommands(commandManager: AxiomCommandManager) {
         commandManager.buildAndRegister("run") {
-            optional("n_instructions", integerParser(0))
+            flag("trace", aliases = arrayOf("t"))
 
             handler { context ->
-                val nScheduledInstructions: Int = context.getOrDefault("n_instructions", Integer.MAX_VALUE)
+                val trace = context.flags().isPresent("trace")
 
                 if (computer.isExecuting()) {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is already running.")
                 }
-                computer.run(nScheduledInstructions) { nInstructions ->
+                computer.run(trace = trace) { nInstructions ->
+                    context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer ${TextColors.brightGreen("finished")} executing ${TextColors.brightYellow(nInstructions.toString())} instructions")
+                }.getOrElse {
+                    context.sender().terminal.writer().println("$PREFIX_EMULATOR Failed to run: ${it.message}")
+                }
+            }
+        }
+
+        commandManager.buildAndRegister("run") {
+            literal("next")
+            optional("n_instructions", integerParser(0))
+            flag("trace", aliases = arrayOf("t"))
+
+            handler { context ->
+                val nScheduledInstructions: Int = context.getOrDefault("n_instructions", Integer.MAX_VALUE)
+                val trace = context.flags().isPresent("trace")
+
+                if (computer.isExecuting()) {
+                    context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is already running.")
+                }
+                computer.run(nScheduledInstructions, trace = trace) { nInstructions ->
                     context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer ${TextColors.brightGreen("finished")} executing ${TextColors.brightYellow(nInstructions.toString())} instructions")
                 }.getOrElse {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Failed to run: ${it.message}")
