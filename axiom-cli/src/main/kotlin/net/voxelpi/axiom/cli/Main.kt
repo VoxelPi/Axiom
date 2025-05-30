@@ -9,6 +9,7 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.default
+import kotlinx.cli.optional
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
@@ -84,7 +85,7 @@ fun main(args: Array<String>) {
     }
 
     class Emulate() : Subcommand("emulate", "Emulates a program.") {
-        val program by argument(ArgType.String, description = "The program file.")
+        val program by argument(ArgType.String, description = "The program file.").optional()
 
         val architecture by option(
             ArgType.Choice(choices = architectures.values.toList(), toVariant = { architectures[it]!! }),
