@@ -1,0 +1,61 @@
+package net.voxelpi.axiom.cli.util
+
+import com.github.ajalt.mordant.rendering.TextColors
+import net.voxelpi.axiom.WordType
+
+fun formattedValue(value: ULong, type: WordType<*>, format: ValueFormat): String {
+    return when (format) {
+        ValueFormat.BINARY -> {
+            val state = value and type.mask
+            "${TextColors.brightCyan("0b")}${TextColors.brightGreen(state.toString(2).padStart(type.bits, '0').chunked(4).joinToString("_"))}"
+        }
+        ValueFormat.DECIMAL -> {
+            val state = value and type.mask
+            TextColors.brightGreen(state.toString())
+        }
+        ValueFormat.HEXADECIMAL -> {
+            val state = value and type.mask
+            "${TextColors.brightCyan("0x")}${TextColors.brightGreen(state.toString(16).padStart(type.bytes * 2, '0').chunked(2).joinToString("_").uppercase())}"
+        }
+        ValueFormat.DECIMAL_SIGNED -> {
+            var state = value and type.mask
+            val negative = state and (1UL shl (type.bits - 1)) != 0UL
+            if (negative) {
+                state = state or type.mask.inv()
+            }
+
+            TextColors.brightGreen(state.toString())
+        }
+        ValueFormat.CHARACTER -> {
+            val state = value and type.mask
+            val symbol = stringFromCodePoint(state)
+            "${TextColors.brightCyan("'")}${TextColors.brightGreen(symbol)}${TextColors.brightCyan("'")}"
+        }
+    }
+}
+
+fun codePointFromString(str: String): ULong {
+    if (str.isEmpty()) {
+        return (-1).toULong()
+    }
+    return str.codePointAt(0).toULong()
+}
+
+fun stringFromCodePoint(codePoint: ULong): String {
+    return Character.toChars(codePoint.toUInt().toInt()).concatToString()
+        .replace(0.toChar().toString(), "\\0")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+        .replace("\b", "\\b")
+        .replace(12.toChar().toString(), "\\f")
+        .replace(11.toChar().toString(), "\\v")
+}
+
+enum class ValueFormat {
+    BINARY,
+    DECIMAL,
+    HEXADECIMAL,
+    DECIMAL_SIGNED,
+    CHARACTER,
+}
