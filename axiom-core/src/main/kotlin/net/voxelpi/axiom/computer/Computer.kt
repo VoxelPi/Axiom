@@ -51,11 +51,14 @@ public class Computer<P : Comparable<P>>(
     public fun runSingleInstruction(): InstructionExecutionResult {
         val changes: MutableList<ComputerStateChange> = mutableListOf()
 
+        var hitBreak = false
+
         // FETCH
         val instructionIndex = state.registerStateUInt64(architecture.registers.programCounter)
         val instruction = if (instructionIndex.toInt() in program.instructions.indices) {
             program.instructions[instructionIndex.toInt()]
         } else {
+            hitBreak = true
             val operation = if (architecture.dataWordType < architecture.registers.programCounterVariable.type) {
                 Operation.LOAD_2
             } else {
@@ -105,7 +108,6 @@ public class Computer<P : Comparable<P>>(
         var result = 0UL
         var hasResult = true
         var carryOut: Boolean? = null
-        var hitBreak = false
         if (conditionValid) {
             when (operation) {
                 Operation.CLEAR -> {
