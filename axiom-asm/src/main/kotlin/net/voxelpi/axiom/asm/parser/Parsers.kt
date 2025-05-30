@@ -206,13 +206,16 @@ public object Parsers {
             // A -> R functions, "R = <function> A"
 
             val aInputWithOutputFunctions = mapOf(
-                "shift left" to Operation.SHIFT_LEFT,
-                "shift right" to Operation.SHIFT_RIGHT,
-                "rotate left" to Operation.ROTATE_LEFT,
-                "rotate right" to Operation.ROTATE_RIGHT,
+                "shift left" to Pair(Operation.SHIFT_LEFT, 0L),
+                "shift right" to Pair(Operation.SHIFT_LEFT, 0L),
+                "rotate left" to Pair(Operation.SHIFT_LEFT, 0L),
+                "rotate right" to Pair(Operation.SHIFT_LEFT, 0L),
+                "inc" to Pair(Operation.ADD, 1L),
+                "dec" to Pair(Operation.SUBTRACT, 1L),
             )
 
-            for ((operator, operation) in aInputWithOutputFunctions) {
+            for ((operator, operatorData) in aInputWithOutputFunctions) {
+                val (operation, bValue) = operatorData
                 transformation<InstructionStatement.WithOutput>("${operator}_${transformationSuffix}") {
                     registerLikeArgument(InstructionStatement.WithOutput::output)
                     literal("=")
@@ -222,7 +225,7 @@ public object Parsers {
                     generateCondition(withConditionPart)
 
                     parameter(InstructionStatement::operation) { operation }
-                    parameter(InstructionStatement::inputB) { IntegerValue(0) }
+                    parameter(InstructionStatement::inputB) { IntegerValue(bValue) }
                 }
             }
 
