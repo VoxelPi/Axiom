@@ -10,6 +10,7 @@ import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
+import net.voxelpi.axiom.cli.emulator.command.EmulatorBreakCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorClearCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorInputCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorLoadCommand
@@ -60,6 +61,7 @@ class Emulator(
 
     val commandManager = AxiomCommandManager().apply {
         registerCommands(EmulatorClearCommand)
+        registerCommands(EmulatorBreakCommand(computer))
         registerCommands(EmulatorInputCommand(computer))
         registerCommands(EmulatorLoadCommand(this@Emulator))
         registerCommands(EmulatorRegisterCommand(computer))
@@ -90,11 +92,11 @@ class Emulator(
             return
         }
         if (computer.isExecuting()) {
-            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("Failed to load program, because the computer is currently running"))))
+            terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, because the computer is currently running")))
             return
         }
         computer.load(program).getOrElse {
-            terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("Failed to load program, ${it.message}"))))
+            terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, ${it.message}")))
             return
         }
 

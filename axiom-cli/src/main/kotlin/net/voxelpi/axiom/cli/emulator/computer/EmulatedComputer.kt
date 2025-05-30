@@ -33,11 +33,20 @@ class EmulatedComputer(
     private var doneCallback: (Int) -> Unit = {}
 
     val inputQueue: ArrayDeque<ULong> = ArrayDeque()
+    private var shouldHalt = false
 
     val computerThread = thread(start = true, name = "Axiom Emulator Computer Thread", isDaemon = true) {
         try {
             while (true) {
+                if (shouldHalt) {
+                    remainingInstructions = 0
+                    doneCallback.invoke(nExecutedInstructions)
+                    doneCallback = {}
+                    shouldHalt = false
+                }
+
                 if (remainingInstructions > 0) {
+
                     // Run instruction
                     val result = computer.runSingleInstruction()
                     ++nExecutedInstructions
@@ -86,6 +95,10 @@ class EmulatedComputer(
         return Result.success(Unit)
     }
 
+    fun halt() {
+        shouldHalt = true
+    }
+
     fun isExecuting(): Boolean {
         return remainingInstructions > 0
     }
@@ -109,6 +122,9 @@ class EmulatedComputer(
             val value = inputQueue.removeFirstOrNull()
             if (value != null) {
                 return value
+            }
+            if (shouldHalt) {
+                return 0UL
             }
 
             coroutineExecutor.runTasks()
