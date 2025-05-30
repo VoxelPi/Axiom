@@ -7,7 +7,7 @@
 # Axiom Computing Platform
 
 Axiom is a custom computing platform. 
-This repository contains a suit of program designed to make development for this platform easier.
+This repository contains a collection of programs designed to make development for that platform easier.
 
 ## Architectures
 
