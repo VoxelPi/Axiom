@@ -102,6 +102,13 @@ class EmulatedComputer(
         shouldHalt = true
     }
 
+    fun reset() {
+        if (isExecuting()) {
+            return
+        }
+        computer.reset()
+    }
+
     fun isExecuting(): Boolean {
         return remainingInstructions > 0
     }

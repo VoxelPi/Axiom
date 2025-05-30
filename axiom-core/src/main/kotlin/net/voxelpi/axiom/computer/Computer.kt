@@ -29,7 +29,13 @@ public class Computer<P : Comparable<P>>(
 
     public fun loadProgram(program: Program) {
         this.program = program
-        this.state.clear()
+        reset()
+    }
+
+    public fun reset() {
+        state.clear()
+        iStep = 0
+        steps.clear()
     }
 
     public fun currentState(): ComputerState<P> {
