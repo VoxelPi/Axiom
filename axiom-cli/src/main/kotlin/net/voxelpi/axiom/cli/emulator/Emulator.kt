@@ -77,7 +77,12 @@ class Emulator(
             return
         }
 
-        val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
+        val assembler = Assembler(
+            listOf(
+                inputFilePath.parent.absolute().normalize(),
+                Path(".").absolute().normalize(),
+            )
+        )
 
         val program: Program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
             terminal.writer().println(Text(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED"))))
