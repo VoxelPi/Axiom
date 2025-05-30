@@ -16,6 +16,7 @@ import net.voxelpi.axiom.cli.emulator.command.EmulatorHistoryCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorInputCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorLoadCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorMemoryCommand
+import net.voxelpi.axiom.cli.emulator.command.EmulatorPCCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorRegisterCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorRunCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStackCommand
@@ -72,6 +73,7 @@ class Emulator(
         registerCommands(EmulatorInputCommand(computer))
         registerCommands(EmulatorLoadCommand(this@Emulator))
         registerCommands(EmulatorMemoryCommand(computer))
+        registerCommands(EmulatorPCCommand(computer))
         registerCommands(EmulatorRegisterCommand(computer))
         registerCommands(EmulatorRunCommand(computer))
         registerCommands(EmulatorStackCommand(computer))

@@ -34,7 +34,7 @@ class EmulatorHistoryCommand(
                     computer.computer.stepBackwards()
                 }
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped back ${TextColors.brightYellow(nSteps.toString())} steps.")
-                context.sender().terminal.writer().println("$PREFIX_EMULATOR Currently at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
+                context.sender().terminal.writer().println("$PREFIX_EMULATOR Now at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
             }
         }
 
@@ -51,7 +51,7 @@ class EmulatorHistoryCommand(
                     computer.computer.stepForwards()
                 }
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped forward ${TextColors.brightYellow(nSteps.toString())} steps.")
-                context.sender().terminal.writer().println("$PREFIX_EMULATOR Currently at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
+                context.sender().terminal.writer().println("$PREFIX_EMULATOR Now at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
             }
         }
     }

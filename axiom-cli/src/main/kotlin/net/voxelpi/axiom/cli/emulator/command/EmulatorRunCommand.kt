@@ -21,7 +21,7 @@ class EmulatorRunCommand(val computer: EmulatedComputer) : AxiomCommandProvider 
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is already running.")
                 }
                 computer.run(nScheduledInstructions) { nInstructions ->
-                    context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer finished executing ${TextColors.brightCyan(nInstructions.toString())} instructions")
+                    context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer ${TextColors.brightGreen("finished")} executing ${TextColors.brightYellow(nInstructions.toString())} instructions")
                 }.getOrElse {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Failed to run: ${it.message}")
                 }
