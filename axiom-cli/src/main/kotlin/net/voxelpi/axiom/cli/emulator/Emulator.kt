@@ -81,7 +81,6 @@ class Emulator(
 
         val assembler = Assembler(
             listOf(
-                inputFilePath.parent.absolute().normalize(),
                 Path(".").absolute().normalize(),
             )
         )

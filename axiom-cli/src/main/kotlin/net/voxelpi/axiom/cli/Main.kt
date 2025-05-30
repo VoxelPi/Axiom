@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
 
             val rawFile = outputFilePath.parent / "${outputFilePath.nameWithoutExtension}.raw.${Assembler.AXIOM_ASM_EXTENSION}"
 
-            val assembler = Assembler(listOf(inputFilePath.parent.absolute().normalize()))
+            val assembler = Assembler(listOf(Path(".").absolute().normalize()))
 
             val program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
                 terminal.println(Text(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED"))), true)
