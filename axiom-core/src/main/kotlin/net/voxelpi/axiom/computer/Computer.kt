@@ -227,7 +227,7 @@ public class Computer<P : Comparable<P>>(
                 }
                 Operation.MEMORY_LOAD -> {
                     val address = a.toInt().coerceIn(0, architecture.memorySize - 1)
-                    val value = state.memoryCellState(address)
+                    val value = state.memoryState(address)
                     result = value and outputRegister.type.mask
                 }
                 Operation.MEMORY_STORE -> {

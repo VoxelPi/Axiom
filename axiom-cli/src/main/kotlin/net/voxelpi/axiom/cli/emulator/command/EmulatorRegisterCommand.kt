@@ -84,7 +84,7 @@ class EmulatorRegisterCommand(
                     terminal.println(
                         table {
                             header {
-                                row("Register", "Value")
+                                row("REGISTER", "VALUE")
                             }
                             body {
                                 for (register in computer.architecture.registers.registers.values) {

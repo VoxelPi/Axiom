@@ -16,4 +16,6 @@ public interface ComputerState<P : Comparable<P>> {
     public fun registerVariableStateInt64(variable: RegisterVariable<*, *>): Long
 
     public fun registerVariableStateUInt64(variable: RegisterVariable<*, *>): ULong
+
+    public fun memoryState(address: Int): ULong
 }

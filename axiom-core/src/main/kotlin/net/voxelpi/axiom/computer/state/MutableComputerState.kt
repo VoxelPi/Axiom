@@ -111,7 +111,7 @@ public class MutableComputerState<P : Comparable<P>>(
         return ComputerStateChange.CarryChange(previousValue, value)
     }
 
-    public fun memoryCellState(address: Int): ULong {
+    override fun memoryState(address: Int): ULong {
         return memoryState[address]
     }
 
