@@ -113,46 +113,7 @@ fun main(args: Array<String>) {
                 exitProcess(1)
             }
 
-            val emulator = Emulator(architecture, program)
-            emulator.start()
-
-            // val inputProvider: () -> ULong = {
-            //     var result: ULong
-            //     while (true) {
-            //         print("[INPUT] > ")
-            //         val input = readln()
-            //
-            //         if (input.length == 3 && input[0] == '\'' && input[2] == '\'') {
-            //             result = input[1].code.toULong()
-            //             break
-            //         }
-            //
-            //         val integer = parseInteger(input)
-            //         if (integer != null) {
-            //             result = integer.toULong()
-            //             break
-            //         }
-            //         println("[ERROR] INVALID INPUT: \"$input\". Please enter a valid integer or character.")
-            //     }
-            //
-            //     result
-            // }
-            //
-            // val outputHandler: (ULong) -> Unit = { value ->
-            //     val signedValue = when (architecture.dataWordType) {
-            //         WordType.INT8 -> value.toByte()
-            //         WordType.INT16 -> value.toShort()
-            //         WordType.INT32 -> value.toInt()
-            //         WordType.INT64 -> value.toLong()
-            //     }
-            //     println("[OUTPUT] uint: $value   int: $signedValue   char: '${value.toInt().toChar()}'")
-            // }
-            //
-            // val emulator = EmulatedComputer(architecture, program, { true }, inputProvider, outputHandler)
-            // while (true) {
-            //     emulator.runUntilBreak()
-            //     readlnOrNull() ?: break
-            // }
+            Emulator(architecture, program)
         }
     }
 

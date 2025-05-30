@@ -29,16 +29,19 @@ public class Computer<P : Comparable<P>>(
         return state
     }
 
-    public fun runUntilBreak() {
+    public fun runUntilBreak(): Int {
+        var nExecutedInstructions = 0
         while (true) {
-            val breakHit = runInstructionWithHistory()
-            if (breakHit) {
+            val result = runSingleInstruction()
+            ++nExecutedInstructions
+            if (result.hitBreak) {
                 break
             }
         }
+        return nExecutedInstructions
     }
 
-    private fun runInstructionWithHistory(): Boolean {
+    public fun runSingleInstruction(): InstructionExecutionResult {
         val changes: MutableList<ComputerStateChange> = mutableListOf()
 
         // FETCH
@@ -294,7 +297,12 @@ public class Computer<P : Comparable<P>>(
         // Add the current patch.
         steps += ComputerStatePatch(changes)
 
-        return hitBreak
+        // Create and return execution result.
+        return InstructionExecutionResult(
+            changes,
+            conditionMet = conditionValid,
+            hitBreak = hitBreak,
+        )
     }
 
     /**
