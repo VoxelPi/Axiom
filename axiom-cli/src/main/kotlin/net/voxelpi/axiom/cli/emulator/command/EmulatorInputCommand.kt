@@ -4,10 +4,11 @@ import com.github.ajalt.mordant.rendering.TextColors
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandProvider
 import net.voxelpi.axiom.cli.emulator.Emulator.Companion.PREFIX_EMULATOR
+import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.parser.standard.LongParser.longParser
 
-class EmulatorInputCommand(val inputQueue: ArrayDeque<ULong>) : AxiomCommandProvider {
+class EmulatorInputCommand(val computer: EmulatedComputer) : AxiomCommandProvider {
 
     override fun registerCommands(commandManager: AxiomCommandManager) {
         commandManager.buildAndRegister("input") {
@@ -16,7 +17,7 @@ class EmulatorInputCommand(val inputQueue: ArrayDeque<ULong>) : AxiomCommandProv
 
             handler { context ->
                 val value: ULong = context.get<Long>("value").toULong()
-                inputQueue.addLast(value)
+                computer.inputQueue.addLast(value)
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(value.toString())} to the input queue.")
             }
         }
@@ -25,7 +26,7 @@ class EmulatorInputCommand(val inputQueue: ArrayDeque<ULong>) : AxiomCommandProv
             literal("clear")
 
             handler { context ->
-                inputQueue.clear()
+                computer.inputQueue.clear()
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Cleared the input queue.")
             }
         }

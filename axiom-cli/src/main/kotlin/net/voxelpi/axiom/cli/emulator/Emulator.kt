@@ -31,9 +31,7 @@ class Emulator(
     val program: Program,
 ) {
 
-    private var inputQueue: ArrayDeque<ULong> = ArrayDeque()
-
-    val computer = EmulatedComputer(architecture, program, ::handleInputPoll, ::provideInput, ::handleOutput)
+    val computer = EmulatedComputer(architecture, program, ::handleInputRequest, ::handleOutput)
 
     val terminal = TerminalBuilder.builder().apply {
         system(true)
@@ -52,7 +50,7 @@ class Emulator(
 
     val commandManager = AxiomCommandManager().apply {
         registerCommands(EmulatorClearCommand)
-        registerCommands(EmulatorInputCommand(inputQueue))
+        registerCommands(EmulatorInputCommand(computer))
         registerCommands(EmulatorRegisterCommand(computer))
         registerCommands(EmulatorRunCommand(computer))
         registerCommands(EmulatorStopCommand(this@Emulator))
@@ -103,26 +101,8 @@ class Emulator(
         shouldRun = false
     }
 
-    private fun handleInputPoll(): Boolean {
-        return inputQueue.isNotEmpty()
-    }
-
-    private fun provideInput(): ULong {
-        val value = inputQueue.removeFirstOrNull()
-        if (value != null) {
-            commandLineReader.printAbove("$PREFIX_COMPUTER The computer has consumed input.")
-            return value
-        }
-
+    private fun handleInputRequest() {
         commandLineReader.printAbove("$PREFIX_COMPUTER The computer is waiting for input.")
-        while (true) {
-            val value = inputQueue.removeFirstOrNull()
-            if (value != null) {
-                commandLineReader.printAbove("$PREFIX_COMPUTER The computer has consumed an value from the input queue.")
-                return value
-            }
-            Thread.sleep(1)
-        }
     }
 
     private fun handleOutput(value: ULong) {

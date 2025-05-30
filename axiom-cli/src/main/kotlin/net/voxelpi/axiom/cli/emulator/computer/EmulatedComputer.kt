@@ -17,15 +17,14 @@ import kotlin.coroutines.CoroutineContext
 class EmulatedComputer(
     architecture: Architecture<*, *>,
     program: Program,
-    inputAvailableProvider: () -> Boolean,
-    inputProvider: () -> ULong,
-    outputHandler: (ULong) -> Unit,
+    val inputRequestHandler: () -> Unit,
+    val outputHandler: (ULong) -> Unit,
 ) : CoroutineScope {
 
     private val coroutineExecutor = ComputerExecutor()
     override val coroutineContext: CoroutineContext = SupervisorJob() + coroutineExecutor.asCoroutineDispatcher()
 
-    val computer = Computer(architecture, program, inputAvailableProvider, inputProvider, outputHandler)
+    val computer = Computer(architecture, program, ::handleInputPoll, ::provideInput, outputHandler)
 
     val architecture: Architecture<*, *>
         get() = computer.architecture
@@ -33,6 +32,8 @@ class EmulatedComputer(
     private var nExecutedInstructions: Int = 0
     private var remainingInstructions: Int = 0
     private var doneCallback: (Int) -> Unit = {}
+
+    val inputQueue: ArrayDeque<ULong> = ArrayDeque()
 
     val computerThread = thread(start = true, name = "Axiom Emulator Computer Thread", isDaemon = true) {
         try {
@@ -83,6 +84,28 @@ class EmulatedComputer(
 
     fun stop() {
         computerThread.interrupt()
+    }
+
+    private fun handleInputPoll(): Boolean {
+        return inputQueue.isNotEmpty()
+    }
+
+    private fun provideInput(): ULong {
+        val value = inputQueue.removeFirstOrNull()
+        if (value != null) {
+            return value
+        }
+
+        inputRequestHandler.invoke()
+        while (true) {
+            val value = inputQueue.removeFirstOrNull()
+            if (value != null) {
+                return value
+            }
+
+            coroutineExecutor.runTasks()
+            Thread.sleep(1)
+        }
     }
 
     private class ComputerExecutor : Executor {
