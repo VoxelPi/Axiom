@@ -21,6 +21,7 @@ import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.util.parseInteger
 import org.incendo.cloud.exception.ArgumentParseException
 import org.incendo.cloud.exception.InvalidSyntaxException
 import org.incendo.cloud.exception.NoSuchCommandException
@@ -116,6 +117,20 @@ class Emulator(
             try {
                 val line = commandLineReader.readLine("> ").trim()
                 if (line.isNotBlank()) {
+                    val lineAsNumber = parseInteger(line)?.toULong()
+                    if (lineAsNumber != null) {
+                        computer.inputQueue.addLast(lineAsNumber)
+                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(lineAsNumber.toString())} to the input queue.")
+                        continue
+                    }
+
+                    if (line.startsWith("'") && line.endsWith("'") && line.length >= 3) {
+                        val codePoint = line.substring(1, line.length - 1).codePointAt(0).toULong()
+                        computer.inputQueue.addLast(codePoint)
+                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(codePoint.toString())} to the input queue.")
+                        continue
+                    }
+
                     try {
                         runBlocking {
                             commandManager.commandExecutor().executeCommand(AxiomCommandSender(terminal, commandLineReader), line).await()
