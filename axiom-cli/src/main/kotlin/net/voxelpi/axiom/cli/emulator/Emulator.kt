@@ -4,6 +4,7 @@ import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
+import net.voxelpi.axiom.AxiomBuildParameters
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
@@ -61,6 +62,8 @@ class Emulator(
     private var shouldRun = true
 
     init {
+        terminal.writer().println(HEADER_MESSAGE)
+
         while (shouldRun) {
             try {
                 val line = commandLineReader.readLine("> ").trim()
@@ -129,5 +132,13 @@ class Emulator(
     companion object {
         val PREFIX_EMULATOR = (TextStyles.bold + TextColors.brightMagenta)("[EMULATOR]")
         val PREFIX_COMPUTER = (TextStyles.bold + TextColors.brightBlue)("[COMPUTER]")
+
+        val HEADER_MESSAGE = """                                                                               
+             _____ __ __ _____ _____ _____    _____ _____ _____ __    _____ _____ _____ _____ 
+            |  _  |  |  |     |     |     |  |   __|     |  |  |  |  |  _  |_   _|     | __  |   ${TextColors.rgb("#98C379")("Version")}: ${AxiomBuildParameters.VERSION}
+            |     |-   -|-   -|  |  | | | |  |   __| | | |  |  |  |__|     | | | |  |  |    -|   ${TextColors.rgb("#98C379")("Branch")}: ${AxiomBuildParameters.GIT_BRANCH}
+            |__|__|__|__|_____|_____|_|_|_|  |_____|_|_|_|_____|_____|__|__| |_| |_____|__|__|   ${TextColors.rgb("#98C379")("Commit")}: ${AxiomBuildParameters.GIT_COMMIT.substring(0..6)}
+                                                                                              
+        """.trimIndent()
     }
 }
