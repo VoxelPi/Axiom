@@ -1,13 +1,13 @@
-package net.voxelpi.axiom.emulator
+package net.voxelpi.axiom.computer
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class EmulatedStackTest {
+class ComputerStackTest {
 
     @Test
     fun `test simple stack`() {
-        val stack = EmulatedStack(4)
+        val stack = ComputerStack(4)
         stack.push(1UL)
         stack.push(2UL)
 

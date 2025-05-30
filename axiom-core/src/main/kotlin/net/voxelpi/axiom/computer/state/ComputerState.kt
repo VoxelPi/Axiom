@@ -1,9 +1,9 @@
-package net.voxelpi.axiom.emulator.state
+package net.voxelpi.axiom.computer.state
 
 import net.voxelpi.axiom.register.Register
 import net.voxelpi.axiom.register.RegisterVariable
 
-public interface EmulatorState<P : Comparable<P>> {
+public interface ComputerState<P : Comparable<P>> {
 
     public fun <R : Comparable<R>> registerState(register: Register<R>): R
 

@@ -1,10 +1,10 @@
-package net.voxelpi.axiom.emulator
+package net.voxelpi.axiom.computer
 
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.emulator.state.EmulatorState
-import net.voxelpi.axiom.emulator.state.EmulatorStateChange
-import net.voxelpi.axiom.emulator.state.EmulatorStatePatch
-import net.voxelpi.axiom.emulator.state.MutableEmulatorState
+import net.voxelpi.axiom.computer.state.ComputerState
+import net.voxelpi.axiom.computer.state.ComputerStateChange
+import net.voxelpi.axiom.computer.state.ComputerStatePatch
+import net.voxelpi.axiom.computer.state.MutableComputerState
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
@@ -12,7 +12,7 @@ import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import kotlin.math.sqrt
 
-public class EmulatedComputer<P : Comparable<P>>(
+public class Computer<P : Comparable<P>>(
     public val architecture: Architecture<P, *>,
     public val program: Program,
     public val inputAvailableProvider: () -> Boolean,
@@ -20,12 +20,12 @@ public class EmulatedComputer<P : Comparable<P>>(
     public val outputHandler: (ULong) -> Unit,
 ) {
 
-    private val state: MutableEmulatorState<P> = MutableEmulatorState(architecture)
+    private val state: MutableComputerState<P> = MutableComputerState(architecture)
 
     private var iStep = 0
-    private val steps: MutableList<EmulatorStatePatch> = mutableListOf()
+    private val steps: MutableList<ComputerStatePatch> = mutableListOf()
 
-    public fun currentState(): EmulatorState<P> {
+    public fun currentState(): ComputerState<P> {
         return state
     }
 
@@ -39,7 +39,7 @@ public class EmulatedComputer<P : Comparable<P>>(
     }
 
     private fun runInstructionWithHistory(): Boolean {
-        val changes: MutableList<EmulatorStateChange> = mutableListOf()
+        val changes: MutableList<ComputerStateChange> = mutableListOf()
 
         // FETCH
         val instructionIndex = state.registerStateUInt64(architecture.registers.programCounter)
@@ -292,7 +292,7 @@ public class EmulatedComputer<P : Comparable<P>>(
         }
 
         // Add the current patch.
-        steps += EmulatorStatePatch(changes)
+        steps += ComputerStatePatch(changes)
 
         return hitBreak
     }

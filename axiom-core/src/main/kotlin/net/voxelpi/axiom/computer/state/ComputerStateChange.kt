@@ -1,31 +1,31 @@
-package net.voxelpi.axiom.emulator.state
+package net.voxelpi.axiom.computer.state
 
 import net.voxelpi.axiom.register.Register
 
-public sealed interface EmulatorStateChange {
+public sealed interface ComputerStateChange {
 
     public data class RegisterChange(
         val register: Register<*>,
         val previousValue: ULong,
         val newValue: ULong,
-    ) : EmulatorStateChange
+    ) : ComputerStateChange
 
     public data class MemoryChange(
         val address: Int,
         val previousValue: ULong,
         val newValue: ULong,
-    ) : EmulatorStateChange
+    ) : ComputerStateChange
 
     public data class StackPush(
         val value: ULong,
-    ) : EmulatorStateChange
+    ) : ComputerStateChange
 
     public data class StackPop(
         val value: ULong,
-    ) : EmulatorStateChange
+    ) : ComputerStateChange
 
     public data class CarryChange(
         val previousValue: Boolean,
         val newValue: Boolean,
-    ) : EmulatorStateChange
+    ) : ComputerStateChange
 }

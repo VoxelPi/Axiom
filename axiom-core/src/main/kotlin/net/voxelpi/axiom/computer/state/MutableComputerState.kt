@@ -1,14 +1,14 @@
-package net.voxelpi.axiom.emulator.state
+package net.voxelpi.axiom.computer.state
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.emulator.EmulatedStack
+import net.voxelpi.axiom.computer.ComputerStack
 import net.voxelpi.axiom.register.Register
 import net.voxelpi.axiom.register.RegisterVariable
 
-public class MutableEmulatorState<P : Comparable<P>>(
+public class MutableComputerState<P : Comparable<P>>(
     public val architecture: Architecture<P, *>,
-) : EmulatorState<P> {
+) : ComputerState<P> {
 
     public var carryState: Boolean = false
 
@@ -17,7 +17,7 @@ public class MutableEmulatorState<P : Comparable<P>>(
     }.toMutableMap()
 
     public val memoryState: ULongArray = ULongArray(architecture.memorySize) { 0UL }
-    public val stackState: EmulatedStack = EmulatedStack(architecture.stackSize)
+    public val stackState: ComputerStack = ComputerStack(architecture.stackSize)
 
     override fun <R : Comparable<R>> registerState(register: Register<R>): R {
         return castToWordType(registerValues[register.id]!!, register.type)
@@ -36,11 +36,11 @@ public class MutableEmulatorState<P : Comparable<P>>(
         return value.toLong()
     }
 
-    public fun makeRegisterModification(register: Register<*>, value: ULong): EmulatorStateChange.RegisterChange {
+    public fun makeRegisterModification(register: Register<*>, value: ULong): ComputerStateChange.RegisterChange {
         val newValue = value and register.type.mask
         val previousValue = registerValues[register.id]!!
         registerValues[register.id] = newValue
-        return EmulatorStateChange.RegisterChange(register, previousValue, newValue)
+        return ComputerStateChange.RegisterChange(register, previousValue, newValue)
     }
 
     override fun registerVariableStateUInt64(variable: RegisterVariable<*, *>): ULong {
@@ -76,7 +76,7 @@ public class MutableEmulatorState<P : Comparable<P>>(
         }
     }
 
-    public fun makeRegisterVariableModification(variable: RegisterVariable<*, *>, value: ULong): EmulatorStateChange.RegisterChange {
+    public fun makeRegisterVariableModification(variable: RegisterVariable<*, *>, value: ULong): ComputerStateChange.RegisterChange {
         when (variable) {
             is RegisterVariable.Direct<*> -> {
                 return makeRegisterModification(variable.register, value)
@@ -87,79 +87,79 @@ public class MutableEmulatorState<P : Comparable<P>>(
                 val previousValue = registerValues[variable.register.id]!!
                 val newValue = (value and partMask) or (previousValue and partMask.inv())
                 registerValues[variable.register.id] = newValue
-                return EmulatorStateChange.RegisterChange(variable.register, previousValue, newValue)
+                return ComputerStateChange.RegisterChange(variable.register, previousValue, newValue)
             }
         }
     }
 
-    public fun makeCarryModification(value: Boolean): EmulatorStateChange.CarryChange {
+    public fun makeCarryModification(value: Boolean): ComputerStateChange.CarryChange {
         val previousValue = carryState
         carryState = value
-        return EmulatorStateChange.CarryChange(previousValue, value)
+        return ComputerStateChange.CarryChange(previousValue, value)
     }
 
     public fun memoryCellState(address: Int): ULong {
         return memoryState[address]
     }
 
-    public fun makeMemoryModification(address: Int, value: ULong): EmulatorStateChange.MemoryChange {
+    public fun makeMemoryModification(address: Int, value: ULong): ComputerStateChange.MemoryChange {
         val previousValue = memoryState[address]
         memoryState[address] = value
-        return EmulatorStateChange.MemoryChange(address, previousValue, value)
+        return ComputerStateChange.MemoryChange(address, previousValue, value)
     }
 
     public fun stackPeek(): ULong {
         return stackState.peek()
     }
 
-    public fun makeStackPush(value: ULong): EmulatorStateChange.StackPush {
+    public fun makeStackPush(value: ULong): ComputerStateChange.StackPush {
         stackState.push(value)
-        return EmulatorStateChange.StackPush(value)
+        return ComputerStateChange.StackPush(value)
     }
 
-    public fun makeStackPop(): Pair<EmulatorStateChange.StackPop, ULong> {
+    public fun makeStackPop(): Pair<ComputerStateChange.StackPop, ULong> {
         val value = stackState.pop()
-        return Pair(EmulatorStateChange.StackPop(value), value)
+        return Pair(ComputerStateChange.StackPop(value), value)
     }
 
-    public fun redoPatch(patch: EmulatorStatePatch) {
+    public fun redoPatch(patch: ComputerStatePatch) {
         for (change in patch.changes) {
             when (change) {
-                is EmulatorStateChange.CarryChange -> {
+                is ComputerStateChange.CarryChange -> {
                     carryState = change.newValue
                 }
-                is EmulatorStateChange.MemoryChange -> {
+                is ComputerStateChange.MemoryChange -> {
                     memoryState[change.address] = change.newValue
                 }
-                is EmulatorStateChange.RegisterChange -> {
+                is ComputerStateChange.RegisterChange -> {
                     registerValues[change.register.id] = change.newValue
                 }
-                is EmulatorStateChange.StackPop -> {
+                is ComputerStateChange.StackPop -> {
                     stackState.pop()
                 }
-                is EmulatorStateChange.StackPush -> {
+                is ComputerStateChange.StackPush -> {
                     stackState.push(change.value)
                 }
             }
         }
     }
 
-    public fun undoPatch(patch: EmulatorStatePatch) {
+    public fun undoPatch(patch: ComputerStatePatch) {
         for (change in patch.changes) {
             when (change) {
-                is EmulatorStateChange.CarryChange -> {
+                is ComputerStateChange.CarryChange -> {
                     carryState = change.previousValue
                 }
-                is EmulatorStateChange.MemoryChange -> {
+                is ComputerStateChange.MemoryChange -> {
                     memoryState[change.address] = change.previousValue
                 }
-                is EmulatorStateChange.RegisterChange -> {
+                is ComputerStateChange.RegisterChange -> {
                     registerValues[change.register.id] = change.previousValue
                 }
-                is EmulatorStateChange.StackPop -> {
+                is ComputerStateChange.StackPop -> {
                     stackState.push(change.value)
                 }
-                is EmulatorStateChange.StackPush -> {
+                is ComputerStateChange.StackPush -> {
                     stackState.pop()
                 }
             }

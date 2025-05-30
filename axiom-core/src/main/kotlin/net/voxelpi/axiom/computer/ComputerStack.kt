@@ -1,6 +1,6 @@
-package net.voxelpi.axiom.emulator
+package net.voxelpi.axiom.computer
 
-public class EmulatedStack(public val capacity: Int) {
+public class ComputerStack(public val capacity: Int) {
 
     private val data: ULongArray = ULongArray(capacity) { 0UL }
     private var pointer: Int = 0
