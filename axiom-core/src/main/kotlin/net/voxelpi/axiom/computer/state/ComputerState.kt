@@ -18,4 +18,10 @@ public interface ComputerState<P : Comparable<P>> {
     public fun registerVariableStateUInt64(variable: RegisterVariable<*, *>): ULong
 
     public fun memoryState(address: Int): ULong
+
+    public fun stackPointerState(): Int
+
+    public fun stackState(address: Int): ULong?
+
+    public fun stackTopState(): ULong
 }

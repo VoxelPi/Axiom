@@ -34,4 +34,9 @@ public class ComputerStack(public val capacity: Int) {
     public fun peek(): ULong {
         return data[if (pointer == 0) capacity - 1 else pointer - 1]
     }
+
+    public operator fun get(index: Int): ULong? {
+        require(index in 0 until size) { "Index $index is out of bounds for the computer stack with size $size." }
+        return data[index]
+    }
 }

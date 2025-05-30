@@ -115,6 +115,18 @@ public class MutableComputerState<P : Comparable<P>>(
         return memoryState[address]
     }
 
+    override fun stackPointerState(): Int {
+        return stackState.size
+    }
+
+    override fun stackState(address: Int): ULong? {
+        return stackState[address]
+    }
+
+    override fun stackTopState(): ULong {
+        return stackState.peek()
+    }
+
     public fun makeMemoryModification(address: Int, value: ULong): ComputerStateChange.MemoryChange {
         val newValue = value and architecture.memoryWordType.mask
         val previousValue = memoryState[address]
