@@ -98,10 +98,10 @@ public class Computer<P : Comparable<P>>(
             Condition.NEVER -> false
             Condition.EQUAL -> c == 0UL
             Condition.NOT_EQUAL -> c != 0UL
-            Condition.LESS -> ((c shl cSize.bits) and 1UL) != 0UL
-            Condition.LESS_OR_EQUAL -> c == 0UL || ((c shl cSize.bits) and 1UL) != 0UL
-            Condition.GREATER -> c != 0UL && ((c shl cSize.bits) and 1UL) == 0UL
-            Condition.GREATER_OR_EQUAL -> ((c shl cSize.bits) and 1UL) == 0UL
+            Condition.LESS -> ((c shl (cSize.bits - 1)) and 1UL) != 0UL
+            Condition.LESS_OR_EQUAL -> c == 0UL || ((c shl (cSize.bits - 1)) and 1UL) != 0UL
+            Condition.GREATER -> c != 0UL && ((c shl (cSize.bits - 1)) and 1UL) == 0UL
+            Condition.GREATER_OR_EQUAL -> ((c shl (cSize.bits - 1)) and 1UL) == 0UL
         }
 
         // EXECUTE
