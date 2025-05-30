@@ -13,6 +13,24 @@ private val sourceRefStyle = TextColors.brightYellow
 private val sourceUnitStyle = TextColors.brightGreen
 private val errorStyle = TextColors.brightRed
 
+fun codePointFromString(str: String): ULong {
+    if (str.isEmpty()) {
+        return (-1).toULong()
+    }
+    return str.codePointAt(0).toULong()
+}
+
+fun stringFromCodePoint(codePoint: ULong): String {
+    return Character.toChars(codePoint.toUInt().toInt()).concatToString()
+        .replace(0.toChar().toString(), "\\0")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+        .replace("\b", "\\b")
+        .replace(12.toChar().toString(), "\\f")
+        .replace(11.toChar().toString(), "\\v")
+}
+
 fun generateCompilationStackTraceMessage(exception: Throwable): String {
     val lines = mutableListOf<String>()
     buildCompilationStackTrace(exception, lines)

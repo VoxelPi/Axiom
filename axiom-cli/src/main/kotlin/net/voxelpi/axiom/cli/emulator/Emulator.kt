@@ -19,7 +19,9 @@ import net.voxelpi.axiom.cli.emulator.command.EmulatorRunCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStopCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
+import net.voxelpi.axiom.cli.util.codePointFromString
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
+import net.voxelpi.axiom.cli.util.stringFromCodePoint
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.util.parseInteger
 import org.incendo.cloud.exception.ArgumentParseException
@@ -125,9 +127,9 @@ class Emulator(
                     }
 
                     if (line.startsWith("'") && line.endsWith("'") && line.length >= 3) {
-                        val codePoint = line.substring(1, line.length - 1).codePointAt(0).toULong()
+                        val codePoint = codePointFromString(line.substring(1, line.length - 1))
                         computer.inputQueue.addLast(codePoint)
-                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(codePoint.toString())} to the input queue.")
+                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(codePoint.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(codePoint))}${TextColors.brightCyan("'")} to the input queue.")
                         continue
                     }
 
@@ -171,7 +173,7 @@ class Emulator(
     }
 
     private fun handleOutput(value: ULong) {
-        commandLineReader.printAbove("$PREFIX_COMPUTER output: ${TextColors.brightGreen(value.toString())}")
+        commandLineReader.printAbove("$PREFIX_COMPUTER output: ${TextColors.brightGreen(value.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(value))}${TextColors.brightCyan("'")}")
     }
 
     companion object {

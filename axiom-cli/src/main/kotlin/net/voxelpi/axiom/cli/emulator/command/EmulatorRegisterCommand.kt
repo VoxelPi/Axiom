@@ -9,6 +9,7 @@ import net.voxelpi.axiom.cli.command.AxiomCommandProvider
 import net.voxelpi.axiom.cli.command.parser.registerParser
 import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
+import net.voxelpi.axiom.cli.util.stringFromCodePoint
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.register.Register
 import org.incendo.cloud.kotlin.extension.buildAndRegister
@@ -28,7 +29,7 @@ class EmulatorRegisterCommand(
 
                 val computerState = runBlocking { computer.state() }
                 val value = formattedRegisterState(register, computerState, RegisterPrintFormat.DECIMAL)
-                println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
             }
         }
 
@@ -43,7 +44,7 @@ class EmulatorRegisterCommand(
 
                 val computerState = runBlocking { computer.state() }
                 val value = formattedRegisterState(register, computerState, format)
-                println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
             }
         }
 
@@ -118,15 +119,8 @@ class EmulatorRegisterCommand(
                 TextColors.brightGreen(state.toString())
             }
             RegisterPrintFormat.CHARACTER -> {
-                val state = computerState.registerStateUInt64(register).toUInt().toInt()
-                val symbol = Character.toChars(state).concatToString()
-                    .replace(0.toChar().toString(), "\\0")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t")
-                    .replace("\b", "\\b")
-                    .replace(12.toChar().toString(), "\\f")
-                    .replace(11.toChar().toString(), "\\v")
+                val state = computerState.registerStateUInt64(register)
+                val symbol = stringFromCodePoint(state)
                 "${TextColors.brightCyan("'")}${TextColors.brightGreen(symbol)}${TextColors.brightCyan("'")}"
             }
         }
