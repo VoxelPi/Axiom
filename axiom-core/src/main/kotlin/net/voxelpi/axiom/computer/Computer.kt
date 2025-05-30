@@ -305,6 +305,7 @@ public class Computer<P : Comparable<P>>(
 
         // Add the current patch.
         steps += ComputerStatePatch(changes)
+        iStep += 1
 
         // Create and return execution result.
         return InstructionExecutionResult(
@@ -318,7 +319,7 @@ public class Computer<P : Comparable<P>>(
      * Redoes the next step in the history.
      */
     public fun stepForwards(): Boolean {
-        if (iStep >= steps.size - 1) {
+        if (iStep >= steps.size) {
             return false
         }
         val step = steps[iStep]
