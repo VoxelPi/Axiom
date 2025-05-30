@@ -89,6 +89,9 @@ class EmulatedComputer(
         if (isExecuting()) {
             return Result.failure(IllegalStateException("The computer is already running."))
         }
+        if (nInstructions <= 0) {
+            return Result.success(Unit)
+        }
         doneCallback = callback
         nExecutedInstructions = 0
         remainingInstructions = nInstructions

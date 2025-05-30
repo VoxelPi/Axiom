@@ -344,4 +344,12 @@ public class Computer<P : Comparable<P>>(
 
         return true
     }
+
+    public fun numberOfHistorySteps(): Int {
+        return steps.size
+    }
+
+    public fun currentHistoryStep(): Int {
+        return iStep
+    }
 }
