@@ -12,6 +12,9 @@ import kotlinx.cli.default
 import kotlinx.cli.optional
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
+import net.voxelpi.axiom.arch.dev08.DEV08Architecture
+import net.voxelpi.axiom.arch.dev16.DEV16Architecture
+import net.voxelpi.axiom.arch.dev32.DEV32Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
 import net.voxelpi.axiom.arch.mcpc08.MCPC08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
@@ -36,6 +39,9 @@ fun main(args: Array<String>) {
 
     val architectures: Map<String, Architecture<*, *>> = listOf(
         AX08Architecture,
+        DEV08Architecture,
+        DEV16Architecture,
+        DEV32Architecture,
         DEV64Architecture,
         MCPC08Architecture,
         MCPC16Architecture,

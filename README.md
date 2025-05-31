@@ -16,7 +16,10 @@ The following architectures are supported by the tools in this repository:
 | Architecture | Supported                      |
 |--------------|--------------------------------|
 | `ax08`       | ✅                              |
+| `dev08`      | ✅                              |
 | `dev16`      | ✅                              |
+| `dev32`      | ✅                              |
+| `dev64`      | ✅                              |
 | `mcpc08`     | ⚠️ DSP functions not supported |
 | `mcpc16`     | ✅                              |
 
