@@ -29,14 +29,14 @@ fun generateFormattedDescription(result: InstructionExecutionResult, architectur
     val b = "${TextColors.brightGreen("$inputB")}${if (inputB !is InstructionValue.ImmediateValue) TextColors.yellow(":${result.valueB}") else ""}"
     val outputRegister = TextColors.brightGreen(instruction.outputRegister.id)
     description += instruction.operation.asString(outputRegister, a, b)
-    description = description + (TextColors.gray(" ").repeat((59 - visibleLength(description)).coerceAtLeast(0)))
+    description = description + (TextColors.gray(" ").repeat((69 - visibleLength(description)).coerceAtLeast(0)))
 
     if (instruction.condition != Condition.ALWAYS) {
         val c = "${TextColors.brightGreen("${instruction.conditionRegister}")}${TextColors.yellow(":${result.valueConditionRegister}")}"
         val conditionResult = if (result.conditionMet) TextColors.brightGreen("(true)") else TextColors.brightRed("(false)")
         description += "${TextColors.brightMagenta("if")} $c ${instruction.condition.symbol} 0 $conditionResult"
     }
-    description = description + (TextColors.gray(" ").repeat((100 - visibleLength(description)).coerceAtLeast(0)))
+    description = description + (TextColors.gray(" ").repeat((111 - visibleLength(description)).coerceAtLeast(0)))
 
     description += result.changes
         .filter { it !is ComputerStateChange.RegisterChange || it.register != programCounter || instruction.outputRegister.register == programCounter }
