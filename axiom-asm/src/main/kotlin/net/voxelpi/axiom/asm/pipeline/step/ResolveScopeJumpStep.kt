@@ -13,7 +13,7 @@ import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ScopeLike
 import net.voxelpi.axiom.instruction.Operation
 
-public object ResolveScopeJumpStep : ProgramPipelineStep {
+public object ResolveScopeJumpStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         return program.transformType<ScopeJumpStatement> { statementInstance ->

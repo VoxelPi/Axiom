@@ -7,7 +7,7 @@ import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.type.AnchorLike
 import net.voxelpi.axiom.asm.type.LabelLike
 
-public object ReplaceLabelNamesStep : ProgramPipelineStep {
+public object ReplaceLabelNamesStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Replace label names in statements.

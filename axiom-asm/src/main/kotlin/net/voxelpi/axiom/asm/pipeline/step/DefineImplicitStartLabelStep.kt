@@ -8,7 +8,7 @@ import net.voxelpi.axiom.asm.statement.StatementPrototype
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 
-public object DefineImplicitStartLabelStep : ProgramPipelineStep {
+public object DefineImplicitStartLabelStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Define the start label if it is not yet defined

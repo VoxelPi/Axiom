@@ -14,7 +14,7 @@ import net.voxelpi.axiom.instruction.Operation
 
 public class UpcastLoadsStep(
     public val architecture: Architecture<*, *>,
-) : ProgramPipelineStep {
+) : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         return program.transformType<InstructionStatement.WithOutput> { statementInstance ->

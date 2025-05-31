@@ -17,7 +17,7 @@ import net.voxelpi.axiom.instruction.Operation
 
 public class InsertStartJumpStep(
     public val architecture: Architecture<*, *>,
-) : ProgramPipelineStep {
+) : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Calculate the start index.

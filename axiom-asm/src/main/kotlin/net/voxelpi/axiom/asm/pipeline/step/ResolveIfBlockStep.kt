@@ -15,7 +15,7 @@ import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.instruction.Operation
 import java.util.UUID
 
-public object ResolveIfBlockStep : ProgramPipelineStep {
+public object ResolveIfBlockStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         for (iStatement in program.statements.indices) {

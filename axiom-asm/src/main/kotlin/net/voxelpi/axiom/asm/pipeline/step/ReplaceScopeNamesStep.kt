@@ -5,7 +5,7 @@ import net.voxelpi.axiom.asm.pipeline.ProgramPipelineStep
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.type.ScopeLike
 
-public object ReplaceScopeNamesStep : ProgramPipelineStep {
+public object ReplaceScopeNamesStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         program.transformArgumentsOfType<ScopeLike.ScopeName> { statementInstance, parameter, value ->

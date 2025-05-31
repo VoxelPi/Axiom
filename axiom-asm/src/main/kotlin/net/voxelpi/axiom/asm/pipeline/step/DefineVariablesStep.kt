@@ -5,7 +5,7 @@ import net.voxelpi.axiom.asm.pipeline.ProgramPipelineStep
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.types.VariableStatement
 
-public object DefineVariablesStep : ProgramPipelineStep {
+public object DefineVariablesStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         return program.transformType<VariableStatement.Definition> { statementInstance ->

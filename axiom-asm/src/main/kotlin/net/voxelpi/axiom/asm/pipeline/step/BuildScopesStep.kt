@@ -12,7 +12,7 @@ import net.voxelpi.axiom.asm.statement.types.ScopeStatement
 import java.util.UUID
 import kotlin.collections.set
 
-public object BuildScopesStep : ProgramPipelineStep {
+public object BuildScopesStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         // Update scope of all variables.

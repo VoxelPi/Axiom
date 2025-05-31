@@ -7,7 +7,7 @@ import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
 import net.voxelpi.axiom.asm.statement.types.LabelStatement
 
-public object DefineLabelsStep : ProgramPipelineStep {
+public object DefineLabelsStep : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
         return program.transformType<LabelStatement.Definition> { statementInstance ->
