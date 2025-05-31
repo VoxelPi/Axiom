@@ -23,7 +23,9 @@ import net.voxelpi.axiom.cli.emulator.command.EmulatorStackCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorStopCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorVersionCommand
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
+import net.voxelpi.axiom.cli.util.ValueFormat
 import net.voxelpi.axiom.cli.util.codePointFromString
+import net.voxelpi.axiom.cli.util.formattedValue
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.cli.util.generateFormattedDescription
 import net.voxelpi.axiom.cli.util.stringFromCodePoint
@@ -209,7 +211,12 @@ class Emulator(
     }
 
     private fun handleOutput(value: ULong) {
-        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightMagenta("[OUTPUT]")} ${TextColors.brightGreen(value.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(value))}${TextColors.brightCyan("'")}")
+        val decimal: String = formattedValue(value, architecture.dataWordType, ValueFormat.DECIMAL)
+        val decimalSigned: String = formattedValue(value, architecture.dataWordType, ValueFormat.DECIMAL_SIGNED)
+        val hexadecimal: String = formattedValue(value, architecture.dataWordType, ValueFormat.HEXADECIMAL)
+        val binary: String = formattedValue(value, architecture.dataWordType, ValueFormat.BINARY)
+        val character: String = formattedValue(value, architecture.dataWordType, ValueFormat.CHARACTER)
+        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightMagenta("[OUTPUT]")}  $decimal  $decimalSigned  $hexadecimal  $binary  $character")
     }
 
     private fun handleTrace(result: InstructionExecutionResult) {
