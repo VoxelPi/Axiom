@@ -36,6 +36,7 @@ class EmulatedComputer(
 
     val inputQueue: ArrayDeque<ULong> = ArrayDeque()
     private var shouldHalt = false
+    private var undoCurrentInstruction = false
     var trace = false
         private set
     var silent = false
@@ -57,15 +58,21 @@ class EmulatedComputer(
 
                     // Run instruction
                     val result = computer.runSingleInstruction()
-                    if (trace) {
-                        traceHandler.invoke(result)
-                    }
-                    ++nExecutedInstructions
-
-                    if (result.hitBreak) {
-                        remainingInstructions = 0
+                    if (undoCurrentInstruction) {
+                        computer.stepBackwards()
+                        computer.eraseFuture()
+                        undoCurrentInstruction = false
                     } else {
-                        --remainingInstructions
+                        if (trace) {
+                            traceHandler.invoke(result)
+                        }
+                        ++nExecutedInstructions
+
+                        if (result.hitBreak) {
+                            remainingInstructions = 0
+                        } else {
+                            --remainingInstructions
+                        }
                     }
 
                     if (remainingInstructions == 0) {
@@ -167,6 +174,7 @@ class EmulatedComputer(
                 return value
             }
             if (shouldHalt) {
+                undoCurrentInstruction = true
                 return 0UL
             }
 

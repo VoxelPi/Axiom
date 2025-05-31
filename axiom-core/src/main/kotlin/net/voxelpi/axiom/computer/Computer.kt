@@ -304,9 +304,7 @@ public class Computer<P : Comparable<P>>(
         }
 
         // Remove any existing following history.
-        while (iStep <= steps.size - 1) {
-            steps.removeAt(iStep)
-        }
+        eraseFuture()
 
         // Create the execution result.
         val executionResult = InstructionExecutionResult(
@@ -357,6 +355,12 @@ public class Computer<P : Comparable<P>>(
         state.undoChanges(step.changes)
 
         return step
+    }
+
+    public fun eraseFuture() {
+        while (iStep <= steps.size - 1) {
+            steps.removeAt(iStep)
+        }
     }
 
     public fun numberOfHistorySteps(): Int {
