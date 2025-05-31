@@ -31,7 +31,7 @@ fun formattedValue(value: ULong, type: WordType<*>, format: ValueFormat): String
                 state = state or type.mask.inv()
             }
 
-            TextColors.brightGreen(state.toString())
+            TextColors.brightGreen((state.toLong()).toString())
         }
         ValueFormat.CHARACTER -> {
             val state = value and type.mask

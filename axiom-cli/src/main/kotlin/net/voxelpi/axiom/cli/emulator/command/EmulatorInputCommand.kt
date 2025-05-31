@@ -16,7 +16,7 @@ class EmulatorInputCommand(val computer: EmulatedComputer) : AxiomCommandProvide
             required("value", longParser())
 
             handler { context ->
-                val value: ULong = context.get<Long>("value").toULong()
+                val value: ULong = context.get<Long>("value").toULong() and computer.architecture.dataWordType.mask
                 computer.inputQueue.addLast(value)
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(value.toString())} to the input queue.")
             }

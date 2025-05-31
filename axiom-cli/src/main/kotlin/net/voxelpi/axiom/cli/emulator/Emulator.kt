@@ -159,15 +159,17 @@ class Emulator(
                 if (line.isNotBlank()) {
                     val lineAsNumber = parseInteger(line)?.toULong()
                     if (lineAsNumber != null) {
-                        computer.inputQueue.addLast(lineAsNumber)
-                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(lineAsNumber.toString())} to the input queue.")
+                        val value = lineAsNumber and computer.architecture.dataWordType.mask
+                        computer.inputQueue.addLast(value)
+                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(value.toString())} to the input queue.")
                         continue
                     }
 
                     if (line.startsWith("'") && line.endsWith("'") && line.length >= 3) {
                         val codePoint = codePointFromString(line.substring(1, line.length - 1))
-                        computer.inputQueue.addLast(codePoint)
-                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(codePoint.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(codePoint))}${TextColors.brightCyan("'")} to the input queue.")
+                        val value = codePoint and computer.architecture.dataWordType.mask
+                        computer.inputQueue.addLast(value)
+                        terminal.writer().println("$PREFIX_EMULATOR Added ${TextColors.brightGreen(value.toString())} ${TextColors.brightCyan("'")}${TextColors.brightGreen(stringFromCodePoint(value))}${TextColors.brightCyan("'")} to the input queue.")
                         continue
                     }
 
