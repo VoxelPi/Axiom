@@ -68,14 +68,31 @@ fun generateFormattedDescription(result: InstructionExecutionResult, architectur
     description += result.changes
         .filter { it !is ComputerStateChange.RegisterChange || it.register != programCounter || instruction.outputRegister.register == programCounter }
         .joinToString(TextColors.gray("  ")) { change ->
-            val changeDescription = when (change) {
-                is ComputerStateChange.CarryChange -> "carry = ${change.newValue}"
-                is ComputerStateChange.MemoryChange -> "[${change.address}] = ${change.newValue}"
-                is ComputerStateChange.RegisterChange -> "${change.register} = ${change.newValue}"
-                is ComputerStateChange.StackPop -> "pop ${change.value}"
-                is ComputerStateChange.StackPush -> "push ${change.value}"
+            when (change) {
+                is ComputerStateChange.CarryChange -> {
+                    if (change.newValue == change.previousValue) {
+                        TextColors.gray("carry = ${change.newValue}")
+                    } else {
+                        TextColors.brightBlue("carry = ${change.newValue}")
+                    }
+                }
+                is ComputerStateChange.MemoryChange -> {
+                    if (change.newValue == change.previousValue) {
+                        TextColors.gray("[${change.address}] = ${change.newValue}")
+                    } else {
+                        TextColors.brightBlue("[${change.address}] = ${change.newValue}")
+                    }
+                }
+                is ComputerStateChange.RegisterChange -> {
+                    if (change.newValue == change.previousValue) {
+                        TextColors.gray("${change.register} = ${change.newValue}")
+                    } else {
+                        TextColors.brightBlue("${change.register} = ${change.newValue}")
+                    }
+                }
+                is ComputerStateChange.StackPop -> TextColors.brightBlue("pop ${change.value}")
+                is ComputerStateChange.StackPush -> TextColors.brightBlue("push ${change.value}")
             }
-            TextColors.brightBlue(changeDescription)
         }
     description = description + (TextColors.gray(" ").repeat((length - visibleLength(description)).coerceAtLeast(0)))
     description = TextStyles.underline(description)
