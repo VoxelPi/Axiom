@@ -149,8 +149,8 @@ public class MutableComputerState<P : Comparable<P>>(
         return Pair(ComputerStateChange.StackPop(value), value)
     }
 
-    public fun redoPatch(patch: ComputerStatePatch) {
-        for (change in patch.changes) {
+    public fun redoChanges(changes: Collection<ComputerStateChange>) {
+        for (change in changes) {
             when (change) {
                 is ComputerStateChange.CarryChange -> {
                     carryState = change.newValue
@@ -171,8 +171,8 @@ public class MutableComputerState<P : Comparable<P>>(
         }
     }
 
-    public fun undoPatch(patch: ComputerStatePatch) {
-        for (change in patch.changes) {
+    public fun undoChanges(changes: Collection<ComputerStateChange>) {
+        for (change in changes) {
             when (change) {
                 is ComputerStateChange.CarryChange -> {
                     carryState = change.previousValue

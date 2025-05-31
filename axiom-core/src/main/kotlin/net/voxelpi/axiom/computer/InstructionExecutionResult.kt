@@ -6,6 +6,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
 
 public data class InstructionExecutionResult(
+    val iInstruction: Int,
     val instruction: Instruction,
     val valueA: ULong,
     val valueB: ULong,
@@ -21,10 +22,10 @@ public data class InstructionExecutionResult(
         val b = if (instruction.inputB is InstructionValue.ImmediateValue) instruction.inputB.value.toString() else "${instruction.inputB}|$valueB"
 
         return when (instruction.condition) {
-            Condition.ALWAYS -> "${instruction.operation.asString(instruction.outputRegister.id, a, b)}${if (output != null) " (${output})" else ""}"
+            Condition.ALWAYS -> "$iInstruction ${instruction.operation.asString(instruction.outputRegister.id, a, b)}${if (output != null) " (${output})" else ""}"
             Condition.NEVER -> "nop"
             else -> {
-                "${instruction.operation.asString(instruction.outputRegister.id, a, b)}${if (output != null) " (=${output})" else ""} if ${instruction.conditionRegister}|$valueConditionRegister ${instruction.condition.symbol} 0 (=${conditionMet})"
+                "$iInstruction ${instruction.operation.asString(instruction.outputRegister.id, a, b)}${if (output != null) " (=${output})" else ""} if ${instruction.conditionRegister}|$valueConditionRegister ${instruction.condition.symbol} 0 (=${conditionMet})"
             }
         }
     }

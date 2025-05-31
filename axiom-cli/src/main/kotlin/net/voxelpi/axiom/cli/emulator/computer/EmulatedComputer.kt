@@ -127,6 +127,24 @@ class EmulatedComputer(
         computerThread.interrupt()
     }
 
+    fun stepBackwardsWithTrace(): InstructionExecutionResult? {
+        if (isExecuting()) {
+            return null
+        }
+        val step = computer.stepBackwards() ?: return null
+        traceHandler.invoke(step)
+        return step
+    }
+
+    fun stepForwardsWithTrace(): InstructionExecutionResult? {
+        if (isExecuting()) {
+            return null
+        }
+        val step = computer.stepForwards() ?: return null
+        traceHandler.invoke(step)
+        return step
+    }
+
     private fun handleInputPoll(): Boolean {
         return inputQueue.isNotEmpty()
     }

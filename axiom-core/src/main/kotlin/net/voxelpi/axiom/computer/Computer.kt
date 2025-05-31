@@ -3,7 +3,6 @@ package net.voxelpi.axiom.computer
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.computer.state.ComputerStateChange
-import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.computer.state.MutableComputerState
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
@@ -25,7 +24,7 @@ public class Computer<P : Comparable<P>>(
     private val state: MutableComputerState<P> = MutableComputerState(architecture)
 
     private var iStep = 0
-    private val steps: MutableList<ComputerStatePatch> = mutableListOf()
+    private val steps: MutableList<InstructionExecutionResult> = mutableListOf()
 
     public fun loadProgram(program: Program) {
         this.program = program
@@ -309,12 +308,9 @@ public class Computer<P : Comparable<P>>(
             steps.removeAt(iStep)
         }
 
-        // Add the current patch.
-        steps += ComputerStatePatch(changes)
-        iStep += 1
-
-        // Create and return execution result.
-        return InstructionExecutionResult(
+        // Create the execution result.
+        val executionResult = InstructionExecutionResult(
+            instructionIndex.toInt(),
             instruction,
             a,
             b,
@@ -324,36 +320,43 @@ public class Computer<P : Comparable<P>>(
             changes,
             hitBreak = hitBreak,
         )
+
+        // Add the execution result to the history.
+        steps += executionResult
+        iStep += 1
+
+        // Create and return execution result.
+        return executionResult
     }
 
     /**
      * Redoes the next step in the history.
      */
-    public fun stepForwards(): Boolean {
+    public fun stepForwards(): InstructionExecutionResult? {
         if (iStep >= steps.size) {
-            return false
+            return null
         }
         val step = steps[iStep]
         ++iStep
 
-        state.redoPatch(step)
+        state.redoChanges(step.changes)
 
-        return true
+        return step
     }
 
     /**
      * Reverts the last step in the history.
      */
-    public fun stepBackwards(): Boolean {
+    public fun stepBackwards(): InstructionExecutionResult? {
         if (iStep <= 0) {
-            return false
+            return null
         }
         --iStep
         val step = steps[iStep]
 
-        state.undoPatch(step)
+        state.undoChanges(step.changes)
 
-        return true
+        return step
     }
 
     public fun numberOfHistorySteps(): Int {

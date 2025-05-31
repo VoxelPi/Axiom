@@ -3,8 +3,10 @@ package net.voxelpi.axiom.cli.emulator.command
 import com.github.ajalt.mordant.rendering.TextColors
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandProvider
+import net.voxelpi.axiom.cli.emulator.Emulator.Companion.PREFIX_COMPUTER
 import net.voxelpi.axiom.cli.emulator.Emulator.Companion.PREFIX_EMULATOR
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
+import net.voxelpi.axiom.cli.util.generateFormattedDescription
 import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.parser.standard.IntegerParser.integerParser
 
@@ -33,14 +35,18 @@ class EmulatorHistoryCommand(
                     // Step backwards.
                     val nSteps = (-nStepsRaw).coerceAtMost(computer.computer.numberOfHistorySteps())
                     repeat(nSteps) {
-                        computer.computer.stepBackwards()
+                        computer.computer.stepBackwards()?.let { result ->
+                            context.sender().terminal.writer().println("$PREFIX_COMPUTER ${TextColors.brightCyan("[UNDO]")}  ${generateFormattedDescription(result, computer.architecture)}")
+                        }
                     }
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped back ${TextColors.brightYellow(nSteps.toString())} steps.")
                 } else if (nStepsRaw > 0) {
                     // Step forward.
                     val nSteps = nStepsRaw.coerceAtMost(computer.computer.numberOfHistorySteps() - computer.computer.currentHistoryStep())
                     repeat(nSteps) {
-                        computer.computer.stepForwards()
+                        computer.computer.stepForwards()?.let { result ->
+                            context.sender().terminal.writer().println("$PREFIX_COMPUTER ${TextColors.brightCyan("[REDO]")}  ${generateFormattedDescription(result, computer.architecture)}")
+                        }
                     }
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped forward ${TextColors.brightYellow(nSteps.toString())} steps.")
                 }
