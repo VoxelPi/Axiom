@@ -49,14 +49,18 @@ fun codePointFromString(str: String): ULong {
 }
 
 fun stringFromCodePoint(codePoint: ULong): String {
-    return Character.toChars(codePoint.toUInt().toInt()).concatToString()
-        .replace(0.toChar().toString(), "\\0")
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-        .replace("\t", "\\t")
-        .replace("\b", "\\b")
-        .replace(12.toChar().toString(), "\\f")
-        .replace(11.toChar().toString(), "\\v")
+    return try {
+        Character.toChars(codePoint.toUInt().toInt()).concatToString()
+            .replace(0.toChar().toString(), "\\0")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+            .replace("\b", "\\b")
+            .replace(12.toChar().toString(), "\\f")
+            .replace(11.toChar().toString(), "\\v")
+    } catch (_: Exception) {
+        "INVALID"
+    }
 }
 
 enum class ValueFormat {
