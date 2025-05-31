@@ -25,7 +25,7 @@ class EmulatedComputer(
     private val coroutineExecutor = ComputerExecutor()
     override val coroutineContext: CoroutineContext = SupervisorJob() + coroutineExecutor.asCoroutineDispatcher()
 
-    val computer = Computer(architecture, ::handleInputPoll, ::provideInput, outputHandler)
+    val computer = Computer(architecture, ::handleInputPoll, ::provideInput, ::handleOutput)
 
     val architecture: Architecture<*, *>
         get() = computer.architecture
@@ -38,6 +38,8 @@ class EmulatedComputer(
     private var shouldHalt = false
     var trace = false
         private set
+    var silent = false
+        private set
 
     val computerThread = thread(start = true, name = "Axiom Emulator Computer Thread", isDaemon = true) {
         try {
@@ -47,6 +49,7 @@ class EmulatedComputer(
                     doneCallback.invoke(nExecutedInstructions)
                     doneCallback = {}
                     trace = false
+                    silent = false
                     shouldHalt = false
                 }
 
@@ -69,6 +72,7 @@ class EmulatedComputer(
                         doneCallback.invoke(nExecutedInstructions)
                         doneCallback = {}
                         trace = false
+                        silent = false
                     }
                 }
 
@@ -94,7 +98,7 @@ class EmulatedComputer(
         return Result.success(Unit)
     }
 
-    fun run(nInstructions: Int = Int.MAX_VALUE, trace: Boolean = false, callback: (Int) -> Unit): Result<Unit> {
+    fun run(nInstructions: Int = Int.MAX_VALUE, trace: Boolean = false, silent: Boolean = false, callback: (Int) -> Unit): Result<Unit> {
         if (isExecuting()) {
             return Result.failure(IllegalStateException("The computer is already running."))
         }
@@ -102,6 +106,7 @@ class EmulatedComputer(
             return Result.success(Unit)
         }
         this.trace = trace
+        this.silent = silent
         doneCallback = callback
         nExecutedInstructions = 0
         remainingInstructions = nInstructions
@@ -167,6 +172,12 @@ class EmulatedComputer(
 
             coroutineExecutor.runTasks()
             Thread.sleep(1)
+        }
+    }
+
+    private fun handleOutput(value: ULong) {
+        if (!silent) {
+            outputHandler.invoke(value)
         }
     }
 
