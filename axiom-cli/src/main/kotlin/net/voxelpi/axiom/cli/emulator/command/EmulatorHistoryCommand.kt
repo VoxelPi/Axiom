@@ -22,35 +22,28 @@ class EmulatorHistoryCommand(
         }
 
         commandManager.buildAndRegister("step") {
-            literal("back")
-            optional("steps", integerParser(1))
+            optional("steps", integerParser())
             handler { context ->
                 if (computer.isExecuting()) {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is currently running.")
                 }
 
-                val nSteps = context.getOrDefault("steps", 1).coerceAtMost(computer.computer.numberOfHistorySteps())
-                repeat(nSteps) {
-                    computer.computer.stepBackwards()
+                val nStepsRaw = context.getOrDefault("steps", 1)
+                if (nStepsRaw < 0) {
+                    // Step backwards.
+                    val nSteps = (-nStepsRaw).coerceAtMost(computer.computer.numberOfHistorySteps())
+                    repeat(nSteps) {
+                        computer.computer.stepBackwards()
+                    }
+                    context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped back ${TextColors.brightYellow(nSteps.toString())} steps.")
+                } else if (nStepsRaw > 0) {
+                    // Step forward.
+                    val nSteps = nStepsRaw.coerceAtMost(computer.computer.numberOfHistorySteps() - computer.computer.currentHistoryStep())
+                    repeat(nSteps) {
+                        computer.computer.stepForwards()
+                    }
+                    context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped forward ${TextColors.brightYellow(nSteps.toString())} steps.")
                 }
-                context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped back ${TextColors.brightYellow(nSteps.toString())} steps.")
-                context.sender().terminal.writer().println("$PREFIX_EMULATOR Now at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
-            }
-        }
-
-        commandManager.buildAndRegister("step") {
-            literal("next")
-            optional("steps", integerParser(1))
-            handler { context ->
-                if (computer.isExecuting()) {
-                    context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is currently running.")
-                }
-
-                val nSteps = context.getOrDefault("steps", 1).coerceAtMost(computer.computer.numberOfHistorySteps() - computer.computer.currentHistoryStep())
-                repeat(nSteps) {
-                    computer.computer.stepForwards()
-                }
-                context.sender().terminal.writer().println("$PREFIX_EMULATOR Stepped forward ${TextColors.brightYellow(nSteps.toString())} steps.")
                 context.sender().terminal.writer().println("$PREFIX_EMULATOR Now at step ${TextColors.brightYellow(computer.computer.currentHistoryStep().toString())} of ${TextColors.brightYellow(computer.computer.numberOfHistorySteps().toString())}")
             }
         }
