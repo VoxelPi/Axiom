@@ -47,8 +47,11 @@ import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.pathString
 
 class Emulator(
     val architecture: Architecture<*, *>,
@@ -61,16 +64,24 @@ class Emulator(
         system(true)
     }.build()
 
-    val commandLineReader: LineReader = LineReaderBuilder.builder().apply {
-        appName("Axiom Emulator")
-        terminal(terminal)
-        completer { reader, line, candidates ->
-            val suggestions = commandManager.suggestionFactory().suggestImmediately(AxiomCommandSender(terminal, commandLineReader), line.line())
-            candidates += suggestions.list().map { Candidate(it.suggestion()) }
-        }
-        option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-        option(LineReader.Option.INSERT_TAB, false)
-    }.build()
+    val commandLineReader: LineReader
+
+    init {
+        val localHistoryFile = findHistoryFile()
+        localHistoryFile.createParentDirectories()
+
+        commandLineReader = LineReaderBuilder.builder().apply {
+            appName("Axiom Emulator")
+            terminal(terminal)
+            completer { reader, line, candidates ->
+                val suggestions = commandManager.suggestionFactory().suggestImmediately(AxiomCommandSender(terminal, commandLineReader), line.line())
+                candidates += suggestions.list().map { Candidate(it.suggestion()) }
+            }
+            variable(LineReader.HISTORY_FILE, localHistoryFile.pathString)
+            option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+            option(LineReader.Option.INSERT_TAB, false)
+        }.build()
+    }
 
     val commandManager = AxiomCommandManager().apply {
         registerCommands(EmulatorClearCommand)
@@ -250,6 +261,20 @@ class Emulator(
         description = "${(TextColors.gray + TextStyles.underline)("  ")}$description"
 
         commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}${TextStyles.underline(description)}")
+    }
+
+    private fun findHistoryFile(): Path {
+        val os = System.getProperty("os.name").lowercase()
+        return when {
+            os.contains("win") -> {
+                val appDataDir = Path(System.getenv("APPDATA") ?: System.getProperty("user.home") ?: ".")
+                appDataDir / "Axiom" / "command_history.txt"
+            }
+            else -> {
+                val localDataHome = Path(System.getenv("XDG_STATE_HOME") ?: "${System.getProperty("user.home") ?: "."}/.local/state")
+                localDataHome / "axiom" / "command_history.txt"
+            }
+        }.absolute().normalize()
     }
 
     companion object {
