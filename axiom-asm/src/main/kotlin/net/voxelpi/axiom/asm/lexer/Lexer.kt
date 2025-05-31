@@ -118,24 +118,24 @@ public class Lexer() {
             val tokenText = text.substring(iTokenStart, iTokenEnd)
             val wordSource = SourceLink.CompilationUnitSlice(unit, statementIndex + iTokenStart, lineNumber, columnNumber + iTokenStart, iTokenEnd - iTokenStart)
 
+            // Integers.
+            val parsedInteger = parseInteger(tokenText)
+            if (parsedInteger != null) {
+                statement.add(Token.Integer(parsedInteger, wordSource))
+                continue
+            }
+
             // Labels
-            if ("^@(?:[A-Za-z0-9_-]+:)?[A-Za-z0-9_\\-/]+".toRegex().matches(tokenText)) {
+            if (tokenText.startsWith("@")) {
                 val iLabelNameStart = iTokenStart + 1
                 statement.add(Token.Label(text.substring(iLabelNameStart, iTokenEnd), wordSource))
                 continue
             }
 
             // Variables
-            if ("^\\$(?:[A-Za-z0-9_-]+:)?[A-Za-z0-9_\\-/]+".toRegex().matches(tokenText)) {
+            if (tokenText.startsWith("$")) {
                 val iVariableNameStart = iTokenStart + 1
                 statement.add(Token.Variable(text.substring(iVariableNameStart, iTokenEnd), wordSource))
-                continue
-            }
-
-            // Integers.
-            val parsedInteger = parseInteger(tokenText)
-            if (parsedInteger != null) {
-                statement.add(Token.Integer(parsedInteger, wordSource))
                 continue
             }
 

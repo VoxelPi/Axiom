@@ -92,4 +92,34 @@ class LexerTest {
 
         assertEquals(3, tokenStatements[1].tokens.size, "Invalid number of tokens in statement 2")
     }
+
+    @Test
+    fun `test complex characters variables`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit("test", "$💀")
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(1, tokenStatements.size, "Invalid number of statements")
+
+        val variableStatement = tokenStatements[0]
+        assertEquals(1, variableStatement.tokens.size, "Invalid number of tokens in statement")
+        assertIs<Token.Variable>(variableStatement.tokens[0])
+    }
+
+    @Test
+    fun `test complex characters`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit("test", "💀\n$💀\n@💀")
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(3, tokenStatements.size, "Invalid number of statements")
+
+        val literalStatement = tokenStatements[0]
+        assertEquals(1, literalStatement.tokens.size, "Invalid number of tokens in statement 1")
+        assertIs<Token.Text>(literalStatement.tokens[0])
+
+        val variableStatement = tokenStatements[1]
+        assertEquals(1, variableStatement.tokens.size, "Invalid number of tokens in statement 2")
+        assertIs<Token.Variable>(variableStatement.tokens[0])
+    }
 }
