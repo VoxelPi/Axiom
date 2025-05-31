@@ -64,10 +64,15 @@ class LexerTest {
         val tokenStatements = lexer.tokenize(unit)
         assertEquals(3, tokenStatements.size, "Invalid number of statements")
 
-        val token = tokenStatements[2].tokens[1]
-        val source = SourceLink.CompilationUnitSlice(unit, 37, 1, 19, 7)
+        val token21 = tokenStatements[2].tokens[1]
+        val source21 = SourceLink.CompilationUnitSlice(unit, 37, 1, 19, 7)
+        assertEquals(source21, token21.source)
+        assertEquals("include", source21.text)
 
-        assertEquals(source, token.source)
+        val token22 = tokenStatements[2].tokens[2]
+        val source22 = SourceLink.CompilationUnitSlice(unit, 45, 1, 27, 5)
+        assertEquals(source22, token22.source)
+        assertEquals("stuff", source22.text)
     }
 
     @Test
