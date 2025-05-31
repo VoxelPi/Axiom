@@ -79,6 +79,16 @@ public object Parsers {
             literal("0")
         }
 
+        transformation<InstructionStatement.WithoutOutput>("nop") {
+            literal("nop")
+
+            parameter(InstructionStatement::operation) { Operation.LOAD }
+            parameter(InstructionStatement::condition) { Condition.NEVER }
+            parameter(InstructionStatement::conditionValue) { RegisterLike.AnyRegister(conditionable = true) }
+            parameter(InstructionStatement::inputA) { IntegerValue(0) }
+            parameter(InstructionStatement::inputB) { IntegerValue(0) }
+        }
+
         // Instruction statements. These are generated twice, once with and once without the condition part.
         for (withConditionPart in listOf(true, false)) {
             val transformationSuffix = if (withConditionPart) "with_condition" else "without_condition"
@@ -153,7 +163,6 @@ public object Parsers {
             // COMMAND FUNCTIONS, "<function>"
 
             val commandFunctions = mapOf(
-                "nop" to Operation.AND,
                 "break" to Operation.BREAK,
             )
 
