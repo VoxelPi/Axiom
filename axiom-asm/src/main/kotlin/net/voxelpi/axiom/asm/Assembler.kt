@@ -27,8 +27,10 @@ import net.voxelpi.axiom.asm.statement.types.InstructionStatement
 import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ValueLike
+import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
+import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.register.RegisterVariable
 import java.nio.file.Path
@@ -39,21 +41,36 @@ public class Assembler(
     public val includeDirectories: List<Path>,
 ) {
 
-    public fun assemble(text: String, architecture: Architecture<*, *>): Result<Program> {
+    public fun assemble(
+        text: String,
+        architecture: Architecture<*, *>,
+        parser: Parser = Parsers.AXIOM_ASM,
+        offset: Int = 0,
+    ): Result<Program> {
         val compilationUnit = CompilationUnit("__main__", text)
-        return assemble(compilationUnit, architecture)
+        return assemble(compilationUnit, architecture, parser, offset)
     }
 
-    public fun assemble(path: Path, architecture: Architecture<*, *>): Result<Program> {
+    public fun assemble(
+        path: Path,
+        architecture: Architecture<*, *>,
+        parser: Parser = Parsers.AXIOM_ASM,
+        offset: Int = 0,
+    ): Result<Program> {
         if (!path.isRegularFile()) {
             return Result.failure(IllegalArgumentException("The path $path is not a regular file."))
         }
 
         val compilationUnit = CompilationUnit("__main__", path.toFile().readText())
-        return assemble(compilationUnit, architecture)
+        return assemble(compilationUnit, architecture, parser, offset)
     }
 
-    public fun assemble(unit: CompilationUnit, architecture: Architecture<*, *>, parser: Parser = Parsers.AXIOM_ASM): Result<Program> = runCatching {
+    public fun assemble(
+        unit: CompilationUnit,
+        architecture: Architecture<*, *>,
+        parser: Parser = Parsers.AXIOM_ASM,
+        offset: Int = 0,
+    ): Result<Program> = runCatching {
         val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
         val program = unitCollector.reduce().getOrThrow()
 
@@ -85,7 +102,7 @@ public class Assembler(
         InsertStartJumpStep(architecture).transform(program).getOrThrow()
 
         // Generate anchors indices and use them to replace all anchor reference parameters.
-        val anchorIndices = generateAnchorIndices(program).getOrThrow()
+        val anchorIndices = generateAnchorIndices(program, offset).getOrThrow()
         ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
 
         // Replace special registers with references to actual registers.
@@ -94,14 +111,14 @@ public class Assembler(
         // Platform-dependent compatibility transformations.
         UpcastLoadsStep(architecture).transform(program).getOrThrow()
 
-        val instructions = generateInstructions(program, architecture).getOrThrow()
+        val instructions = generateInstructions(program, architecture, offset).getOrThrow()
         val compiledProgram = Program(instructions)
         return Result.success(compiledProgram)
     }
 
-    private fun generateAnchorIndices(program: MutableStatementProgram): Result<Map<UUID, Int>> {
+    private fun generateAnchorIndices(program: MutableStatementProgram, offset: Int): Result<Map<UUID, Int>> {
         val anchorIndices = mutableMapOf<UUID, Int>()
-        var iInstruction = 0
+        var iInstruction = offset
         program.transform { statementInstance ->
             val statement = statementInstance.create()
             when (statement) {
@@ -121,8 +138,19 @@ public class Assembler(
         return Result.success(anchorIndices)
     }
 
-    private fun generateInstructions(program: StatementProgram, architecture: Architecture<*, *>): Result<List<Instruction>> {
+    private fun generateInstructions(program: StatementProgram, architecture: Architecture<*, *>, offset: Int): Result<List<Instruction>> {
         val instructions = mutableListOf<Instruction>()
+        val nopInstruction = Instruction(
+            Operation.LOAD,
+            Condition.NEVER,
+            findRegister(architecture, RegisterLike.AnyRegister(conditionable = true)).getOrElse { return Result.failure(it) },
+            findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) },
+            InstructionValue.ImmediateValue(0),
+            InstructionValue.ImmediateValue(0),
+        )
+        repeat(offset) {
+            instructions += nopInstruction
+        }
         for (statementInstance in program.statements) {
             val statement = statementInstance.create()
             if (statement !is InstructionStatement) {

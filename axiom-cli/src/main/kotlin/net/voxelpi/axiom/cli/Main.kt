@@ -50,6 +50,7 @@ fun main(args: Array<String>) {
     class Assemble : Subcommand("assemble", "Assembles a program.") {
         val input by argument(ArgType.String, description = "The input file.")
         val output by option(ArgType.String, "output", "o", description = "The output file.")
+        val position by option(ArgType.Int, "position", "p", description = "The position of the program.").default(0)
         val generateRawAxm by option(ArgType.Boolean, "raw", "r", description = "If a raw axm file should be generated").default(false)
 
         val architecture by option(
@@ -73,7 +74,7 @@ fun main(args: Array<String>) {
 
             val assembler = Assembler(listOf(Path(".").absolute().normalize()))
 
-            val program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
+            val program = assembler.assemble(inputFilePath, architecture, offset = position).getOrElse { exception ->
                 terminal.println(Text(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED"))), true)
                 terminal.println(Text(generateCompilationStackTraceMessage(exception)), true)
                 exitProcess(1)
