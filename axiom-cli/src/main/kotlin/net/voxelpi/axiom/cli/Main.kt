@@ -50,6 +50,7 @@ fun main(args: Array<String>) {
     class Assemble : Subcommand("assemble", "Assembles a program.") {
         val input by argument(ArgType.String, description = "The input file.")
         val output by option(ArgType.String, "output", "o", description = "The output file.")
+        val generateRawAxm by option(ArgType.Boolean, "raw", "r", description = "If a raw axm file should be generated").default(false)
 
         val architecture by option(
             ArgType.Choice(choices = architectures.values.toList(), toVariant = { architectures[it]!! }),
@@ -78,7 +79,9 @@ fun main(args: Array<String>) {
                 exitProcess(1)
             }
 
-            rawFile.writeText(program.toString())
+            if (generateRawAxm) {
+                rawFile.writeText(program.toString())
+            }
 
             if (architecture.hasEncodedFormat) {
                 val encodedProgram = architecture.encodeProgram(program).getOrThrow()
