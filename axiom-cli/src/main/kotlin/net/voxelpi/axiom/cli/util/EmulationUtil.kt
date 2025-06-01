@@ -32,7 +32,7 @@ private val CHANGE_PART_LENGTH = mapOf(
     WordType.INT64 to 42,
 )
 
-fun generateFormattedDescription(result: InstructionExecutionResult, architecture: Architecture<*, *>): String {
+fun generateFormattedDescription(result: InstructionExecutionResult, architecture: Architecture): String {
     val programCounter = architecture.registers.programCounter
     val lengthWithOperation = INSTRUCTION_NUMBER_LENGTH + OPERATION_PART_LENGTH[architecture.dataWordType]!!
     val lengthWithCondition = lengthWithOperation + CONDITION_PART_LENGTH[architecture.dataWordType]!!

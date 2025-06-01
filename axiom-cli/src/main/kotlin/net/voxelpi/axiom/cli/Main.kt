@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
     val parser = ArgParser("axiom")
     val terminal = Terminal()
 
-    val architectures: Map<String, Architecture<*, *>> = listOf(
+    val architectures: Map<String, Architecture> = listOf(
         AX08Architecture,
         DEV08Architecture,
         DEV16Architecture,
@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
         DEV64Architecture,
         MCPC08Architecture,
         MCPC16Architecture,
-    ).associateBy(Architecture<*, *>::id)
+    ).associateBy(Architecture::id)
 
     class Assemble : Subcommand("assemble", "Assembles a program.") {
         val input by argument(ArgType.String, description = "The input file.")

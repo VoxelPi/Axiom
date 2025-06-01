@@ -5,7 +5,7 @@ import net.voxelpi.axiom.register.Register
 public sealed interface ComputerStateChange {
 
     public data class RegisterChange(
-        val register: Register<*>,
+        val register: Register,
         val previousValue: ULong,
         val newValue: ULong,
     ) : ComputerStateChange

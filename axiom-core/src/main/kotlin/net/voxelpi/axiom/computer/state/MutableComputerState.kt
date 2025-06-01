@@ -1,14 +1,13 @@
 package net.voxelpi.axiom.computer.state
 
-import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.computer.ComputerStack
 import net.voxelpi.axiom.register.Register
 import net.voxelpi.axiom.register.RegisterVariable
 
-public class MutableComputerState<P : Comparable<P>>(
-    public val architecture: Architecture<P, *>,
-) : ComputerState<P> {
+public class MutableComputerState(
+    public val architecture: Architecture,
+) : ComputerState {
 
     public var carryState: Boolean = false
 
@@ -32,69 +31,50 @@ public class MutableComputerState<P : Comparable<P>>(
         stackState.clear()
     }
 
-    override fun <R : Comparable<R>> registerState(register: Register<R>): R {
-        return castToWordType(registerValues[register.id]!!, register.type)
+    override fun registerState(register: Register): ULong {
+        return register.type.unsignedValueOf(registerValues[register.id]!!)
     }
 
-    override fun registerStateUInt64(register: Register<*>): ULong {
-        return registerValues[register.id]!! and register.type.mask
+    override fun registerStateUInt64(register: Register): ULong {
+        return register.type.unsignedValueOf(registerValues[register.id]!!)
     }
 
-    override fun registerStateInt64(register: Register<*>): Long {
-        var value = registerStateUInt64(register)
-        val negative = value and (1UL shl (register.type.bits - 1)) != 0UL
-        if (negative) {
-            value = value or register.type.mask.inv()
-        }
-        return value.toLong()
+    override fun registerStateInt64(register: Register): Long {
+        return register.type.signedValueOf(registerValues[register.id]!!)
     }
 
-    public fun makeRegisterModification(register: Register<*>, value: ULong): ComputerStateChange.RegisterChange {
-        val newValue = value and register.type.mask
+    public fun makeRegisterModification(register: Register, value: ULong): ComputerStateChange.RegisterChange {
+        val newValue = register.type.unsignedValueOf(value)
         val previousValue = registerValues[register.id]!!
         registerValues[register.id] = newValue
         return ComputerStateChange.RegisterChange(register, previousValue, newValue)
     }
 
-    override fun registerVariableStateUInt64(variable: RegisterVariable<*, *>): ULong {
+    override fun registerVariableState(variable: RegisterVariable): ULong {
         return when (variable) {
-            is RegisterVariable.Direct<*> -> registerStateUInt64(variable.register)
-            is RegisterVariable.Part<*, *> -> {
-                val registerState = registerStateUInt64(variable.register)
+            is RegisterVariable.Direct -> registerState(variable.register)
+            is RegisterVariable.Part -> {
+                val registerState = registerState(variable.register)
                 return (registerState shr (variable.part * variable.type.bits)) and variable.type.mask
             }
         }
     }
 
-    override fun registerVariableStateInt64(variable: RegisterVariable<*, *>): Long {
-        var value = registerVariableStateUInt64(variable)
-        val negative = value and (1UL shl (variable.type.bits - 1)) != 0UL
-        if (negative) {
-            value = value or variable.type.mask.inv()
-        }
-        return value.toLong()
+    override fun registerVariableStateUInt64(variable: RegisterVariable): ULong {
+        return registerVariableState(variable)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <R : Comparable<R>, V : Comparable<V>> registerVariableState(variable: RegisterVariable<V, R>): V {
-        when (variable) {
-            is RegisterVariable.Direct<*> -> {
-                return registerState(variable.register) as V
-            }
-            is RegisterVariable.Part<*, *> -> {
-                val registerState = registerValues[variable.register.id]!!
-                val value = (registerState shr (variable.part * variable.type.bits)) and variable.type.mask
-                return castToWordType(value, variable.type)
-            }
-        }
+    override fun registerVariableStateInt64(variable: RegisterVariable): Long {
+        val value = registerVariableState(variable)
+        return variable.type.signedValueOf(value)
     }
 
-    public fun makeRegisterVariableModification(variable: RegisterVariable<*, *>, value: ULong): ComputerStateChange.RegisterChange {
+    public fun makeRegisterVariableModification(variable: RegisterVariable, value: ULong): ComputerStateChange.RegisterChange {
         when (variable) {
-            is RegisterVariable.Direct<*> -> {
+            is RegisterVariable.Direct -> {
                 return makeRegisterModification(variable.register, value)
             }
-            is RegisterVariable.Part<*, *> -> {
+            is RegisterVariable.Part -> {
                 val partMask = variable.type.mask shl (variable.part * variable.type.bits)
 
                 val previousValue = registerValues[variable.register.id]!!
@@ -190,16 +170,6 @@ public class MutableComputerState<P : Comparable<P>>(
                     stackState.pop()
                 }
             }
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T : Comparable<T>> castToWordType(value: ULong, wordType: WordType<T>): T {
-        return when (wordType) {
-            WordType.INT8 -> value.toUByte() as T
-            WordType.INT16 -> value.toUShort() as T
-            WordType.INT32 -> value.toUInt() as T
-            WordType.INT64 -> value as T
         }
     }
 }

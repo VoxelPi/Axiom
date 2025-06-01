@@ -13,7 +13,7 @@ import net.voxelpi.axiom.asm.type.ValueLike
 import net.voxelpi.axiom.instruction.Operation
 
 public class UpcastLoadsStep(
-    public val architecture: Architecture<*, *>,
+    public val architecture: Architecture,
 ) : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {
@@ -69,7 +69,7 @@ public class UpcastLoadsStep(
         }
     }
 
-    private fun splitValue(value: ValueLike, source: SourceLink, type: WordType<*>): Pair<ValueLike, ValueLike> {
+    private fun splitValue(value: ValueLike, source: SourceLink, type: WordType): Pair<ValueLike, ValueLike> {
         return when (value) {
             is IntegerValue -> {
                 val integer = value.value.toULong()

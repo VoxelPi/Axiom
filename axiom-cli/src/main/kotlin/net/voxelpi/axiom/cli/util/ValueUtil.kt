@@ -10,7 +10,7 @@ fun visibleLength(s: String): Int {
     return ansiRegex.replace(s, "").length
 }
 
-fun formattedValue(value: ULong, type: WordType<*>, format: ValueFormat): String {
+fun formattedValue(value: ULong, type: WordType, format: ValueFormat): String {
     return when (format) {
         ValueFormat.BINARY -> {
             val state = value and type.mask

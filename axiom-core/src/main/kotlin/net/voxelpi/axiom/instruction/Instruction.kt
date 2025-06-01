@@ -5,8 +5,8 @@ import net.voxelpi.axiom.register.RegisterVariable
 public data class Instruction(
     val operation: Operation,
     val condition: Condition,
-    val conditionRegister: RegisterVariable<*, *>,
-    val outputRegister: RegisterVariable<*, *>,
+    val conditionRegister: RegisterVariable,
+    val outputRegister: RegisterVariable,
     val inputA: InstructionValue,
     val inputB: InstructionValue,
 ) {

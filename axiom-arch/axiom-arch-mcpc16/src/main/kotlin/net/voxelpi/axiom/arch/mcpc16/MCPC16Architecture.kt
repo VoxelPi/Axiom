@@ -9,7 +9,7 @@ import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.util.biMapOf
 
-public object MCPC16Architecture : Architecture<UShort, ULong>(
+public object MCPC16Architecture : Architecture(
     "mcpc16",
     WordType.INT64,
     WordType.INT16,
@@ -19,7 +19,7 @@ public object MCPC16Architecture : Architecture<UShort, ULong>(
     WordType.INT16,
 ) {
 
-    override val registers: RegisterFile<UShort> = RegisterFile.create("PC", WordType.INT16) {
+    override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT16) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)
 
         for (registerIndex in 1..15) {
@@ -37,7 +37,7 @@ public object MCPC16Architecture : Architecture<UShort, ULong>(
     override val supportedOperations: Set<Operation>
         get() = operationMapping.values
 
-    override fun encodeInstruction(instruction: Instruction): Result<ULong> {
+    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
         var encodedInstruction = 0.toULong()
 
         // Encode operation.
@@ -75,10 +75,12 @@ public object MCPC16Architecture : Architecture<UShort, ULong>(
         }
 
         // Return encoded instruction.
-        return Result.success(encodedInstruction)
+        return Result.success(WordType.INT64.pack(encodedInstruction))
     }
 
-    override fun decodeInstruction(encodedInstruction: ULong): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
+        val encodedInstruction = WordType.INT64.unpack(encodedInstruction)
+
         // Decode the operation.
         val operation = operationMapping[((encodedInstruction shr 10) and 0b111111u)]
             ?: return Result.failure(IllegalArgumentException("Invalid opcode ${((encodedInstruction shr 10) and 0b111111u)}"))

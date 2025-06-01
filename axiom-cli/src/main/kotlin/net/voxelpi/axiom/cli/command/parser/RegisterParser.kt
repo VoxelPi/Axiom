@@ -10,10 +10,10 @@ import org.incendo.cloud.parser.ParserDescriptor
 import org.incendo.cloud.suggestion.BlockingSuggestionProvider
 
 class RegisterParser<C : Any>(
-    val registers: RegisterFile<*>,
-) : ArgumentParser<C, Register<*>>, BlockingSuggestionProvider.Strings<C> {
+    val registers: RegisterFile,
+) : ArgumentParser<C, Register>, BlockingSuggestionProvider.Strings<C> {
 
-    override fun parse(commandContext: CommandContext<C>, commandInput: CommandInput): ArgumentParseResult<Register<*>> {
+    override fun parse(commandContext: CommandContext<C>, commandInput: CommandInput): ArgumentParseResult<Register> {
         val input = commandInput.readString()
 
         val register = registers.register(input)
@@ -27,7 +27,7 @@ class RegisterParser<C : Any>(
     }
 }
 
-fun <C : Any> registerParser(registers: RegisterFile<*>): ParserDescriptor<C, Register<*>> {
+fun <C : Any> registerParser(registers: RegisterFile): ParserDescriptor<C, Register> {
     return ParserDescriptor.of(
         RegisterParser<C>(registers),
         Register::class.java,

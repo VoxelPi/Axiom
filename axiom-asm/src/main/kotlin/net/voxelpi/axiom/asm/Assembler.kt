@@ -43,7 +43,7 @@ public class Assembler(
 
     public fun assemble(
         text: String,
-        architecture: Architecture<*, *>,
+        architecture: Architecture,
         parser: Parser = Parsers.AXIOM_ASM,
         offset: Int = 0,
     ): Result<Program> {
@@ -53,7 +53,7 @@ public class Assembler(
 
     public fun assemble(
         path: Path,
-        architecture: Architecture<*, *>,
+        architecture: Architecture,
         parser: Parser = Parsers.AXIOM_ASM,
         offset: Int = 0,
     ): Result<Program> {
@@ -67,7 +67,7 @@ public class Assembler(
 
     public fun assemble(
         unit: CompilationUnit,
-        architecture: Architecture<*, *>,
+        architecture: Architecture,
         parser: Parser = Parsers.AXIOM_ASM,
         offset: Int = 0,
     ): Result<Program> = runCatching {
@@ -138,7 +138,7 @@ public class Assembler(
         return Result.success(anchorIndices)
     }
 
-    private fun generateInstructions(program: StatementProgram, architecture: Architecture<*, *>, offset: Int): Result<List<Instruction>> {
+    private fun generateInstructions(program: StatementProgram, architecture: Architecture, offset: Int): Result<List<Instruction>> {
         val instructions = mutableListOf<Instruction>()
         val nopInstruction = Instruction(
             Operation.LOAD,
@@ -195,7 +195,7 @@ public class Assembler(
         return Result.success(instructions)
     }
 
-    private fun parseConditionRegister(value: RegisterLike, source: SourceLink, architecture: Architecture<*, *>): Result<RegisterVariable<*, *>> {
+    private fun parseConditionRegister(value: RegisterLike, source: SourceLink, architecture: Architecture): Result<RegisterVariable> {
         return when (value) {
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
@@ -209,7 +209,7 @@ public class Assembler(
         }
     }
 
-    private fun parseOutputRegister(value: RegisterLike, source: SourceLink, architecture: Architecture<*, *>): Result<RegisterVariable<*, *>> {
+    private fun parseOutputRegister(value: RegisterLike, source: SourceLink, architecture: Architecture): Result<RegisterVariable> {
         return when (value) {
             is RegisterLike.RegisterReference -> {
                 Result.success(value.register)
@@ -223,7 +223,7 @@ public class Assembler(
         }
     }
 
-    private fun parseInstructionValue(value: ValueLike, source: SourceLink, architecture: Architecture<*, *>): Result<InstructionValue> {
+    private fun parseInstructionValue(value: ValueLike, source: SourceLink, architecture: Architecture): Result<InstructionValue> {
         return when (value) {
             is IntegerValue -> {
                 Result.success(InstructionValue.ImmediateValue(value.value))
@@ -241,7 +241,7 @@ public class Assembler(
         }
     }
 
-    private fun findRegister(architecture: Architecture<*, *>, specification: RegisterLike.AnyRegister): Result<RegisterVariable<*, *>> {
+    private fun findRegister(architecture: Architecture, specification: RegisterLike.AnyRegister): Result<RegisterVariable> {
         val register = architecture.registers.variables.values.firstOrNull {
             if (it.register.id == architecture.registers.programCounter.id) {
                 return@firstOrNull false

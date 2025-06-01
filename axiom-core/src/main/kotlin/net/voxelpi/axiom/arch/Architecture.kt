@@ -12,20 +12,20 @@ import net.voxelpi.axiom.register.RegisterFile
  * @property memorySize The size of the memory.
  * @property stackSize The size of the stack.
  */
-public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
+public abstract class Architecture(
     public val id: String,
-    public val instructionWordType: WordType<I>,
-    public val dataWordType: WordType<*>,
+    public val instructionWordType: WordType,
+    public val dataWordType: WordType,
     public val memorySize: Int,
-    public val memoryWordType: WordType<*>,
+    public val memoryWordType: WordType,
     public val stackSize: Int,
-    public val stackWordType: WordType<*>,
+    public val stackWordType: WordType,
 ) {
 
     /**
      * The register file of the architecture.
      */
-    public abstract val registers: RegisterFile<P>
+    public abstract val registers: RegisterFile
 
     /**
      * The maximum size of a program on this architecture.
@@ -47,36 +47,12 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
     /**
      * Encodes the given [instruction] into the architecture-specific format.
      */
-    public abstract fun encodeInstruction(instruction: Instruction): Result<I>
-
-    /**
-     * Encodes the given [instruction] into the architecture-specific format.
-     */
-    public fun encodeInstructionPacked(instruction: Instruction): Result<UByteArray> {
-        // Check if the architecture supports encoded programs.
-        if (!hasEncodedFormat) {
-            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
-        }
-
-        return encodeInstruction(instruction).map { instructionWordType.pack(it) }
-    }
+    public abstract fun encodeInstruction(instruction: Instruction): Result<UByteArray>
 
     /**
      * Decodes the given architecture-specific [encodedInstruction] into an instruction.
      */
-    public abstract fun decodeInstruction(encodedInstruction: I): Result<Instruction>
-
-    /**
-     * Decodes the given architecture-specific [encodedInstruction] into an instruction.
-     */
-    public fun decodeInstructionPacked(encodedInstruction: UByteArray): Result<Instruction> {
-        // Check if the architecture supports encoded programs.
-        if (!hasEncodedFormat) {
-            throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
-        }
-
-        return decodeInstruction(instructionWordType.unpack(encodedInstruction))
-    }
+    public abstract fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction>
 
     /**
      * Encodes the program to an [UByteArray].
@@ -95,7 +71,7 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
             if (instruction.operation !in supportedOperations) {
                 throw IllegalArgumentException("The operation \"${instruction.operation}\" is not supported by the architecture \"${id}\".")
             }
-            val encodedInstruction = encodeInstructionPacked(instruction).getOrThrow()
+            val encodedInstruction = encodeInstruction(instruction).getOrThrow()
             if (invertByteOrder) {
                 encodedInstruction.reverse()
             }
@@ -129,7 +105,7 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
             if (invertByteOrder) {
                 instructionData.reverse()
             }
-            val instruction = decodeInstructionPacked(instructionData).getOrThrow()
+            val instruction = decodeInstruction(instructionData).getOrThrow()
             instructions += instruction
         }
 

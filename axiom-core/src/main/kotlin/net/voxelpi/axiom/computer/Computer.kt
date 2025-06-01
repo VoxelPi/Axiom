@@ -11,8 +11,8 @@ import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import kotlin.math.sqrt
 
-public class Computer<P : Comparable<P>>(
-    public val architecture: Architecture<P, *>,
+public class Computer(
+    public val architecture: Architecture,
     public val inputAvailableProvider: () -> Boolean,
     public val inputProvider: () -> ULong,
     public val outputHandler: (ULong) -> Unit,
@@ -21,7 +21,7 @@ public class Computer<P : Comparable<P>>(
     public var program: Program = Program(emptyList())
         private set
 
-    private val state: MutableComputerState<P> = MutableComputerState(architecture)
+    private val state: MutableComputerState = MutableComputerState(architecture)
 
     private var iStep = 0
     private val steps: MutableList<InstructionExecutionResult> = mutableListOf()
@@ -37,7 +37,7 @@ public class Computer<P : Comparable<P>>(
         steps.clear()
     }
 
-    public fun currentState(): ComputerState<P> {
+    public fun currentState(): ComputerState {
         return state
     }
 

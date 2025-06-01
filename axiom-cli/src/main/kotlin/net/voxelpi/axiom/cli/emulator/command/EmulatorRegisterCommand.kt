@@ -25,7 +25,7 @@ class EmulatorRegisterCommand(
             required("register", registerParser(computer.architecture.registers))
 
             handler { context ->
-                val register: Register<*> = context["register"]
+                val register: Register = context["register"]
 
                 val computerState = runBlocking { computer.state() }
                 val value = formattedValue(computerState.registerStateUInt64(register), register.type, ValueFormat.DECIMAL)
@@ -39,7 +39,7 @@ class EmulatorRegisterCommand(
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
-                val register: Register<*> = context["register"]
+                val register: Register = context["register"]
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }

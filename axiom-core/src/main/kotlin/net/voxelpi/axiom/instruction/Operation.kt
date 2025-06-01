@@ -44,7 +44,7 @@ public enum class Operation(public val type: OperationType, public val format: S
     BREAK(OperationType.NO_INPUT_NO_OUTPUT, "break"),
     ;
 
-    public fun asString(output: RegisterVariable<*, *>, a: InstructionValue, b: InstructionValue): String {
+    public fun asString(output: RegisterVariable, a: InstructionValue, b: InstructionValue): String {
         return format
             .replace("{out}", output.id)
             .replace("{a}", a.toString())

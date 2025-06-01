@@ -2,86 +2,86 @@ package net.voxelpi.axiom.register
 
 import net.voxelpi.axiom.WordType
 
-public class RegisterFile<P : Comparable<P>>(
-    public val registers: Map<String, Register<*>>,
-    public val variables: Map<String, RegisterVariable<*, *>>,
-    public val programCounter: Register<P>,
-    public val programCounterVariable: RegisterVariable.Direct<P>,
+public class RegisterFile(
+    public val registers: Map<String, Register>,
+    public val variables: Map<String, RegisterVariable>,
+    public val programCounter: Register,
+    public val programCounterVariable: RegisterVariable.Direct,
 ) {
 
-    public fun registers(): Collection<Register<*>> {
+    public fun registers(): Collection<Register> {
         return registers.values
     }
 
-    public fun register(id: String): Register<*>? {
+    public fun register(id: String): Register? {
         return registers[id]
     }
 
-    public fun variables(): Collection<RegisterVariable<*, *>> {
+    public fun variables(): Collection<RegisterVariable> {
         return variables.values
     }
 
-    public fun variable(id: String): RegisterVariable<*, *>? {
+    public fun variable(id: String): RegisterVariable? {
         return variables[id]
     }
 
     public companion object {
-        public fun <P : Comparable<P>> create(
+        public fun create(
             programCounterId: String,
-            programCounterType: WordType<P>,
-            block: Builder<P>.() -> Unit,
-        ): RegisterFile<P> {
+            programCounterType: WordType,
+            block: Builder.() -> Unit,
+        ): RegisterFile {
             val builder = Builder(programCounterId, programCounterType)
             builder.block()
             return builder.build()
         }
     }
 
-    public class Builder<P : Comparable<P>> internal constructor(
+    public class Builder internal constructor(
         programCounterId: String,
-        programCounterType: WordType<P>,
+        programCounterType: WordType,
     ) {
-        public val programCounter: Register<P> = Register(programCounterId, programCounterType)
-        public lateinit var programCounterVariable: RegisterVariable.Direct<P>
+        public val programCounter: Register = Register(programCounterId, programCounterType)
+        public lateinit var programCounterVariable: RegisterVariable.Direct
 
-        private var registers: MutableMap<String, Register<*>> = mutableMapOf(programCounter.id to programCounter)
-        private var variables: MutableMap<String, RegisterVariable<*, *>> = mutableMapOf()
+        private var registers: MutableMap<String, Register> = mutableMapOf(programCounter.id to programCounter)
+        private var variables: MutableMap<String, RegisterVariable> = mutableMapOf()
 
-        public fun createRegister(id: String, type: WordType<*>): Register<*> {
+        public fun createRegister(id: String, type: WordType): Register {
             val register = Register(id, type)
             registers[id] = register
             return register
         }
 
-        public fun <R : Comparable<R>> createVariable(
+        public fun createVariable(
             id: String,
-            register: Register<R>,
+            register: Register,
             address: Int,
             readable: Boolean,
             writeable: Boolean,
             conditionable: Boolean,
-        ): RegisterVariable.Direct<R> {
+        ): RegisterVariable.Direct {
             val variable = RegisterVariable.Direct(id, register, address, readable, writeable, conditionable)
             variables[id] = variable
             return variable
         }
 
-        public fun <V : Comparable<V>, R : Comparable<R>> createVariable(
+        public fun createVariable(
             id: String,
-            register: Register<R>,
-            type: WordType<V>,
+            register: Register,
+            type: WordType,
             part: Int,
             address: Int,
             readable: Boolean,
             writeable: Boolean,
             conditionable: Boolean,
-        ): RegisterVariable.Part<V, R> {
+        ): RegisterVariable.Part {
             val variable = RegisterVariable.Part(id, type, register, part, address, readable, writeable, conditionable)
             variables[id] = variable
             return variable
         }
 
-        internal fun build(): RegisterFile<P> {
+        internal fun build(): RegisterFile {
             return RegisterFile(
                 registers,
                 variables,

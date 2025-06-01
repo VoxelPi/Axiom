@@ -9,7 +9,7 @@ import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.util.biMapOf
 
-public object MCPC08Architecture : Architecture<UByte, UShort>(
+public object MCPC08Architecture : Architecture(
     "mcpc8",
     WordType.INT16,
     WordType.INT8,
@@ -19,7 +19,7 @@ public object MCPC08Architecture : Architecture<UByte, UShort>(
     WordType.INT8,
 ) {
 
-    override val registers: RegisterFile<UByte> = RegisterFile.create("PC", WordType.INT8) {
+    override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT8) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)
 
         for (registerIndex in 1..7) {
@@ -37,7 +37,7 @@ public object MCPC08Architecture : Architecture<UByte, UShort>(
     override val supportedOperations: Set<Operation>
         get() = operationMapping.values
 
-    override fun encodeInstruction(instruction: Instruction): Result<UShort> {
+    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
         var encodedInstruction: UShort = 0u
 
         val a = instruction.inputA
@@ -108,10 +108,12 @@ public object MCPC08Architecture : Architecture<UByte, UShort>(
             // Encode set mode flag
             encodedInstruction = encodedInstruction or (1u shl 15).toUShort()
         }
-        return Result.success(encodedInstruction)
+        return Result.success(WordType.INT16.pack(encodedInstruction.toULong()))
     }
 
-    override fun decodeInstruction(encodedInstruction: UShort): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
+        val encodedInstruction = WordType.INT16.unpack(encodedInstruction)
+
         val mode = (encodedInstruction.toUInt() shr 15) and 1u != 0u
 
         // Decode the output register.

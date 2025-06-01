@@ -6,7 +6,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 
-public object DEV08Architecture : Architecture<UByte, UByte>(
+public object DEV08Architecture : Architecture(
     "dev08",
     WordType.INT8,
     WordType.INT8,
@@ -16,7 +16,7 @@ public object DEV08Architecture : Architecture<UByte, UByte>(
     WordType.INT8,
 ) {
 
-    override val registers: RegisterFile<UByte> = RegisterFile.create("PC", WordType.INT8) {
+    override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT8) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = true)
         for (iRegister in 1..255) {
             val register = createRegister("R$iRegister", WordType.INT8)
@@ -30,11 +30,11 @@ public object DEV08Architecture : Architecture<UByte, UByte>(
     override val supportedOperations: Set<Operation>
         get() = Operation.entries.toSet()
 
-    override fun encodeInstruction(instruction: Instruction): Result<UByte> {
+    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
         return Result.failure(UnsupportedOperationException("Encoding of instructions is not supported by the DEV08 architecture."))
     }
 
-    override fun decodeInstruction(encodedInstruction: UByte): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
         return Result.failure(UnsupportedOperationException("Encoding of instructions is not supported by the DEV08 architecture."))
     }
 }

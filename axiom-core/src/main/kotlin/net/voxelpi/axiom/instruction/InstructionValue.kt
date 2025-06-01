@@ -14,7 +14,7 @@ public sealed interface InstructionValue {
     }
 
     public data class RegisterReference(
-        val register: RegisterVariable<*, *>,
+        val register: RegisterVariable,
     ) : InstructionValue {
 
         override fun toString(): String {

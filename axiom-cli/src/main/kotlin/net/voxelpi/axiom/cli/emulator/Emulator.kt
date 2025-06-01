@@ -53,7 +53,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.pathString
 
 class Emulator(
-    val architecture: Architecture<*, *>,
+    val architecture: Architecture,
     initialProgram: String? = null,
 ) {
 

@@ -6,7 +6,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
 
-public object DEV64Architecture : Architecture<ULong, ULong>(
+public object DEV64Architecture : Architecture(
     "dev64",
     WordType.INT64,
     WordType.INT64,
@@ -16,7 +16,7 @@ public object DEV64Architecture : Architecture<ULong, ULong>(
     WordType.INT64,
 ) {
 
-    override val registers: RegisterFile<ULong> = RegisterFile.create("PC", WordType.INT64) {
+    override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT64) {
         programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = true)
         for (iRegister in 1..255) {
             val register = createRegister("R$iRegister", WordType.INT64)
@@ -30,11 +30,11 @@ public object DEV64Architecture : Architecture<ULong, ULong>(
     override val supportedOperations: Set<Operation>
         get() = Operation.entries.toSet()
 
-    override fun encodeInstruction(instruction: Instruction): Result<ULong> {
+    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
         return Result.failure(UnsupportedOperationException("Encoding of instructions is not supported by the DEV64 architecture."))
     }
 
-    override fun decodeInstruction(encodedInstruction: ULong): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
         return Result.failure(UnsupportedOperationException("Encoding of instructions is not supported by the DEV64 architecture."))
     }
 }

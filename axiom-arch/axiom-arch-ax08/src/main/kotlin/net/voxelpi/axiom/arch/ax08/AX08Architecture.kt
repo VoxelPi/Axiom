@@ -10,7 +10,7 @@ import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.register.RegisterVariable
 import net.voxelpi.axiom.util.biMapOf
 
-public object AX08Architecture : Architecture<UShort, UInt>(
+public object AX08Architecture : Architecture(
     "ax08",
     WordType.INT32,
     WordType.INT8,
@@ -20,7 +20,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
     WordType.INT16,
 ) {
 
-    override val registers: RegisterFile<UShort> = RegisterFile.create("PC", WordType.INT16) {
+    override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT16) {
         // Create the PC variables.
         programCounterVariable = createVariable("PC", programCounter, 14, readable = false, writeable = true, conditionable = false)
         createVariable("PC_0", programCounter, WordType.INT8, 0, 14, readable = true, writeable = false, conditionable = false)
@@ -36,7 +36,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
     override val supportedOperations: Set<Operation>
         get() = operationMapping.values
 
-    override fun encodeInstruction(instruction: Instruction): Result<UInt> {
+    override fun encodeInstruction(instruction: Instruction): Result<UByteArray> {
         var encodedInstruction = 0.toUInt()
 
         // Encode operation.
@@ -74,16 +74,18 @@ public object AX08Architecture : Architecture<UShort, UInt>(
         }
 
         // Return encoded instruction.
-        return Result.success(encodedInstruction)
+        return Result.success(WordType.INT32.pack(encodedInstruction.toULong()))
     }
 
-    override fun decodeInstruction(encodedInstruction: UInt): Result<Instruction> {
+    override fun decodeInstruction(encodedInstruction: UByteArray): Result<Instruction> {
+        val encodedInstruction = WordType.INT32.unpack(encodedInstruction)
+
         // Decode the operation.
-        val operation = operationMapping[((encodedInstruction shr 27) and 0b11111u)]
+        val operation = operationMapping[((encodedInstruction shr 27) and 0b11111u).toUInt()]
             ?: return Result.failure(IllegalArgumentException("Invalid opcode ${((encodedInstruction shr 27) and 0b11111u)}"))
 
         // Decode the condition.
-        val condition = conditionMapping[((encodedInstruction shr 24) and 0b111u)]
+        val condition = conditionMapping[((encodedInstruction shr 24) and 0b111u).toUInt()]
             ?: return Result.failure(IllegalArgumentException("Invalid condition ${((encodedInstruction shr 24) and 0b111u)}"))
 
         // Decode the condition register.
@@ -93,7 +95,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
         } ?: return Result.failure(IllegalArgumentException("Invalid condition register address $conditionRegisterAddress"))
 
         // Decode the output register.
-        val outputRegister: RegisterVariable<*, *> = if (operation in pcOutputOperations) {
+        val outputRegister: RegisterVariable = if (operation in pcOutputOperations) {
             registers.programCounterVariable
         } else {
             val outputRegisterAddress = ((encodedInstruction shr 18) and 0b111u).toInt()
@@ -102,7 +104,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
         }
 
         // Decode input A.
-        val inputA = if ((encodedInstruction shr 16) and 1u != 0u) {
+        val inputA = if ((encodedInstruction shr 16) and 1uL != 0uL) {
             val registerAddress = ((encodedInstruction shr 0) and 0xFu).toInt()
             val register = registers.variables.values.find { it.address == registerAddress && it.readable }
                 ?: return Result.failure(IllegalArgumentException("Invalid input A register address $registerAddress"))
@@ -112,7 +114,7 @@ public object AX08Architecture : Architecture<UShort, UInt>(
         }
 
         // Decode input B.
-        val inputB = if ((encodedInstruction shr 17) and 1u != 0u) {
+        val inputB = if ((encodedInstruction shr 17) and 1uL != 0uL) {
             val registerAddress = ((encodedInstruction shr 8) and 0xFu).toInt()
             val register = registers.variables.values.find { it.address == registerAddress && it.readable }
                 ?: return Result.failure(IllegalArgumentException("Invalid input B register address $registerAddress"))

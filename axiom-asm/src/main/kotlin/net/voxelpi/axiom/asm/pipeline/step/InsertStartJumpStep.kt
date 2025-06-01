@@ -16,7 +16,7 @@ import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Operation
 
 public class InsertStartJumpStep(
-    public val architecture: Architecture<*, *>,
+    public val architecture: Architecture,
 ) : ProgramPipelineStep<Unit> {
 
     override fun transform(program: MutableStatementProgram): Result<Unit> {

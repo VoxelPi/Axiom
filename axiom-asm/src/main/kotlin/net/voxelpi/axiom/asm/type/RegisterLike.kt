@@ -17,6 +17,6 @@ public sealed interface RegisterLike : ValueLike {
     public data object PC : RegisterLike
 
     public data class RegisterReference(
-        val register: RegisterVariable<*, *>,
+        val register: RegisterVariable,
     ) : RegisterLike
 }

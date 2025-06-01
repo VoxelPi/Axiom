@@ -2,13 +2,13 @@ package net.voxelpi.axiom.register
 
 import net.voxelpi.axiom.WordType
 
-public sealed interface RegisterVariable<V : Comparable<V>, R : Comparable<R>> {
+public sealed interface RegisterVariable {
 
     public val id: String
 
-    public val type: WordType<V>
+    public val type: WordType
 
-    public val register: Register<R>
+    public val register: Register
 
     public val address: Int
 
@@ -18,16 +18,16 @@ public sealed interface RegisterVariable<V : Comparable<V>, R : Comparable<R>> {
 
     public val conditionable: Boolean
 
-    public data class Direct<V : Comparable<V>>(
+    public data class Direct(
         override val id: String,
-        override val register: Register<V>,
+        override val register: Register,
         override val address: Int,
         override val readable: Boolean,
         override val writable: Boolean,
         override val conditionable: Boolean,
-    ) : RegisterVariable<V, V> {
+    ) : RegisterVariable {
 
-        override val type: WordType<V>
+        override val type: WordType
             get() = register.type
 
         override fun toString(): String {
@@ -35,16 +35,16 @@ public sealed interface RegisterVariable<V : Comparable<V>, R : Comparable<R>> {
         }
     }
 
-    public data class Part<V : Comparable<V>, R : Comparable<R>>(
+    public data class Part(
         override val id: String,
-        override val type: WordType<V>,
-        override val register: Register<R>,
+        override val type: WordType,
+        override val register: Register,
         val part: Int,
         override val address: Int,
         override val readable: Boolean,
         override val writable: Boolean,
         override val conditionable: Boolean,
-    ) : RegisterVariable<V, R> {
+    ) : RegisterVariable {
 
         init {
             require(type.bits * part < register.type.bits)

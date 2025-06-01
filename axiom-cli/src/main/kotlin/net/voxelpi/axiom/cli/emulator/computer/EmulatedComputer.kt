@@ -16,7 +16,7 @@ import kotlin.concurrent.thread
 import kotlin.coroutines.CoroutineContext
 
 class EmulatedComputer(
-    architecture: Architecture<*, *>,
+    architecture: Architecture,
     val traceHandler: (instruction: InstructionExecutionResult) -> Unit,
     val inputRequestHandler: () -> Unit,
     val outputHandler: (ULong) -> Unit,
@@ -27,7 +27,7 @@ class EmulatedComputer(
 
     val computer = Computer(architecture, ::handleInputPoll, ::provideInput, ::handleOutput)
 
-    val architecture: Architecture<*, *>
+    val architecture: Architecture
         get() = computer.architecture
 
     private var nExecutedInstructions: Int = 0
@@ -91,7 +91,7 @@ class EmulatedComputer(
         }
     }
 
-    suspend fun state(): ComputerState<*> {
+    suspend fun state(): ComputerState {
         return withContext(coroutineContext) {
             computer.currentState()
         }
