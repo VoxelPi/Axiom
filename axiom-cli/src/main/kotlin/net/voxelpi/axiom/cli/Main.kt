@@ -52,6 +52,7 @@ fun main(args: Array<String>) {
         val output by option(ArgType.String, "output", "o", description = "The output file.")
         val position by option(ArgType.Int, "position", "p", description = "The position of the program.").default(0)
         val generateRawAxm by option(ArgType.Boolean, "raw", "r", description = "If a raw axm file should be generated").default(false)
+        val inverseInstructionByteOrder by option(ArgType.Boolean, "inverse", "i", description = "If the instruction byte order should be inverted").default(false)
 
         val architecture by option(
             ArgType.Choice(choices = architectures.values.toList(), toVariant = { architectures[it]!! }),
@@ -85,7 +86,7 @@ fun main(args: Array<String>) {
             }
 
             if (architecture.hasEncodedFormat) {
-                val encodedProgram = architecture.encodeProgram(program).getOrThrow()
+                val encodedProgram = architecture.encodeProgram(program, invertByteOrder = inverseInstructionByteOrder).getOrThrow()
                 outputFilePath.writeBytes(encodedProgram.toByteArray())
                 println("Assembled ${program.instructions.size} instructions (${encodedProgram.size} bytes)")
             } else {

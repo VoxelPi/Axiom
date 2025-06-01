@@ -81,7 +81,7 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
     /**
      * Encodes the program to an [UByteArray].
      */
-    public fun encodeProgram(program: Program): Result<UByteArray> = runCatching {
+    public fun encodeProgram(program: Program, invertByteOrder: Boolean = false): Result<UByteArray> = runCatching {
         // Check if the architecture supports encoded programs.
         if (!hasEncodedFormat) {
             throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
@@ -96,6 +96,9 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
                 throw IllegalArgumentException("The operation \"${instruction.operation}\" is not supported by the architecture \"${id}\".")
             }
             val encodedInstruction = encodeInstructionPacked(instruction).getOrThrow()
+            if (invertByteOrder) {
+                encodedInstruction.reverse()
+            }
             encodedInstruction.copyInto(encodedProgram, iInstruction * instructionWordType.bytes)
         }
 
@@ -106,7 +109,7 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
     /**
      * Decodes a program from the given [encodedProgram].
      */
-    public fun decodedProgram(encodedProgram: UByteArray): Result<Program> = runCatching {
+    public fun decodedProgram(encodedProgram: UByteArray, invertByteOrder: Boolean = false): Result<Program> = runCatching {
         // Check if the architecture supports encoded programs.
         if (!hasEncodedFormat) {
             throw UnsupportedOperationException("The architecture \"${id}\" does not support encoded programs.")
@@ -119,12 +122,14 @@ public abstract class Architecture<P : Comparable<P>, I : Comparable<I>>(
         // Decode instructions.
         val instructions = mutableListOf<Instruction>()
         for (iInstruction in 0 until nInstructions) {
-            val instruction = decodeInstructionPacked(
-                encodedProgram.copyOfRange(
-                    iInstruction * instructionWordType.bytes,
-                    (iInstruction + 1) * instructionWordType.bytes,
-                )
-            ).getOrThrow()
+            val instructionData = encodedProgram.copyOfRange(
+                iInstruction * instructionWordType.bytes,
+                (iInstruction + 1) * instructionWordType.bytes,
+            )
+            if (invertByteOrder) {
+                instructionData.reverse()
+            }
+            val instruction = decodeInstructionPacked(instructionData).getOrThrow()
             instructions += instruction
         }
 
