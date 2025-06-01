@@ -16,7 +16,7 @@ class EmulatorPCCommand(
         commandManager.buildAndRegister("pc") {
             handler { context ->
                 val state = runBlocking { computer.state() }
-                val instructionIndex = state.registerStateUInt64(computer.architecture.registers.programCounter)
+                val instructionIndex = state.registerState(computer.architecture.registers.programCounter)
                 if (instructionIndex.toInt() in computer.computer.program.instructions.indices) {
                     val instruction = computer.computer.program.instructions[instructionIndex.toInt()]
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR The computer is currently at instruction ${TextColors.yellow(instructionIndex.toString())}, ${TextColors.brightGreen(instruction.toString())}")

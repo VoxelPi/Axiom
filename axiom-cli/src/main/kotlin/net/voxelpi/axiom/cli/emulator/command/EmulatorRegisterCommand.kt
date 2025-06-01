@@ -28,7 +28,7 @@ class EmulatorRegisterCommand(
                 val register: Register = context["register"]
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.registerStateUInt64(register), register.type, ValueFormat.DECIMAL)
+                val value = formattedValue(computerState.registerState(register), register.type, ValueFormat.DECIMAL)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
             }
         }
@@ -43,7 +43,7 @@ class EmulatorRegisterCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.registerStateUInt64(register), register.type, format)
+                val value = formattedValue(computerState.registerState(register), register.type, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
             }
         }
@@ -67,7 +67,7 @@ class EmulatorRegisterCommand(
                             }
                             body {
                                 for (register in computer.architecture.registers.registers.values) {
-                                    val state = computerState.registerStateUInt64(register)
+                                    val state = computerState.registerState(register)
                                     row {
                                         cell(register.id)
                                         cell(formattedValue(state, register.type, ValueFormat.DECIMAL))
@@ -90,7 +90,7 @@ class EmulatorRegisterCommand(
                                 for (register in computer.architecture.registers.registers.values) {
                                     row {
                                         cell(register.id)
-                                        cell(formattedValue(computerState.registerStateUInt64(register), register.type, format))
+                                        cell(formattedValue(computerState.registerState(register), register.type, format))
                                     }
                                 }
                             }

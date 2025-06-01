@@ -35,14 +35,6 @@ public class MutableComputerState(
         return register.type.unsignedValueOf(registerValues[register.id]!!)
     }
 
-    override fun registerStateUInt64(register: Register): ULong {
-        return register.type.unsignedValueOf(registerValues[register.id]!!)
-    }
-
-    override fun registerStateInt64(register: Register): Long {
-        return register.type.signedValueOf(registerValues[register.id]!!)
-    }
-
     public fun makeRegisterModification(register: Register, value: ULong): ComputerStateChange.RegisterChange {
         val newValue = register.type.unsignedValueOf(value)
         val previousValue = registerValues[register.id]!!
@@ -58,15 +50,6 @@ public class MutableComputerState(
                 return (registerState shr (variable.part * variable.type.bits)) and variable.type.mask
             }
         }
-    }
-
-    override fun registerVariableStateUInt64(variable: RegisterVariable): ULong {
-        return registerVariableState(variable)
-    }
-
-    override fun registerVariableStateInt64(variable: RegisterVariable): Long {
-        val value = registerVariableState(variable)
-        return variable.type.signedValueOf(value)
     }
 
     public fun makeRegisterVariableModification(variable: RegisterVariable, value: ULong): ComputerStateChange.RegisterChange {

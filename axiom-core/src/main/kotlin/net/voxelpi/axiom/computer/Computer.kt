@@ -59,7 +59,7 @@ public class Computer(
         var hitBreak = false
 
         // FETCH
-        val instructionIndex = state.registerStateUInt64(architecture.registers.programCounter)
+        val instructionIndex = state.registerState(architecture.registers.programCounter)
         val instruction = if (instructionIndex.toInt() in program.instructions.indices) {
             program.instructions[instructionIndex.toInt()]
         } else {
@@ -84,13 +84,13 @@ public class Computer(
         val condition = instruction.condition
         val a: ULong = when (val value = instruction.inputA) {
             is InstructionValue.ImmediateValue -> value.value.toULong()
-            is InstructionValue.RegisterReference -> state.registerVariableStateUInt64(value.register)
+            is InstructionValue.RegisterReference -> state.registerVariableState(value.register)
         }
         val b: ULong = when (val value = instruction.inputB) {
             is InstructionValue.ImmediateValue -> value.value.toULong()
-            is InstructionValue.RegisterReference -> state.registerVariableStateUInt64(value.register)
+            is InstructionValue.RegisterReference -> state.registerVariableState(value.register)
         }
-        val c: ULong = state.registerVariableStateUInt64(instruction.conditionRegister)
+        val c: ULong = state.registerVariableState(instruction.conditionRegister)
         val cSize = instruction.conditionRegister.type
 
         val outputRegister = instruction.outputRegister
@@ -251,12 +251,12 @@ public class Computer(
                     hasResult = false
                 }
                 Operation.CALL -> {
-                    val currentProgramCounter = state.registerStateUInt64(architecture.registers.programCounter)
+                    val currentProgramCounter = state.registerState(architecture.registers.programCounter)
                     changes += state.makeStackPush(currentProgramCounter + 1UL)
                     result = a
                 }
                 Operation.CALL_2 -> {
-                    val currentProgramCounter = state.registerStateUInt64(architecture.registers.programCounter)
+                    val currentProgramCounter = state.registerState(architecture.registers.programCounter)
                     val combinedValue = (a and architecture.dataWordType.mask) or ((b and architecture.dataWordType.mask) shl architecture.dataWordType.bits)
                     changes += state.makeStackPush(currentProgramCounter + 1UL)
                     result = combinedValue
