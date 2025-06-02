@@ -29,11 +29,11 @@ class EmulatorStackCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val depth = formattedValue(computerState.stackPointerState().toULong(), WordType.INT64, ValueFormat.DECIMAL)
-                if (computerState.stackPointerState() == 0) {
+                val depth = formattedValue(computerState.stackPointer().toULong(), WordType.INT64, ValueFormat.DECIMAL)
+                if (computerState.stackPointer() == 0) {
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack is empty")
                 } else {
-                    val value = formattedValue(computerState.stackTopState(), computer.architecture.stackWordType, format)
+                    val value = formattedValue(computerState.stackPeek(), computer.architecture.stackWordType, format)
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack has a depth of $depth and the top element is set to $value")
                 }
             }
@@ -49,11 +49,11 @@ class EmulatorStackCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                if (address >= computerState.stackPointerState()) {
-                    val depth = formattedValue(computerState.stackPointerState().toULong(), WordType.INT64, ValueFormat.DECIMAL)
+                if (address >= computerState.stackPointer()) {
+                    val depth = formattedValue(computerState.stackPointer().toULong(), WordType.INT64, ValueFormat.DECIMAL)
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack is only $depth elements deep")
                 } else {
-                    val value = formattedValue(computerState.stackState(address)!!, computer.architecture.stackWordType, format)
+                    val value = formattedValue(computerState.stackCell(address)!!, computer.architecture.stackWordType, format)
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack element ${TextColors.brightYellow("#$address")} is set to $value")
                 }
             }
@@ -67,7 +67,7 @@ class EmulatorStackCommand(
                 val format: ValueFormat? = context.getOrNull("format")
 
                 val computerState = runBlocking { computer.state() }
-                val depth = computerState.stackPointerState()
+                val depth = computerState.stackPointer()
 
                 val terminal = Terminal()
                 terminal.println("${Emulator.PREFIX_EMULATOR} Register dump:")
@@ -79,7 +79,7 @@ class EmulatorStackCommand(
                             }
                             body {
                                 for (address in 0 until depth) {
-                                    val state = computerState.stackState(address)!!
+                                    val state = computerState.stackCell(address)!!
                                     row {
                                         cell(address)
                                         cell(formattedValue(state, computer.architecture.stackWordType, ValueFormat.DECIMAL))
@@ -101,7 +101,7 @@ class EmulatorStackCommand(
                             body {
                                 for (address in 0 until depth) {
                                     row {
-                                        val state = computerState.stackState(address)!!
+                                        val state = computerState.stackCell(address)!!
                                         cell(address)
                                         cell(formattedValue(state, computer.architecture.stackWordType, format))
                                     }

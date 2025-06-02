@@ -35,8 +35,25 @@ public class ComputerStack(public val capacity: Int) {
         return data[if (pointer == 0) capacity - 1 else pointer - 1]
     }
 
-    public operator fun get(index: Int): ULong? {
-        require(index in 0 until size) { "Index $index is out of bounds for the computer stack with size $size." }
+    public fun jump(address: Int) {
+        this.pointer = address % capacity
+    }
+
+    public fun copy(): ComputerStack {
+        val copy = ComputerStack(capacity)
+        for (i in 0 until size) {
+            copy.push(data[i])
+        }
+        return copy
+    }
+
+    public operator fun get(index: Int): ULong {
+        require(index in 0 until capacity) { "Index $index is out of bounds for the computer stack with capacity $capacity." }
         return data[index]
+    }
+
+    public operator fun set(index: Int, value: ULong) {
+        require(index in 0 until capacity) { "Index $index is out of bounds for the computer stack with size $capacity." }
+        data[index] = value
     }
 }

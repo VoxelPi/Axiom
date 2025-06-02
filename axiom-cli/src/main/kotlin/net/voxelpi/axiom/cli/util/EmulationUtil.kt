@@ -4,8 +4,8 @@ import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.computer.InstructionExecutionResult
 import net.voxelpi.axiom.computer.state.ComputerStateChange
+import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.InstructionValue
 
@@ -32,41 +32,64 @@ private val CHANGE_PART_LENGTH = mapOf(
     WordType.INT64 to 42,
 )
 
-fun generateFormattedDescription(result: InstructionExecutionResult, architecture: Architecture): String {
+fun generateFormattedDescription(patch: ComputerStatePatch<*>, architecture: Architecture): String {
+    var description = ""
     val programCounter = architecture.registers.programCounter
+
     val lengthWithOperation = INSTRUCTION_NUMBER_LENGTH + OPERATION_PART_LENGTH[architecture.dataWordType]!!
     val lengthWithCondition = lengthWithOperation + CONDITION_PART_LENGTH[architecture.dataWordType]!!
     val length = lengthWithCondition + CHANGE_PART_LENGTH[architecture.dataWordType]!!
 
-    var description = "${TextColors.brightBlue(result.iInstruction.toString().padStart(5))}${TextColors.gray("  ")}"
+    val reason = patch.reason
+    when (reason) {
+        is ComputerStatePatch.Reason.InstructionExecution -> {
+            val instructionIndexPart = if (reason is ComputerStatePatch.Reason.InstructionExecution.Program) {
+                reason.iInstruction.toString().padStart(5)
+            } else {
+                "     "
+            }
 
-    val instruction = result.instruction
-    val condition = instruction.condition
-    if (condition == Condition.NEVER) {
-        description += TextColors.brightMagenta("nop")
-        description = description + (TextColors.gray(" ").repeat((length - visibleLength(description)).coerceAtLeast(0)))
-        description = TextStyles.underline(description)
+            description += "${TextColors.brightBlue(instructionIndexPart)}${TextColors.gray("  ")}"
 
-        return description
+            val instruction = reason.instruction
+            val condition = instruction.condition
+            if (condition == Condition.NEVER) {
+                description += TextColors.brightMagenta("nop")
+                description = description + (TextColors.gray(" ").repeat((length - visibleLength(description)).coerceAtLeast(0)))
+                description = TextStyles.underline(description)
+
+                return description
+            }
+
+            val inputA = instruction.inputA
+            val inputB = instruction.inputB
+            val a = "${TextColors.brightGreen("$inputA")}${if (inputA !is InstructionValue.ImmediateValue) TextColors.yellow(":${reason.valueA}") else ""}"
+            val b = "${TextColors.brightGreen("$inputB")}${if (inputB !is InstructionValue.ImmediateValue) TextColors.yellow(":${reason.valueB}") else ""}"
+            val outputRegister = TextColors.brightGreen(instruction.outputRegister.id)
+            description += instruction.operation.asString(outputRegister, a, b)
+            description = description + (TextColors.gray(" ").repeat((lengthWithOperation - visibleLength(description)).coerceAtLeast(0)))
+
+            if (instruction.condition != Condition.ALWAYS) {
+                val c = "${TextColors.brightGreen("${instruction.conditionRegister}")}${TextColors.yellow(":${reason.valueConditionRegister}")}"
+                val conditionResult = if (reason.conditionMet) TextColors.brightGreen("(true)") else TextColors.brightRed("(false)")
+                description += "${TextColors.brightMagenta("if")} $c ${instruction.condition.symbol} 0 $conditionResult"
+            }
+            description = description + (TextColors.gray(" ").repeat((lengthWithCondition - visibleLength(description)).coerceAtLeast(0)))
+        }
+        ComputerStatePatch.Reason.External -> {
+            description += TextColors.gray(" ".repeat(lengthWithCondition))
+        }
     }
 
-    val inputA = instruction.inputA
-    val inputB = instruction.inputB
-    val a = "${TextColors.brightGreen("$inputA")}${if (inputA !is InstructionValue.ImmediateValue) TextColors.yellow(":${result.valueA}") else ""}"
-    val b = "${TextColors.brightGreen("$inputB")}${if (inputB !is InstructionValue.ImmediateValue) TextColors.yellow(":${result.valueB}") else ""}"
-    val outputRegister = TextColors.brightGreen(instruction.outputRegister.id)
-    description += instruction.operation.asString(outputRegister, a, b)
-    description = description + (TextColors.gray(" ").repeat((lengthWithOperation - visibleLength(description)).coerceAtLeast(0)))
-
-    if (instruction.condition != Condition.ALWAYS) {
-        val c = "${TextColors.brightGreen("${instruction.conditionRegister}")}${TextColors.yellow(":${result.valueConditionRegister}")}"
-        val conditionResult = if (result.conditionMet) TextColors.brightGreen("(true)") else TextColors.brightRed("(false)")
-        description += "${TextColors.brightMagenta("if")} $c ${instruction.condition.symbol} 0 $conditionResult"
-    }
-    description = description + (TextColors.gray(" ").repeat((lengthWithCondition - visibleLength(description)).coerceAtLeast(0)))
-
-    description += result.changes
-        .filter { it !is ComputerStateChange.RegisterChange || it.register != programCounter || instruction.outputRegister.register == programCounter }
+    description += patch.changes
+        .filter {
+            if (it is ComputerStateChange.RegisterChange && reason is ComputerStatePatch.Reason.InstructionExecution) {
+                if (it.register == programCounter && reason.instruction.outputRegister.register != programCounter) {
+                    return@filter false
+                }
+            }
+            return@filter true
+        }
         .joinToString(TextColors.gray("  ")) { change ->
             when (change) {
                 is ComputerStateChange.CarryChange -> {
@@ -90,8 +113,10 @@ fun generateFormattedDescription(result: InstructionExecutionResult, architectur
                         TextColors.brightBlue("${change.register} = ${change.newValue}")
                     }
                 }
-                is ComputerStateChange.StackPop -> TextColors.brightBlue("pop ${change.value}")
-                is ComputerStateChange.StackPush -> TextColors.brightBlue("push ${change.value}")
+                is ComputerStateChange.Stack.Pop -> TextColors.brightBlue("pop ${change.value}")
+                is ComputerStateChange.Stack.Push -> TextColors.brightBlue("push ${change.value}")
+                is ComputerStateChange.Stack.Change -> TextColors.brightBlue("stack[${change.address}] = ${change.newValue}")
+                is ComputerStateChange.Stack.PointerChange -> TextColors.brightBlue("stack_pointer = ${change.newAddress}")
             }
         }
     description = description + (TextColors.gray(" ").repeat((length - visibleLength(description)).coerceAtLeast(0)))

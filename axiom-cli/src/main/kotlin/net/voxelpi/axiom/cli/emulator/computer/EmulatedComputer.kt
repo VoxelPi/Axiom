@@ -6,8 +6,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.computer.Computer
-import net.voxelpi.axiom.computer.InstructionExecutionResult
 import net.voxelpi.axiom.computer.state.ComputerState
+import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Program
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executor
@@ -17,7 +17,7 @@ import kotlin.coroutines.CoroutineContext
 
 class EmulatedComputer(
     architecture: Architecture,
-    val traceHandler: (instruction: InstructionExecutionResult) -> Unit,
+    val traceHandler: (patch: ComputerStatePatch<*>) -> Unit,
     val inputRequestHandler: () -> Unit,
     val outputHandler: (ULong) -> Unit,
 ) : CoroutineScope {
@@ -68,7 +68,7 @@ class EmulatedComputer(
                         }
                         ++nExecutedInstructions
 
-                        if (result.hitBreak) {
+                        if (result.reason.hitBreak) {
                             remainingInstructions = 0
                         } else {
                             --remainingInstructions
@@ -94,6 +94,12 @@ class EmulatedComputer(
     suspend fun state(): ComputerState {
         return withContext(coroutineContext) {
             computer.currentState()
+        }
+    }
+
+    suspend fun modifyState(block: ComputerStatePatch.Builder.() -> Unit): ComputerState {
+        return withContext(coroutineContext) {
+            computer.modifyState(block)
         }
     }
 
@@ -139,22 +145,22 @@ class EmulatedComputer(
         computerThread.interrupt()
     }
 
-    fun stepBackwardsWithTrace(): InstructionExecutionResult? {
+    fun stepBackwardsWithTrace(): ComputerStatePatch<*>? {
         if (isExecuting()) {
             return null
         }
-        val step = computer.stepBackwards() ?: return null
-        traceHandler.invoke(step)
-        return step
+        val patch = computer.stepBackwards() ?: return null
+        traceHandler.invoke(patch)
+        return patch
     }
 
-    fun stepForwardsWithTrace(): InstructionExecutionResult? {
+    fun stepForwardsWithTrace(): ComputerStatePatch<*>? {
         if (isExecuting()) {
             return null
         }
-        val step = computer.stepForwards() ?: return null
-        traceHandler.invoke(step)
-        return step
+        val patch = computer.stepForwards() ?: return null
+        traceHandler.invoke(patch)
+        return patch
     }
 
     private fun handleInputPoll(): Boolean {

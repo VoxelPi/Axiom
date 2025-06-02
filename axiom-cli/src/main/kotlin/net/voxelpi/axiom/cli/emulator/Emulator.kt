@@ -29,7 +29,7 @@ import net.voxelpi.axiom.cli.util.formattedValue
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.cli.util.generateFormattedDescription
 import net.voxelpi.axiom.cli.util.stringFromCodePoint
-import net.voxelpi.axiom.computer.InstructionExecutionResult
+import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.util.parseInteger
 import org.incendo.cloud.exception.ArgumentParseException
@@ -221,8 +221,8 @@ class Emulator(
         commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightMagenta("[OUTPUT]")}  $decimal  $decimalSigned  $hexadecimal  $binary  $character")
     }
 
-    private fun handleTrace(result: InstructionExecutionResult) {
-        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}  ${generateFormattedDescription(result, computer.architecture)}")
+    private fun handleTrace(patch: ComputerStatePatch<*>) {
+        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}  ${generateFormattedDescription(patch, computer.architecture)}")
     }
 
     private fun findHistoryFile(): Path {

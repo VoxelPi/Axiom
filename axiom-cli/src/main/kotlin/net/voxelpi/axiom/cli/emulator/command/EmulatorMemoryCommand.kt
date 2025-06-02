@@ -29,7 +29,7 @@ class EmulatorMemoryCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.memoryState(address), computer.architecture.memoryWordType, format)
+                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryWordType, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} is set to $value")
             }
         }
@@ -44,7 +44,7 @@ class EmulatorMemoryCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.memoryState(address), computer.architecture.memoryWordType, format)
+                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryWordType, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} is set to $value")
             }
         }
@@ -72,7 +72,7 @@ class EmulatorMemoryCommand(
                             }
                             body {
                                 for (address in from..to) {
-                                    val state = computerState.memoryState(address)
+                                    val state = computerState.memoryCell(address)
                                     row {
                                         cell(address)
                                         cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.DECIMAL))
@@ -94,7 +94,7 @@ class EmulatorMemoryCommand(
                             body {
                                 for (address in from..to) {
                                     row {
-                                        val state = computerState.memoryState(address)
+                                        val state = computerState.memoryCell(address)
                                         cell(address)
                                         cell(formattedValue(state, computer.architecture.memoryWordType, format))
                                     }
