@@ -15,6 +15,7 @@ import net.voxelpi.axiom.register.Register
 import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.kotlin.extension.getOrNull
 import org.incendo.cloud.parser.standard.EnumParser.enumParser
+import org.incendo.cloud.parser.standard.LongParser.longParser
 
 class EmulatorRegisterCommand(
     val computer: EmulatedComputer,
@@ -45,6 +46,24 @@ class EmulatorRegisterCommand(
                 val computerState = runBlocking { computer.state() }
                 val value = formattedValue(computerState.register(register), register.type, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} is set to $value")
+            }
+        }
+
+        commandManager.buildAndRegister("register") {
+            required("register", registerParser(computer.architecture.registers))
+            literal("set")
+            required("value", longParser())
+
+            handler { context ->
+                val register: Register = context["register"]
+                val value: ULong = context.get<Long>("value").toULong() and register.type.mask
+
+                val computerState = runBlocking {
+                    computer.modifyState {
+                        writeRegister(register, value)
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Register ${TextColors.brightYellow(register.id)} has been set to ${computerState.register(register)}")
             }
         }
 
