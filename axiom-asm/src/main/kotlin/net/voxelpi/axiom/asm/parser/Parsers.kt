@@ -79,15 +79,7 @@ public object Parsers {
             literal("0")
         }
 
-        transformation<InstructionStatement.WithoutOutput>("nop") {
-            literal("nop")
-
-            parameter(InstructionStatement::operation) { Operation.LOAD }
-            parameter(InstructionStatement::condition) { Condition.NEVER }
-            parameter(InstructionStatement::conditionValue) { RegisterLike.AnyRegister(conditionable = true) }
-            parameter(InstructionStatement::inputA) { IntegerValue(0) }
-            parameter(InstructionStatement::inputB) { IntegerValue(0) }
-        }
+        axiomInstructionStatements()
 
         // Instruction statements. These are generated twice, once with and once without the condition part.
         for (withConditionPart in listOf(true, false)) {
@@ -122,6 +114,32 @@ public object Parsers {
 
                 generateCondition(withConditionPart)
             }
+        }
+    }
+
+    /**
+     * Subset of the axiom assembly syntax, only contains statements that directly translate to instructions.
+     */
+    public val INLINE_ASM: Parser = Parser.create {
+        axiomInstructionStatements()
+    }
+
+    private fun Parser.Builder.axiomInstructionStatements() {
+        // Nop instruction.
+        // The condition of a nop is always never.
+        transformation<InstructionStatement.WithoutOutput>("nop") {
+            literal("nop")
+
+            parameter(InstructionStatement::operation) { Operation.LOAD }
+            parameter(InstructionStatement::condition) { Condition.NEVER }
+            parameter(InstructionStatement::conditionValue) { RegisterLike.AnyRegister(conditionable = true) }
+            parameter(InstructionStatement::inputA) { IntegerValue(0) }
+            parameter(InstructionStatement::inputB) { IntegerValue(0) }
+        }
+
+        // Instruction statements. These are generated twice, once with and once without the condition part.
+        for (withConditionPart in listOf(true, false)) {
+            val transformationSuffix = if (withConditionPart) "with_condition" else "without_condition"
 
             // JUMP, 'jump <value>'
             transformation<InstructionStatement.WithOutput>("jump_${transformationSuffix}") {
