@@ -15,6 +15,7 @@ import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.kotlin.extension.getOrNull
 import org.incendo.cloud.parser.standard.EnumParser.enumParser
 import org.incendo.cloud.parser.standard.IntegerParser.integerParser
+import org.incendo.cloud.parser.standard.LongParser.longParser
 
 class EmulatorStackCommand(
     val computer: EmulatedComputer,
@@ -53,9 +54,74 @@ class EmulatorStackCommand(
                     val depth = formattedValue(computerState.stackPointer().toULong(), WordType.INT64, ValueFormat.DECIMAL)
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack is only $depth elements deep")
                 } else {
-                    val value = formattedValue(computerState.stackCell(address)!!, computer.architecture.stackWordType, format)
+                    val value = formattedValue(computerState.stackCell(address), computer.architecture.stackWordType, format)
                     context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack element ${TextColors.brightYellow("#$address")} is set to $value")
                 }
+            }
+        }
+
+        commandManager.buildAndRegister("stack") {
+            literal("set")
+            required("address", integerParser(0, computer.architecture.stackSize - 1))
+            required("value", longParser())
+
+            handler { context ->
+                val address: Int = context["address"]
+                val value: ULong = context.get<Long>("value").toULong() and computer.architecture.stackWordType.mask
+
+                val computerState = runBlocking {
+                    computer.modifyState {
+                        writeStackCell(address, value)
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Stack cell ${TextColors.brightYellow("#$address")} has been set to ${computerState.stackCell(address)}")
+            }
+        }
+
+        commandManager.buildAndRegister("stack") {
+            literal("set")
+            literal("pointer")
+            required("value", integerParser(0, computer.architecture.stackSize - 1))
+
+            handler { context ->
+                val value: Int = context.get("value")
+
+                val computerState = runBlocking {
+                    computer.modifyState {
+                        writeStackPointer(value)
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} The ${TextColors.brightYellow("stack pointer")} has been set to ${computerState.stackPointer()}")
+            }
+        }
+
+        commandManager.buildAndRegister("stack") {
+            literal("push")
+            required("value", longParser())
+
+            handler { context ->
+                val value: ULong = context.get<Long>("value").toULong() and computer.architecture.stackWordType.mask
+
+                val computerState = runBlocking {
+                    computer.modifyState {
+                        stackPush(value)
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} The value ${computerState.stackPeek()} has been pushed to the ${TextColors.brightYellow("stack")}")
+            }
+        }
+
+        commandManager.buildAndRegister("stack") {
+            literal("pop")
+
+            handler { context ->
+                var poppedValue: ULong? = null
+                runBlocking {
+                    computer.modifyState {
+                        poppedValue = stackPop()
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} The value $poppedValue has been popped from the ${TextColors.brightYellow("stack")}")
             }
         }
 
