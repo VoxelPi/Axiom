@@ -8,6 +8,7 @@ import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.computer.Computer
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
+import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Program
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executor
@@ -100,6 +101,20 @@ class EmulatedComputer(
     suspend fun modifyState(block: ComputerStatePatch.Builder.() -> Unit): ComputerState {
         return withContext(coroutineContext) {
             computer.modifyState(block)
+        }
+    }
+
+    suspend fun runInlineInstructions(instructions: Collection<Instruction>, trace: Boolean = false, silent: Boolean = false) {
+        return withContext(coroutineContext) {
+            val previousSilent = this@EmulatedComputer.silent
+            this@EmulatedComputer.silent = silent
+            for (instruction in instructions) {
+                val patch = computer.runInlineInstruction(instruction)
+                if (trace) {
+                    traceHandler.invoke(patch)
+                }
+            }
+            this@EmulatedComputer.silent = previousSilent
         }
     }
 
