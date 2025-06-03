@@ -10,6 +10,14 @@ fun visibleLength(s: String): Int {
     return ansiRegex.replace(s, "").length
 }
 
+fun formattedBooleanValue(value: Boolean): String {
+    return if (value) {
+        TextColors.brightGreen("true")
+    } else {
+        TextColors.brightRed("false")
+    }
+}
+
 fun formattedValue(value: ULong, type: WordType, format: ValueFormat): String {
     return when (format) {
         ValueFormat.BINARY -> {

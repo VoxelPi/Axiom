@@ -10,6 +10,7 @@ import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
 import net.voxelpi.axiom.cli.emulator.command.EmulatorBreakCommand
+import net.voxelpi.axiom.cli.emulator.command.EmulatorCarryCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorClearCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorHistoryCommand
 import net.voxelpi.axiom.cli.emulator.command.EmulatorInputCommand
@@ -83,8 +84,9 @@ class Emulator(
     }
 
     val commandManager = AxiomCommandManager().apply {
-        registerCommands(EmulatorClearCommand)
         registerCommands(EmulatorBreakCommand(computer))
+        registerCommands(EmulatorCarryCommand(computer))
+        registerCommands(EmulatorClearCommand)
         registerCommands(EmulatorHistoryCommand(computer))
         registerCommands(EmulatorInputCommand(computer))
         registerCommands(EmulatorLoadCommand(this@Emulator))
