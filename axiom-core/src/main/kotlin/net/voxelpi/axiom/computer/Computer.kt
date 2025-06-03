@@ -256,24 +256,24 @@ public class Computer(
                     }
                     Operation.CALL -> {
                         val currentProgramCounter = state.register(architecture.registers.programCounter)
-                        pushStack(currentProgramCounter + 1UL)
+                        stackPush(currentProgramCounter + 1UL)
                         result = a
                     }
                     Operation.CALL_2 -> {
                         val currentProgramCounter = state.register(architecture.registers.programCounter)
                         val combinedValue = (a and architecture.dataWordType.mask) or ((b and architecture.dataWordType.mask) shl architecture.dataWordType.bits)
-                        pushStack(currentProgramCounter + 1UL)
+                        stackPush(currentProgramCounter + 1UL)
                         result = combinedValue
                     }
                     Operation.RETURN -> {
-                        val poppedValue = popStack()
+                        val poppedValue = stackPop()
                         result = poppedValue and outputRegister.type.mask
                     }
                     Operation.STACK_PUSH -> {
-                        pushStack(b)
+                        stackPush(b)
                     }
                     Operation.STACK_POP -> {
-                        val poppedValue = popStack()
+                        val poppedValue = stackPop()
                         result = poppedValue and outputRegister.type.mask
                     }
                     Operation.STACK_PEEK -> {

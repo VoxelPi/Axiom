@@ -63,7 +63,7 @@ public data class ComputerStatePatch<R : ComputerStatePatch.Reason>(
             return stackMirror[address]
         }
 
-        override fun writeModifyStackCell(address: Int, value: ULong) {
+        override fun writeStackCell(address: Int, value: ULong) {
             val previousValue = stackMirror[address]
             val newValue = base.architecture.stackWordType.unsignedValueOf(value)
             stackMirror[address] = newValue
@@ -77,13 +77,13 @@ public data class ComputerStatePatch<R : ComputerStatePatch.Reason>(
             changes += ComputerStateChange.Stack.PointerChange(previousAddress, newAddress)
         }
 
-        override fun pushStack(value: ULong) {
+        override fun stackPush(value: ULong) {
             val newValue = base.architecture.stackWordType.unsignedValueOf(value)
             changes += ComputerStateChange.Stack.Push(newValue)
             stackMirror.push(newValue)
         }
 
-        override fun popStack(): ULong {
+        override fun stackPop(): ULong {
             val value = stackMirror.pop()
             changes.add(ComputerStateChange.Stack.Pop(value))
             return value

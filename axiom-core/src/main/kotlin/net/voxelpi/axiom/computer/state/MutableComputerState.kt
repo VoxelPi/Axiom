@@ -19,13 +19,13 @@ public interface MutableComputerState : ComputerState {
 
     public fun writeMemoryCell(address: Int, value: ULong)
 
-    public fun writeModifyStackCell(address: Int, value: ULong)
+    public fun writeStackCell(address: Int, value: ULong)
 
     public fun writeStackPointer(address: Int)
 
-    public fun pushStack(value: ULong)
+    public fun stackPush(value: ULong)
 
-    public fun popStack(): ULong
+    public fun stackPop(): ULong
 
     public fun writeCarry(value: Boolean)
 }
