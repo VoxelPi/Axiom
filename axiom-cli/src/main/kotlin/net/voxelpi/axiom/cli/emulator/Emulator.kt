@@ -180,16 +180,16 @@ class Emulator(
                             commandManager.commandExecutor().executeCommand(AxiomCommandSender(terminal, commandLineReader), line).await()
                         }
                     } catch (exception: NoSuchCommandException) {
-                        terminal.writer().println(exception.message ?: "$PREFIX_EMULATOR Unknown command.")
+                        terminal.writer().println("$PREFIX_EMULATOR $PREFIX_ERROR Unknown command \"${exception.suppliedCommand()}\"")
                         continue
                     } catch (exception: InvalidSyntaxException) {
-                        terminal.writer().println(exception.message ?: "$PREFIX_EMULATOR Invalid syntax.")
+                        terminal.writer().println("$PREFIX_EMULATOR $PREFIX_ERROR ${exception.message ?: "Invalid command syntax."}")
                         continue
                     } catch (exception: ArgumentParseException) {
-                        terminal.writer().println(exception.message ?: "$PREFIX_EMULATOR Failed to parse argument.")
+                        terminal.writer().println("$PREFIX_EMULATOR $PREFIX_ERROR Failed to parse argument. ${exception.message ?: ""}")
                         continue
                     } catch (exception: Exception) {
-                        terminal.writer().println("$PREFIX_EMULATOR An error occurred while executing the command: ${exception.message}")
+                        terminal.writer().println("$PREFIX_EMULATOR $PREFIX_ERROR An error occurred while executing the command: ${exception.message}")
                         continue
                     }
                 }
@@ -244,6 +244,7 @@ class Emulator(
     companion object {
         val PREFIX_EMULATOR = (TextStyles.bold + TextColors.brightMagenta)("[EMULATOR]")
         val PREFIX_COMPUTER = (TextStyles.bold + TextColors.brightBlue)("[COMPUTER]")
+        val PREFIX_ERROR = (TextStyles.bold + TextColors.brightRed)("[ERROR]")
 
         val HEADER_MESSAGE = """                                                                               
              _____ __ __ _____ _____ _____    _____ _____ _____ __    _____ _____ _____ _____ 
