@@ -14,6 +14,7 @@ import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.kotlin.extension.getOrNull
 import org.incendo.cloud.parser.standard.EnumParser.enumParser
 import org.incendo.cloud.parser.standard.IntegerParser.integerParser
+import org.incendo.cloud.parser.standard.LongParser.longParser
 
 class EmulatorMemoryCommand(
     val computer: EmulatedComputer,
@@ -46,6 +47,24 @@ class EmulatorMemoryCommand(
                 val computerState = runBlocking { computer.state() }
                 val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryWordType, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} is set to $value")
+            }
+        }
+
+        commandManager.buildAndRegister("memory") {
+            literal("set")
+            required("address", integerParser(0, computer.architecture.memorySize - 1))
+            required("value", longParser())
+
+            handler { context ->
+                val address: Int = context["address"]
+                val value: ULong = context.get<Long>("value").toULong() and computer.architecture.memoryWordType.mask
+
+                val computerState = runBlocking {
+                    computer.modifyState {
+                        writeMemoryCell(address, value)
+                    }
+                }
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} has been set to ${computerState.memoryCell(address)}")
             }
         }
 
