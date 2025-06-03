@@ -21,6 +21,7 @@ class EmulatorRunCommand(val computer: EmulatedComputer) : AxiomCommandProvider 
 
                 if (computer.isExecuting()) {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is already running.")
+                    return@handler
                 }
                 computer.run(trace = trace, silent = silent) { nInstructions ->
                     context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer ${TextColors.brightGreen("finished")} executing ${TextColors.brightYellow(nInstructions.toString())} instructions")
@@ -43,6 +44,7 @@ class EmulatorRunCommand(val computer: EmulatedComputer) : AxiomCommandProvider 
 
                 if (computer.isExecuting()) {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is already running.")
+                    return@handler
                 }
                 computer.run(nScheduledInstructions, trace = trace, silent = silent) { nInstructions ->
                     context.sender().lineReader.printAbove("$PREFIX_EMULATOR Computer ${TextColors.brightGreen("finished")} executing ${TextColors.brightYellow(nInstructions.toString())} instructions")

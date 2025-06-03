@@ -28,6 +28,7 @@ class EmulatorHistoryCommand(
             handler { context ->
                 if (computer.isExecuting()) {
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR Computer is currently running.")
+                    return@handler
                 }
 
                 val nStepsRaw = context.getOrDefault("steps", 1)
