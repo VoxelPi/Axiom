@@ -196,6 +196,27 @@ public object Parsers {
                 }
             }
 
+            val assignmentOperatorFunctions = mapOf(
+                "+=" to Operation.ADD,
+                "-=" to Operation.SUBTRACT,
+                "*=" to Operation.MULTIPLY,
+                "/=" to Operation.DIVIDE,
+                "%=" to Operation.MODULO,
+            )
+
+            for ((operator, operation) in assignmentOperatorFunctions) {
+                transformation<InstructionStatement.WithOutput>("assignment_${operator}_${transformationSuffix}") {
+                    val register = registerLikeArgument(InstructionStatement.WithOutput::output)
+                    literal(operator)
+                    valueLikeArgument(InstructionStatement::inputB)
+
+                    generateCondition(withConditionPart)
+
+                    parameter(InstructionStatement::operation) { operation }
+                    parameter(InstructionStatement::inputA) { this[register] }
+                }
+            }
+
             // BINARY OPERATORS, "R = A <operator> B"
 
             val abInputWithOutputOperators = mapOf(
