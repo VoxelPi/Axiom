@@ -4,12 +4,15 @@ import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.asm.Assembler
+import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.computer.state.ComputerStateChange
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.InstructionValue
 
 private const val INSTRUCTION_NUMBER_LENGTH = 7
+private const val SOURCE_LENGTH = 28
 
 private val OPERATION_PART_LENGTH = mapOf(
     WordType.INT8 to 28,
@@ -36,7 +39,7 @@ fun generateFormattedDescription(patch: ComputerStatePatch<*>, architecture: Arc
     var description = ""
     val programCounter = architecture.registers.programCounter
 
-    val lengthWithOperation = INSTRUCTION_NUMBER_LENGTH + OPERATION_PART_LENGTH[architecture.dataWordType]!!
+    val lengthWithOperation = INSTRUCTION_NUMBER_LENGTH + SOURCE_LENGTH + OPERATION_PART_LENGTH[architecture.dataWordType]!!
     val lengthWithCondition = lengthWithOperation + CONDITION_PART_LENGTH[architecture.dataWordType]!!
     val length = lengthWithCondition + CHANGE_PART_LENGTH[architecture.dataWordType]!!
 
@@ -48,8 +51,19 @@ fun generateFormattedDescription(patch: ComputerStatePatch<*>, architecture: Arc
             } else {
                 "     "
             }
-
             description += "${TextColors.brightBlue(instructionIndexPart)}${TextColors.gray("  ")}"
+
+            val sourceLinkPart = if (reason is ComputerStatePatch.Reason.InstructionExecution.Program) {
+                val source = reason.instruction.meta[Assembler.SOURCE_INSTRUCTION_META_KEY] as? SourceLink
+                if (source != null && source is SourceLink.CompilationUnitSlice) {
+                    "${source.unit.id.padStart(16)}  ${"${source.line + 1}".padStart(5)}:${"${source.column + 1}".padStart(2)}"
+                } else {
+                    " ".repeat(16 + 2 + 5 + 1 + 2)
+                }
+            } else {
+                " ".repeat(16 + 2 + 5 + 1 + 2)
+            }
+            description += "${TextColors.brightYellow(sourceLinkPart)}${TextColors.gray("  ")}"
 
             val instruction = reason.instruction
             val condition = instruction.condition
