@@ -123,7 +123,7 @@ public object MCPC16Architecture : Architecture(
         }
 
         // Return decoded instruction.
-        return Result.success(Instruction(operation, condition, conditionRegister, outputRegister, inputA, inputB))
+        return Result.success(Instruction(operation, condition, conditionRegister, outputRegister, inputA, inputB, emptyMap()))
     }
 
     private val conditionSourceMapping = biMapOf(

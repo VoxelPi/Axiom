@@ -143,6 +143,7 @@ public object MCPC08Architecture : Architecture(
                         outputRegister,
                         InstructionValue.RegisterReference(outputRegister),
                         value,
+                        emptyMap(),
                     )
                 )
             } else {
@@ -154,6 +155,7 @@ public object MCPC08Architecture : Architecture(
                         outputRegister,
                         value,
                         InstructionValue.ImmediateValue(0),
+                        emptyMap(),
                     )
                 )
             }
@@ -181,6 +183,7 @@ public object MCPC08Architecture : Architecture(
                     outputRegister,
                     InstructionValue.RegisterReference(registerA),
                     InstructionValue.RegisterReference(registerB),
+                    emptyMap(),
                 )
             )
         }

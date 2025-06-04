@@ -9,6 +9,7 @@ public data class Instruction(
     val outputRegister: RegisterVariable,
     val inputA: InstructionValue,
     val inputB: InstructionValue,
+    val meta: Map<String, Any?>,
 ) {
     init {
         if (inputA is InstructionValue.RegisterReference) {

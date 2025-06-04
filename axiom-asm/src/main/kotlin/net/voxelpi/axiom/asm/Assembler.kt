@@ -147,6 +147,7 @@ public class Assembler(
             findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) },
             InstructionValue.ImmediateValue(0),
             InstructionValue.ImmediateValue(0),
+            emptyMap(),
         )
         repeat(offset) {
             instructions += nopInstruction
@@ -190,6 +191,7 @@ public class Assembler(
                 output,
                 inputA,
                 inputB,
+                mapOf(SOURCE_INSTRUCTION_META_KEY to statementInstance.source),
             )
         }
         return Result.success(instructions)
@@ -267,5 +269,7 @@ public class Assembler(
         public const val AXIOM_ASM_EXTENSION: String = "axm"
 
         public const val START_LABEL_NAME: String = "global:start"
+
+        public const val SOURCE_INSTRUCTION_META_KEY: String = "source"
     }
 }

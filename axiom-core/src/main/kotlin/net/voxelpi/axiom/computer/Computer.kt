@@ -86,6 +86,7 @@ public class Computer(
                     architecture.registers.programCounterVariable,
                     InstructionValue.ImmediateValue(0),
                     InstructionValue.ImmediateValue(0),
+                    emptyMap(),
                 )
             }
 
