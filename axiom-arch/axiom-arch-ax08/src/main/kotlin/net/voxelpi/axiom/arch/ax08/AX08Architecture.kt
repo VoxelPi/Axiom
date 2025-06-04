@@ -28,8 +28,8 @@ public object AX08Architecture : Architecture(
 
         // Create general purpose registers.
         repeat(8) { registerIndex ->
-            val register = createRegister("R${registerIndex}", WordType.INT8)
-            createVariable("R${registerIndex}", register, registerIndex, readable = true, writeable = true, conditionable = true)
+            val register = createRegister("R${registerIndex + 1}", WordType.INT8)
+            createVariable("R${registerIndex + 1}", register, registerIndex, readable = true, writeable = true, conditionable = true)
         }
     }
 
