@@ -217,6 +217,29 @@ public object Parsers {
                 }
             }
 
+            // BINARY OPERATORS WITH CARRY, "R = A <operator> B with carry"
+
+            val abInputWithOutputWithCarryOperators = mapOf(
+                "+" to Operation.ADD_WITH_CARRY,
+                "-" to Operation.SUBTRACT_WITH_CARRY,
+            )
+
+            for ((operator, operation) in abInputWithOutputWithCarryOperators) {
+                transformation<InstructionStatement.WithOutput>("${operator}_with_carry_${transformationSuffix}") {
+                    registerLikeArgument(InstructionStatement.WithOutput::output)
+                    literal("=")
+                    valueLikeArgument(InstructionStatement::inputA)
+                    literal(operator)
+                    valueLikeArgument(InstructionStatement::inputB)
+                    literal("with")
+                    literal("carry")
+
+                    generateCondition(withConditionPart)
+
+                    parameter(InstructionStatement::operation) { operation }
+                }
+            }
+
             // BINARY OPERATORS, "R = A <operator> B"
 
             val abInputWithOutputOperators = mapOf(
