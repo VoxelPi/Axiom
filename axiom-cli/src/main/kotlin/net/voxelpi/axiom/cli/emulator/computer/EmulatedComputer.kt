@@ -149,6 +149,7 @@ class EmulatedComputer(
         if (isExecuting()) {
             return
         }
+        inputQueue.clear()
         computer.reset()
     }
 
