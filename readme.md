@@ -9,6 +9,8 @@
 Axiom is a custom computing platform. 
 This repository contains a collection of programs designed to make development for that platform easier.
 
+Check out the [Wiki](https://github.com/VoxelPi/Axiom/wiki) for more information!
+
 ## Architectures
 
 The following architectures are supported by the tools in this repository:
@@ -27,9 +29,9 @@ The following architectures are supported by the tools in this repository:
 
 The repository contains the following modules:
 
-| Module       | Description                                    |
-|--------------|------------------------------------------------|
-| `axiom-arch` | Implementation of the supported architectures. |
-| `axiom-asm`  | Assembler for the axiom-asm language.          |
-| `axiom-core` | The core library for all axiom tools.          |
-| `axiom-cli`  | The cli application.                           |
+| Module       | Description                                                                                                                |
+|--------------|----------------------------------------------------------------------------------------------------------------------------|
+| `axiom-arch` | Implementation of the supported architectures.                                                                             |
+| `axiom-asm`  | Assembler for the axiom-asm language, see the [wiki](https://github.com/VoxelPi/Axiom/wiki/Assembly) for more information. |
+| `axiom-core` | The core library for all axiom tools.                                                                                      |
+| `axiom-cli`  | The cli application.                                                                                                       |
