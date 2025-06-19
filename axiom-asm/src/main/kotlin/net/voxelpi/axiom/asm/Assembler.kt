@@ -14,6 +14,7 @@ import net.voxelpi.axiom.asm.pipeline.step.ReplaceLabelNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceRegisterNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceScopeNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceSpecialRegistersStep
+import net.voxelpi.axiom.asm.pipeline.step.ReplaceStringConstantsStep
 import net.voxelpi.axiom.asm.pipeline.step.ReplaceVariableNamesStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveIfBlockStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveScopeJumpStep
@@ -107,6 +108,9 @@ public class Assembler(
 
         // Replace special registers with references to actual registers.
         ReplaceSpecialRegistersStep(architecture).transform(program).getOrThrow()
+
+        // Replace string constants with a list of characters.
+        ReplaceStringConstantsStep.transform(program).getOrThrow()
 
         // Flatten the program.
         val (statementIndices, anchorIndices) = flattenProgram(program, architecture).getOrThrow()
@@ -218,7 +222,7 @@ public class Assembler(
             val position = statementPositions[index]
 
             when (statement) {
-                is ConstantStatement -> {
+                is ConstantStatement.IntegerConstant -> {
                     val value = statement.value
                     if (value !is IntegerValue) {
                         throw SourceCompilationException(statementInstance.source, "Program constant $index is not an integer value")

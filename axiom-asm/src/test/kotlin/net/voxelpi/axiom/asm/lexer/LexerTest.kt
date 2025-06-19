@@ -122,4 +122,44 @@ class LexerTest {
         assertEquals(1, variableStatement.tokens.size, "Invalid number of tokens in statement 2")
         assertIs<Token.Variable>(variableStatement.tokens[0])
     }
+
+    @Test
+    fun `test string tokens`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit(
+            "test",
+            """
+            "text"
+            """.trimIndent()
+        )
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(1, tokenStatements.size, "Invalid number of statements")
+        assertEquals(1, tokenStatements[0].tokens.size, "Invalid number of tokens in statement 1")
+        assertIs<Token.StringText>(tokenStatements[0].tokens[0])
+
+        val textToken = tokenStatements[0].tokens[0] as Token.StringText
+        assertEquals("text", textToken.value)
+    }
+
+    @Test
+    fun `test string tokens with semicolons`() {
+        val testText = " 1 ; 2 "
+
+        val lexer = Lexer()
+        val unit = CompilationUnit(
+            "test",
+            """
+            "$testText"
+            """.trimIndent()
+        )
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(1, tokenStatements.size, "Invalid number of statements")
+        val statement = tokenStatements[0]
+        assertEquals(1, statement.tokens.size, "Invalid number of tokens in statement 1")
+
+        val textToken = tokenStatements[0].tokens[0] as Token.StringText
+        assertEquals(testText, textToken.value)
+    }
 }

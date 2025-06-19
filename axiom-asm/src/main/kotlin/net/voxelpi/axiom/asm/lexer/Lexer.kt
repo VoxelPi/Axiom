@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.lexer
 
 import net.voxelpi.axiom.asm.CompilationUnit
+import net.voxelpi.axiom.asm.exception.SourceCompilationException
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.util.parseInteger
 
@@ -36,7 +37,39 @@ public class Lexer() {
     private fun tokenizeLine(text: String, lineStartIndex: Int, lineNumber: Int, unit: CompilationUnit): List<TokenizedStatement> {
         val statements: MutableList<TokenizedStatement> = mutableListOf()
 
-        val statementTexts = text.split(";")
+        val splitStatementTexts = text.split(";")
+
+        // Rejoin statements with open string literals.
+        val statementTexts = mutableListOf<String>()
+        var accumulatedText = ""
+        for (splitText in splitStatementTexts) {
+            val text = accumulatedText + splitText
+            var i = accumulatedText.length
+            var bracketOpen = accumulatedText.isNotEmpty()
+
+            var isEscaped = false
+            while (i < text.length) {
+                if (isEscaped) {
+                    isEscaped = false
+                    continue
+                }
+                if (text[i] == '\\') {
+                    isEscaped = true
+                    continue
+                }
+                if (text[i] == '"') {
+                    bracketOpen = !bracketOpen
+                }
+                ++i
+            }
+
+            if (bracketOpen) {
+                accumulatedText = "$text;"
+            } else {
+                statementTexts += text
+            }
+        }
+
         var iStartColumn = 0
         for (statementText in statementTexts) {
             val iStartIndex = lineStartIndex + iStartColumn
@@ -71,6 +104,54 @@ public class Lexer() {
             if (c == '#') {
                 // Comments end the statement.
                 break
+            }
+
+            if (c == '"') {
+                val iStringStart = iSymbol // Index of opening string quote.
+                iSymbol += 1
+                var isEscaped = false
+                var characters = mutableListOf<Char>()
+                while (iSymbol < text.length) {
+                    if (isEscaped) {
+                        characters += text[iSymbol]
+                        iSymbol += 1
+                        isEscaped = false
+                        continue
+                    }
+                    if (text[iSymbol] == '"') {
+                        break
+                    }
+                    if (text[iSymbol] == '\\') {
+                        isEscaped = true
+                        continue
+                    }
+                    characters += text[iSymbol]
+                    iSymbol += 1
+                }
+
+                val iStringEnd = iSymbol // Index of closing string quote.
+                iSymbol += 1
+
+                if (iStringEnd == text.length) {
+                    val exceptionLink = SourceLink.CompilationUnitSlice(
+                        unit,
+                        statementIndex + iStringStart,
+                        lineNumber,
+                        columnNumber + iStringStart,
+                        text.length - iStringStart,
+                    )
+                    throw SourceCompilationException(exceptionLink, "Missing closing quotes.")
+                }
+
+                val source = SourceLink.CompilationUnitSlice(
+                    unit,
+                    statementIndex + iStringStart,
+                    lineNumber,
+                    columnNumber + iStringStart,
+                    iStringEnd - iStringStart + 1,
+                )
+                statement.add(Token.StringText(characters.joinToString(""), source))
+                continue
             }
 
             // Handle symbols.

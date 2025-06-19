@@ -40,4 +40,12 @@ public sealed interface Token {
         val value: String,
         override val source: SourceLink.CompilationUnitSlice,
     ) : Token
+
+    /**
+     * A string token.
+     */
+    public data class StringText(
+        val value: String,
+        override val source: SourceLink.CompilationUnitSlice,
+    ) : Token
 }

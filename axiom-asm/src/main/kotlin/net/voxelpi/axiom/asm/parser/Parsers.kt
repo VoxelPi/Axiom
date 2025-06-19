@@ -131,8 +131,13 @@ public object Parsers {
         }
 
         // Integer constants.
-        transformation<ConstantStatement>("integer_constant") {
-            valueLikeArgument(ConstantStatement::value)
+        transformation<ConstantStatement.IntegerConstant>("integer_constant") {
+            valueLikeArgument(ConstantStatement.IntegerConstant::value)
+        }
+
+        // String constants.
+        transformation<ConstantStatement.StringConstant>("string_constant") {
+            stringLikeArgument(ConstantStatement.StringConstant::value)
         }
     }
 

@@ -11,6 +11,7 @@ import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.LabelLike
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ScopeLike
+import net.voxelpi.axiom.asm.type.StringLike
 import net.voxelpi.axiom.asm.type.UnitLike
 import net.voxelpi.axiom.asm.type.ValueLike
 import net.voxelpi.axiom.asm.type.VariableLike
@@ -248,6 +249,17 @@ public class ParserTransformation<T : Any> internal constructor(
 
         public fun registerLikeArgument(property: KProperty<RegisterLike>): ParserTransformationArgument.RegisterLikeArgument {
             return registerLikeArgument(StatementParameter.create(property))
+        }
+
+        public fun stringLikeArgument(parameter: StatementParameter<in StringLike>): ParserTransformationArgument.StringLikeArgument {
+            val argument = ParserTransformationArgument.StringLikeArgument(parameter)
+            segments += argument
+            arguments[parameter.id] = argument
+            return argument
+        }
+
+        public fun stringLikeArgument(property: KProperty<StringLike>): ParserTransformationArgument.StringLikeArgument {
+            return stringLikeArgument(StatementParameter.create(property))
         }
 
         public fun <T> parameter(parameter: StatementParameter<T>, value: ArgumentState.() -> T) {

@@ -7,6 +7,7 @@ import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.LabelLike
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ScopeLike
+import net.voxelpi.axiom.asm.type.StringLike
 import net.voxelpi.axiom.asm.type.UnitLike
 import net.voxelpi.axiom.asm.type.ValueLike
 import net.voxelpi.axiom.asm.type.VariableLike
@@ -138,6 +139,9 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
                 is Token.Label -> LabelLike.LabelName(token.value)
                 is Token.Integer -> IntegerValue(token.value)
                 is Token.Text -> ValueLike.UnparsedValue(token.value)
+                else -> return Result.failure(
+                    ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
+                )
             }
             return Result.success(ParsedValue.create(token.source, value))
         }
@@ -155,6 +159,23 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
                 is Token.Text -> RegisterLike.RegisterName(token.value)
                 else -> return Result.failure(
                     ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
+                )
+            }
+            return Result.success(ParsedValue.create(token.source, value))
+        }
+    }
+
+    public data class StringLikeArgument(override val parameter: StatementParameter<in StringLike>) : ParserTransformationArgument<StringLike> {
+
+        override fun isValid(token: Token): Boolean {
+            return token is Token.StringText
+        }
+
+        override fun parse(token: Token): Result<ParsedValue<StringLike>> {
+            val value: StringLike = when (token) {
+                is Token.StringText -> StringLike.StringValue(token.value)
+                else -> return Result.failure(
+                    ParseException(token.source, "Expected a string token but got ${token::class.simpleName}"),
                 )
             }
             return Result.success(ParsedValue.create(token.source, value))
