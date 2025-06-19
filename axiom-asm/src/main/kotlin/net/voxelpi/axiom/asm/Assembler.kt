@@ -126,7 +126,7 @@ public class Assembler(
     ): Result<Pair<List<Int>, Map<UUID, Int>>> {
         val anchorIndices = mutableMapOf<UUID, Int>()
         val statementsIndices = mutableListOf<Int>()
-        val usedIndices = mutableSetOf<Int>()
+        val usedIndices = mutableMapOf<Int, SourceLink>()
 
         val activeIndexedScopes: ArrayDeque<Scope> = ArrayDeque(listOf(program.globalScope))
         val indexStack: ArrayDeque<Int> = ArrayDeque()
@@ -144,7 +144,7 @@ public class Assembler(
             // Handle closed scopes.
             var tempScope = previousIndexScope
             while (tempScope.uniqueId != commonScope.uniqueId) {
-                if (tempScope.uniqueId == activeIndexedScopes.last()) {
+                if (tempScope.uniqueId == activeIndexedScopes.last().uniqueId) {
                     activeIndexedScopes.removeLast()
                     index = indexStack.removeLast()
                 }
@@ -158,15 +158,24 @@ public class Assembler(
                 for (openedScope in scopeAncestry.subList(commonScopeAncestry.size, scopeAncestry.size)) {
                     val position = openedScope.position ?: continue
                     indexStack.addLast(index)
+                    activeIndexedScopes.add(openedScope)
                     index = position
                 }
             }
 
             // Handle statement.
             when (statement) {
-                is InstructionStatement -> {
+                is ProgramElementStatement -> {
                     if (index in usedIndices) {
-                        throw SourceCompilationException(statementInstance.source, "Program Memory overlap, the program memory address $index is already in use.")
+                        val firstDefinitionSource = usedIndices[index]!!
+                        throw SourceCompilationException(
+                            statementInstance.source,
+                            "Program Memory overlap, the program memory address $index is already in use.",
+                            SourceCompilationException(
+                                firstDefinitionSource,
+                                "Originally defined here."
+                            )
+                        )
                     }
                     if (index.toULong() >= architecture.programSize) {
                         throw SourceCompilationException(statementInstance.source, "Out of program memory (${architecture.programSize} words)")
@@ -174,7 +183,7 @@ public class Assembler(
 
                     yield(statementInstance)
                     statementsIndices += index
-                    usedIndices += index
+                    usedIndices[index] = statementInstance.source
                     index += 1
                 }
                 is AnchorStatement -> {
@@ -184,7 +193,7 @@ public class Assembler(
                     throw SourceCompilationException(statementInstance.source, "Unresolved statement type ${statementInstance.prototype.id}")
                 }
             }
-        }
+        }.onFailure { return Result.failure(it) }
 
         return Result.success(Pair(statementsIndices, anchorIndices))
     }
