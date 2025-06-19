@@ -59,10 +59,10 @@ public object Parsers {
             curlyBracketsOpen()
         }
 
-        transformation<ScopeStatement.Open.Named>("scope/open_named_at") {
-            scopeArgument(ScopeStatement.Open.Named::name)
+        transformation<ScopeStatement.Open.NamedAt>("scope/open_named_at") {
+            scopeArgument(ScopeStatement.Open.NamedAt::name)
             directive("at")
-            integerArgument(ScopeStatement.Open.UnnamedAt::position)
+            integerArgument(ScopeStatement.Open.NamedAt::position)
             curlyBracketsOpen()
         }
 
