@@ -138,9 +138,6 @@ public sealed interface ParserTransformationArgument<T> : ParserTransformationSe
                 is Token.Label -> LabelLike.LabelName(token.value)
                 is Token.Integer -> IntegerValue(token.value)
                 is Token.Text -> ValueLike.UnparsedValue(token.value)
-                else -> return Result.failure(
-                    ParseException(token.source, "Expected a variable, text or integer token but got ${token::class.simpleName}"),
-                )
             }
             return Result.success(ParsedValue.create(token.source, value))
         }
