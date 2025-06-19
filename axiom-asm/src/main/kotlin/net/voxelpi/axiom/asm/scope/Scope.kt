@@ -17,14 +17,17 @@ public sealed interface Scope {
 
     public val labels: MutableMap<String, Anchor.Named>
 
+    public val position: Int?
+
     public fun createScope(
         uniqueId: UUID = UUID.randomUUID(),
         variables: MutableMap<String, Variable> = mutableMapOf(),
         labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
+        position: Int? = null,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ): LocalScope.Unnamed {
-        val scope = LocalScope.Unnamed(this, mutableListOf(), uniqueId, variables, labels, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
+        val scope = LocalScope.Unnamed(this, mutableListOf(), uniqueId, variables, labels, position, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
         scopes.add(scope)
         return scope
     }
@@ -34,10 +37,11 @@ public sealed interface Scope {
         uniqueId: UUID = UUID.randomUUID(),
         variables: MutableMap<String, Variable> = mutableMapOf(),
         labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
+        position: Int? = null,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ): LocalScope.Named {
-        val scope = LocalScope.Named(this, mutableListOf(), uniqueId, name, variables, labels, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
+        val scope = LocalScope.Named(this, mutableListOf(), uniqueId, name, variables, labels, position, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
         scopes.add(scope)
         return scope
     }
@@ -105,4 +109,17 @@ public sealed interface Scope {
     public fun findVariable(name: String): Pair<Variable, Scope>?
 
     public fun findVariable(uniqueId: UUID): Pair<Variable, Scope>?
+
+    public fun ancestry(): List<Scope>
+
+    public companion object {
+
+        public fun lastCommonScope(scopeA: Scope, scopeB: Scope): Scope? {
+            val scopeAAncestry = scopeA.ancestry()
+            val scopeBAncestry = scopeB.ancestry()
+
+            check(scopeAAncestry.isNotEmpty() && scopeBAncestry.isNotEmpty())
+            return (scopeAAncestry zip scopeBAncestry).lastOrNull { it.first.uniqueId == it.second.uniqueId }?.first
+        }
+    }
 }

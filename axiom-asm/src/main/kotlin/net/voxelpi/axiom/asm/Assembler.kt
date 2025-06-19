@@ -19,6 +19,8 @@ import net.voxelpi.axiom.asm.pipeline.step.ResolveIfBlockStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveScopeJumpStep
 import net.voxelpi.axiom.asm.pipeline.step.ResolveVariableValuesStep
 import net.voxelpi.axiom.asm.pipeline.step.UpcastLoadsStep
+import net.voxelpi.axiom.asm.scope.LocalScope
+import net.voxelpi.axiom.asm.scope.Scope
 import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.program.StatementProgram
@@ -69,9 +71,9 @@ public class Assembler(
         unit: CompilationUnit,
         architecture: Architecture,
         parser: Parser = Parsers.AXIOM_ASM,
-        offset: Int = 0,
+        position: Int = 0,
     ): Result<Program> = runCatching {
-        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
+        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories, position).getOrThrow()
         val program = unitCollector.reduce().getOrThrow()
 
         // Replace scope names with references.
@@ -101,62 +103,117 @@ public class Assembler(
         // Insert start jump if neccessary.
         InsertStartJumpStep(architecture).transform(program).getOrThrow()
 
-        // Generate anchors indices and use them to replace all anchor reference parameters.
-        val anchorIndices = generateAnchorIndices(program, offset).getOrThrow()
-        ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
-
         // Replace special registers with references to actual registers.
         ReplaceSpecialRegistersStep(architecture).transform(program).getOrThrow()
+
+        // Flatten the program.
+        val (statementIndices, anchorIndices) = flattenProgram(program, architecture).getOrThrow()
+
+        // Replace all anchor reference parameters with actual instruction indices.
+        ApplyAnchorIndicesStep(anchorIndices).transform(program).getOrThrow()
 
         // Platform-dependent compatibility transformations.
         UpcastLoadsStep(architecture).transform(program).getOrThrow()
 
-        val instructions = generateInstructions(program, architecture, offset).getOrThrow()
+        val instructions = generateInstructions(program, architecture, statementIndices).getOrThrow()
         val compiledProgram = Program(instructions)
         return Result.success(compiledProgram)
     }
 
-    private fun generateAnchorIndices(program: MutableStatementProgram, offset: Int): Result<Map<UUID, Int>> {
+    private fun flattenProgram(
+        program: MutableStatementProgram,
+        architecture: Architecture,
+    ): Result<Pair<List<Int>, Map<UUID, Int>>> {
         val anchorIndices = mutableMapOf<UUID, Int>()
-        var iInstruction = offset
+        val statementsIndices = mutableListOf<Int>()
+        val usedIndices = mutableSetOf<Int>()
+
+        val activeIndexedScopes: ArrayDeque<Scope> = ArrayDeque(listOf(program.globalScope))
+        val indexStack: ArrayDeque<Int> = ArrayDeque()
+        var index = program.globalScope.position
+
         program.transform { statementInstance ->
             val statement = statementInstance.create()
+
+            // Find common parent scope.
+            val previousIndexScope = activeIndexedScopes.last()
+            val scope = statementInstance.scope
+            val commonScope = Scope.lastCommonScope(scope, previousIndexScope)
+                ?: throw SourceCompilationException(statementInstance.source, "Something went SERIOUSLY wrong, this should never happen 💀.")
+
+            // Handle closed scopes.
+            var tempScope = previousIndexScope
+            while (tempScope.uniqueId != commonScope.uniqueId) {
+                if (tempScope.uniqueId == activeIndexedScopes.last()) {
+                    activeIndexedScopes.removeLast()
+                    index = indexStack.removeLast()
+                }
+                tempScope = (tempScope as LocalScope).parent
+            }
+
+            // Handle opened scopes.
+            if (commonScope.uniqueId != scope.uniqueId) {
+                val commonScopeAncestry = commonScope.ancestry()
+                val scopeAncestry = scope.ancestry()
+                for (openedScope in scopeAncestry.subList(commonScopeAncestry.size, scopeAncestry.size)) {
+                    val position = openedScope.position ?: continue
+                    indexStack.addLast(index)
+                    index = position
+                }
+            }
+
+            // Handle statement.
             when (statement) {
                 is InstructionStatement -> {
+                    if (index in usedIndices) {
+                        throw SourceCompilationException(statementInstance.source, "Program Memory overlap, the program memory address $index is already in use.")
+                    }
+                    if (index.toULong() >= architecture.programSize) {
+                        throw SourceCompilationException(statementInstance.source, "Out of program memory (${architecture.programSize} words)")
+                    }
+
                     yield(statementInstance)
-                    ++iInstruction
+                    statementsIndices += index
+                    usedIndices += index
+                    index += 1
                 }
                 is AnchorStatement -> {
-                    anchorIndices[statement.anchor.uniqueId] = iInstruction
-                    // The anchor statement is removed, as it is already resolved and therefore no longer required.
+                    anchorIndices[statement.anchor.uniqueId] = index
                 }
                 else -> {
                     throw SourceCompilationException(statementInstance.source, "Unresolved statement type ${statementInstance.prototype.id}")
                 }
             }
-        }.onFailure { return Result.failure(it) }
-        return Result.success(anchorIndices)
+        }
+
+        return Result.success(Pair(statementsIndices, anchorIndices))
     }
 
-    private fun generateInstructions(program: StatementProgram, architecture: Architecture, offset: Int): Result<List<Instruction>> {
-        val instructions = mutableListOf<Instruction>()
-        val nopInstruction = Instruction(
-            Operation.LOAD,
-            Condition.NEVER,
-            findRegister(architecture, RegisterLike.AnyRegister(conditionable = true)).getOrElse { return Result.failure(it) },
-            findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) },
-            InstructionValue.ImmediateValue(0),
-            InstructionValue.ImmediateValue(0),
-            emptyMap(),
-        )
-        repeat(offset) {
-            instructions += nopInstruction
+    private fun generateInstructions(
+        program: StatementProgram,
+        architecture: Architecture,
+        statementPositions: List<Int>,
+    ): Result<List<Instruction>> {
+        // Create program memory full of nop instructions.
+        val instructions = MutableList(architecture.programSize.toInt()) {
+            Instruction(
+                Operation.LOAD,
+                Condition.NEVER,
+                findRegister(architecture, RegisterLike.AnyRegister(conditionable = true)).getOrElse { return Result.failure(it) },
+                findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) },
+                InstructionValue.ImmediateValue(0),
+                InstructionValue.ImmediateValue(0),
+                emptyMap(),
+            )
         }
-        for (statementInstance in program.statements) {
+
+        for ((index, statementInstance) in program.statements.withIndex()) {
             val statement = statementInstance.create()
             if (statement !is InstructionStatement) {
                 throw SourceCompilationException(statementInstance.source, "Non instruction statement ${statementInstance.prototype.id} found")
             }
+
+            val position = statementPositions[index]
 
             val output = if (statement is InstructionStatement.WithOutput) {
                 parseOutputRegister(
@@ -184,7 +241,7 @@ public class Assembler(
                 architecture,
             ).getOrElse { return Result.failure(it) }
 
-            instructions += Instruction(
+            instructions[position] = Instruction(
                 statement.operation,
                 statement.condition,
                 conditionRegister,

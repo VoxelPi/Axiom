@@ -10,7 +10,7 @@ class MutableStatementProgramTest {
 
     @Test
     fun `test scope sorting`() {
-        val globalScope = GlobalScope()
+        val globalScope = GlobalScope(position = 0)
         val program = MutableStatementProgram(globalScope, emptyList())
 
         val scope1 = globalScope.createScope("scope1")
@@ -54,7 +54,7 @@ class MutableStatementProgramTest {
 
     @Test
     fun `test randomized scope sorting`() {
-        val globalScope = GlobalScope()
+        val globalScope = GlobalScope(position = 0)
         val program = MutableStatementProgram(globalScope, emptyList())
 
         // Register 100 scopes with random parent scopes.

@@ -35,7 +35,7 @@ class ParserTest {
         val source = CompilationUnit("__test__", "simple 5")
         val tokenizedStatement = lexer.tokenize(source).first()
 
-        val globalScope = GlobalScope()
+        val globalScope = GlobalScope(position = 0)
 
         val statementInstance = parser.parse(tokenizedStatement, globalScope).getOrThrow()
         val statement = statementInstance.create()
@@ -65,7 +65,7 @@ class ParserTest {
             }
         }
 
-        val globalScope = GlobalScope()
+        val globalScope = GlobalScope(position = 0)
 
         val source = CompilationUnit("__test__", "simple test")
         val tokenizedStatement = lexer.tokenize(source).first()
@@ -86,7 +86,7 @@ class ParserTest {
         val lexer = Lexer()
         val parser = Parsers.AXIOM_ASM
 
-        val globalScope = GlobalScope()
+        val globalScope = GlobalScope(position = 0)
 
         val tokenizedStatements = lexer.tokenize(unit)
         for (tokenizedStatement in tokenizedStatements) {

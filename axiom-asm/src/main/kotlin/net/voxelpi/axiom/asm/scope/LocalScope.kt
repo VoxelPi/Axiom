@@ -80,6 +80,10 @@ public sealed class LocalScope(
         return null
     }
 
+    override fun ancestry(): List<Scope> {
+        return parent.ancestry() + listOf(this)
+    }
+
     public class Named(
         parent: Scope,
         override val scopes: MutableList<Scope>,
@@ -87,6 +91,7 @@ public sealed class LocalScope(
         public val name: String,
         override val variables: MutableMap<String, Variable>,
         override val labels: MutableMap<String, Anchor.Named>,
+        override val position: Int?,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
@@ -97,6 +102,7 @@ public sealed class LocalScope(
         override val uniqueId: UUID,
         override val variables: MutableMap<String, Variable>,
         override val labels: MutableMap<String, Anchor.Named>,
+        override val position: Int?,
         scopeStartAnchorUniqueId: UUID = UUID.randomUUID(),
         scopeEndAnchorUniqueId: UUID = UUID.randomUUID(),
     ) : LocalScope(parent, scopeStartAnchorUniqueId, scopeEndAnchorUniqueId)
