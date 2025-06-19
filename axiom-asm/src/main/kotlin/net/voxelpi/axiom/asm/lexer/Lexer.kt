@@ -20,11 +20,7 @@ public class Lexer() {
 
         var iStartIndex = 0
         for ((lineNumber, rawLineText) in lines.withIndex()) {
-            val lineText = if (rawLineText.endsWith('\r')) {
-                rawLineText.substring(0, rawLineText.length - 1)
-            } else {
-                rawLineText
-            }
+            val lineText = rawLineText.trimEnd()
 
             statements += tokenizeLine(lineText, iStartIndex, lineNumber, unit)
             iStartIndex += rawLineText.length + 1 // +1 for the new line character.
