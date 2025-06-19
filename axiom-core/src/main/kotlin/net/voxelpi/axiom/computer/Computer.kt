@@ -78,7 +78,7 @@ public class Computer(
                 element
             } else {
                 hitBreak = true
-                val operation = if (architecture.dataWordType < architecture.registers.programCounterVariable.type) {
+                val operation = if (architecture.registers.programCounterVariable.needsMode2 || architecture.dataWordType < architecture.registers.programCounterVariable.type) {
                     Operation.LOAD_2
                 } else {
                     Operation.LOAD
@@ -349,12 +349,18 @@ public class Computer(
                 result = a xor bitValue
             }
             Operation.MEMORY_LOAD -> {
-                val address = a.toInt().coerceIn(0, architecture.memorySize - 1)
+                val base = architecture.registers.indexRegister?.let { state.register(it) } ?: 0UL
+                val offset = a
+                val address = (base + offset).toInt().coerceIn(0, architecture.memorySize - 1)
+
                 val value = state.memoryCell(address)
                 result = value and outputRegister.type.mask
             }
             Operation.MEMORY_STORE -> {
-                val address = a.toInt().coerceIn(0, architecture.memorySize - 1)
+                val base = architecture.registers.indexRegister?.let { state.register(it) } ?: 0UL
+                val offset = a
+                val address = (base + offset).toInt().coerceIn(0, architecture.memorySize - 1)
+
                 writeMemoryCell(address, b)
             }
             Operation.IO_POLL -> {

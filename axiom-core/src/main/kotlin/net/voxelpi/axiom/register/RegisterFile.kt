@@ -7,6 +7,7 @@ public class RegisterFile(
     public val variables: Map<String, RegisterVariable>,
     public val programCounter: Register,
     public val programCounterVariable: RegisterVariable.Direct,
+    public val indexRegister: Register?,
 ) {
 
     public fun registers(): Collection<Register> {
@@ -43,6 +44,7 @@ public class RegisterFile(
     ) {
         public val programCounter: Register = Register(programCounterId, programCounterType)
         public lateinit var programCounterVariable: RegisterVariable.Direct
+        public var indexRegister: Register? = null
 
         private var registers: MutableMap<String, Register> = mutableMapOf(programCounter.id to programCounter)
         private var variables: MutableMap<String, RegisterVariable> = mutableMapOf()
@@ -57,11 +59,12 @@ public class RegisterFile(
             id: String,
             register: Register,
             address: Int,
-            readable: Boolean,
-            writeable: Boolean,
-            conditionable: Boolean,
+            readable: Boolean = false,
+            writeable: Boolean = false,
+            conditionable: Boolean = false,
+            needsMode2: Boolean = false,
         ): RegisterVariable.Direct {
-            val variable = RegisterVariable.Direct(id, register, address, readable, writeable, conditionable)
+            val variable = RegisterVariable.Direct(id, register, address, readable, writeable, conditionable, needsMode2)
             variables[id] = variable
             return variable
         }
@@ -72,11 +75,12 @@ public class RegisterFile(
             type: WordType,
             part: Int,
             address: Int,
-            readable: Boolean,
-            writeable: Boolean,
-            conditionable: Boolean,
+            readable: Boolean = false,
+            writeable: Boolean = false,
+            conditionable: Boolean = false,
+            needsMode2: Boolean = false,
         ): RegisterVariable.Part {
-            val variable = RegisterVariable.Part(id, type, register, part, address, readable, writeable, conditionable)
+            val variable = RegisterVariable.Part(id, type, register, part, address, readable, writeable, conditionable, needsMode2)
             variables[id] = variable
             return variable
         }
@@ -87,6 +91,7 @@ public class RegisterFile(
                 variables,
                 programCounter,
                 programCounterVariable,
+                indexRegister,
             )
         }
     }

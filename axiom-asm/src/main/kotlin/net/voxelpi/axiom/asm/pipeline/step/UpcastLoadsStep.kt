@@ -26,7 +26,7 @@ public class UpcastLoadsStep(
             }
             val outputRegister = output.register
 
-            if (outputRegister.type <= architecture.dataWordType) {
+            if ((!outputRegister.needsMode2) || (outputRegister.type <= architecture.dataWordType)) {
                 yield(statementInstance)
                 return@transformType
             }

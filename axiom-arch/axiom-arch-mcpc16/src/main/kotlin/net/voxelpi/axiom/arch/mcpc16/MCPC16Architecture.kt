@@ -20,7 +20,7 @@ public object MCPC16Architecture : Architecture(
 ) {
 
     override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT16) {
-        programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true, conditionable = false)
+        programCounterVariable = createVariable("PC", programCounter, 0, readable = true, writeable = true)
 
         for (registerIndex in 1..15) {
             val isConditional = registerIndex >= 14

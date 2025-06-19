@@ -22,9 +22,16 @@ public object AX08Architecture : Architecture(
 
     override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT16) {
         // Create the PC variables.
-        programCounterVariable = createVariable("PC", programCounter, 14, readable = false, writeable = true, conditionable = false)
-        createVariable("PC_0", programCounter, WordType.INT8, 0, 14, readable = true, writeable = false, conditionable = false)
-        createVariable("PC_1", programCounter, WordType.INT8, 1, 15, readable = true, writeable = false, conditionable = false)
+        programCounterVariable = createVariable("PC", programCounter, 8, writeable = true, needsMode2 = true)
+        createVariable("PC_0", programCounter, WordType.INT8, 0, 8, readable = true)
+        createVariable("PC_1", programCounter, WordType.INT8, 1, 9, readable = true)
+
+        // Create the index register.
+        indexRegister = createRegister("INDEX", WordType.INT16)
+        createVariable("INDEX", indexRegister!!, 10, writeable = true, needsMode2 = true)
+        createVariable("PAGE", indexRegister!!, WordType.INT8, 1, 11, readable = true, writeable = true, needsMode2 = true)
+        createVariable("INDEX_0", indexRegister!!, WordType.INT8, 0, 10, readable = true)
+        createVariable("INDEX_1", indexRegister!!, WordType.INT8, 1, 11, readable = true)
 
         // Create general purpose registers.
         repeat(8) { registerIndex ->

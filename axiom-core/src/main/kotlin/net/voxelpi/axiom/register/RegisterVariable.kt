@@ -16,6 +16,8 @@ public sealed interface RegisterVariable {
 
     public val writable: Boolean
 
+    public val needsMode2: Boolean
+
     public val conditionable: Boolean
 
     public data class Direct(
@@ -25,6 +27,7 @@ public sealed interface RegisterVariable {
         override val readable: Boolean,
         override val writable: Boolean,
         override val conditionable: Boolean,
+        override val needsMode2: Boolean,
     ) : RegisterVariable {
 
         override val type: WordType
@@ -44,6 +47,7 @@ public sealed interface RegisterVariable {
         override val readable: Boolean,
         override val writable: Boolean,
         override val conditionable: Boolean,
+        override val needsMode2: Boolean,
     ) : RegisterVariable {
 
         init {
