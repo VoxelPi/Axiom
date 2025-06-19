@@ -28,10 +28,11 @@ internal class CompilationUnitCollector private constructor(
     val mainProgram: MutableStatementProgram,
     val parser: Parser,
     val includeDirectories: Collection<Path>,
+    val position: Int,
 ) {
     val lexer: Lexer = Lexer()
 
-    val globalScope: GlobalScope = GlobalScope()
+    val globalScope: GlobalScope = GlobalScope(position = position)
 
     private val units: MutableMap<String, CompilationUnit> = mutableMapOf(mainUnit.id to mainUnit)
     private val unitsStatements: MutableMap<String, MutableStatementProgram> = mutableMapOf(mainUnit.id to mainProgram)
@@ -98,6 +99,7 @@ internal class CompilationUnitCollector private constructor(
                                     includedScope.uniqueId,
                                     includedScope.variables.toMutableMap(),
                                     includedScope.labels.toMutableMap(),
+                                    includedScope.position,
                                     includedScope.startAnchor.uniqueId,
                                     includedScope.endAnchor.uniqueId,
                                 )
@@ -110,6 +112,7 @@ internal class CompilationUnitCollector private constructor(
                                     includedScope.uniqueId,
                                     includedScope.variables.toMutableMap(),
                                     includedScope.labels.toMutableMap(),
+                                    includedScope.position,
                                     includedScope.startAnchor.uniqueId,
                                     includedScope.endAnchor.uniqueId,
                                 )
@@ -196,6 +199,7 @@ internal class CompilationUnitCollector private constructor(
                                         includedScope.uniqueId,
                                         includedScope.variables.toMutableMap(),
                                         includedScope.labels.toMutableMap(),
+                                        includedScope.position,
                                         includedScope.startAnchor.uniqueId,
                                         includedScope.endAnchor.uniqueId,
                                     )
@@ -212,6 +216,7 @@ internal class CompilationUnitCollector private constructor(
                                             includedScope.uniqueId,
                                             includedScope.variables.toMutableMap(),
                                             includedScope.labels.toMutableMap(),
+                                            includedScope.position,
                                             includedScope.startAnchor.uniqueId,
                                             includedScope.endAnchor.uniqueId,
                                         )
@@ -227,6 +232,7 @@ internal class CompilationUnitCollector private constructor(
                                         includedScope.uniqueId,
                                         includedScope.variables.toMutableMap(),
                                         includedScope.labels.toMutableMap(),
+                                        includedScope.position,
                                         includedScope.startAnchor.uniqueId,
                                         includedScope.endAnchor.uniqueId,
                                     )
@@ -360,7 +366,7 @@ internal class CompilationUnitCollector private constructor(
                 units[unit.id] = unit
 
                 // Prepare the statements from the unit.
-                val unitStatements = prepareUnit(unit, parser).getOrElse {
+                val unitStatements = prepareUnit(unit, parser, 0).getOrElse {
                     throw SourceCompilationException(statementInstance.source, "Failed to include unit $unitName.", it)
                 }
                 unitsStatements[unit.id] = unitStatements
@@ -389,12 +395,12 @@ internal class CompilationUnitCollector private constructor(
 
     companion object {
 
-        private fun prepareUnit(unit: CompilationUnit, parser: Parser): Result<MutableStatementProgram> {
+        private fun prepareUnit(unit: CompilationUnit, parser: Parser, position: Int): Result<MutableStatementProgram> {
             // Tokenize input text.
             val lexer = Lexer()
             val tokenizedStatements = lexer.tokenize(unit)
 
-            val unitGlobalScope = GlobalScope()
+            val unitGlobalScope = GlobalScope(position = position)
 
             // Parse tokenized statements
             val program = MutableStatementProgram(
@@ -414,11 +420,12 @@ internal class CompilationUnitCollector private constructor(
             mainUnit: CompilationUnit,
             parser: Parser,
             includeDirectories: Collection<Path>,
+            position: Int,
         ): Result<CompilationUnitCollector> {
-            val mainProgram: MutableStatementProgram = prepareUnit(mainUnit, parser).getOrElse {
+            val mainProgram: MutableStatementProgram = prepareUnit(mainUnit, parser, position).getOrElse {
                 return Result.failure(it)
             }
-            return Result.success(CompilationUnitCollector(mainUnit, mainProgram, parser, includeDirectories))
+            return Result.success(CompilationUnitCollector(mainUnit, mainProgram, parser, includeDirectories, position))
         }
     }
 }

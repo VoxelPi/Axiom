@@ -69,9 +69,9 @@ public class Assembler(
         unit: CompilationUnit,
         architecture: Architecture,
         parser: Parser = Parsers.AXIOM_ASM,
-        offset: Int = 0,
+        position: Int = 0,
     ): Result<Program> = runCatching {
-        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories).getOrThrow()
+        val unitCollector = CompilationUnitCollector.create(unit, parser, includeDirectories, position).getOrThrow()
         val program = unitCollector.reduce().getOrThrow()
 
         // Replace scope names with references.
@@ -111,7 +111,7 @@ public class Assembler(
         // Platform-dependent compatibility transformations.
         UpcastLoadsStep(architecture).transform(program).getOrThrow()
 
-        val instructions = generateInstructions(program, architecture, offset).getOrThrow()
+        val instructions = generateInstructions(program, architecture, position).getOrThrow()
         val compiledProgram = Program(instructions)
         return Result.success(compiledProgram)
     }

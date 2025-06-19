@@ -52,6 +52,19 @@ public object Parsers {
             curlyBracketsOpen()
         }
 
+        transformation<ScopeStatement.Open.UnnamedAt>("scope/open_unnamed_at") {
+            literal("!at")
+            integerArgument(ScopeStatement.Open.UnnamedAt::position)
+            curlyBracketsOpen()
+        }
+
+        transformation<ScopeStatement.Open.Named>("scope/open_named_at") {
+            scopeArgument(ScopeStatement.Open.Named::name)
+            literal("!at")
+            integerArgument(ScopeStatement.Open.UnnamedAt::position)
+            curlyBracketsOpen()
+        }
+
         transformation<ScopeStatement.Close>("scope/close") {
             curlyBracketsClose()
         }

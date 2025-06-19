@@ -8,6 +8,7 @@ public class GlobalScope(
     override val scopes: MutableList<Scope> = mutableListOf(),
     override val variables: MutableMap<String, Variable> = mutableMapOf(),
     override val labels: MutableMap<String, Anchor.Named> = mutableMapOf(),
+    override val position: Int,
 ) : Scope {
 
     // The global scope has a unique id of 0.
