@@ -2,7 +2,7 @@
 cloud-command = "2.0.0"
 jline = "3.30.4"
 junit = "5.11.4"
-kotlin = "2.1.10"
+kotlin = "2.1.21"
 kotlin-logging = "7.0.7"
 kotlinx-cli = "0.3.6"
 kotlinx-coroutines = "1.10.2"
