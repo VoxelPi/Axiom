@@ -104,11 +104,15 @@ class EmulatedComputer(
         }
     }
 
-    suspend fun runInlineInstructions(instructions: Collection<Instruction>, trace: Boolean = false, silent: Boolean = false) {
+    suspend fun runInlineInstructions(program: Program, trace: Boolean = false, silent: Boolean = false) {
         return withContext(coroutineContext) {
             val previousSilent = this@EmulatedComputer.silent
             this@EmulatedComputer.silent = silent
-            for (instruction in instructions) {
+            for (instruction in program.data) {
+                if (instruction !is Instruction) {
+                    throw Exception("Cannot execute program constants.")
+                }
+
                 val patch = computer.runInlineInstruction(instruction)
                 if (trace) {
                     traceHandler.invoke(patch)

@@ -37,9 +37,9 @@ class EmulatorExecuteInstruction(
 
                 // Run instructions.
                 runBlocking {
-                    computer.runInlineInstructions(program.instructions, trace = trace, silent = silent)
+                    computer.runInlineInstructions(program, trace = trace, silent = silent)
                 }
-                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Executed ${TextColors.brightYellow(program.instructions.size.toString())} instructions")
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Executed ${TextColors.brightYellow(program.data.size.toString())} instructions")
             }
         }
     }

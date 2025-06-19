@@ -19,8 +19,8 @@ class EmulatorPCCommand(
             handler { context ->
                 val state = runBlocking { computer.state() }
                 val instructionIndex = state.register(computer.architecture.registers.programCounter)
-                if (instructionIndex.toInt() in computer.computer.program.instructions.indices) {
-                    val instruction = computer.computer.program.instructions[instructionIndex.toInt()]
+                if (instructionIndex.toInt() in computer.computer.program.data.indices) {
+                    val instruction = computer.computer.program.data[instructionIndex.toInt()]
                     context.sender().terminal.writer().println("$PREFIX_EMULATOR The computer is currently at instruction ${TextColors.yellow(instructionIndex.toString())}, ${TextColors.brightGreen(instruction.toString())}")
 
                     val source = instruction.meta[Assembler.SOURCE_INSTRUCTION_META_KEY] as? SourceLink

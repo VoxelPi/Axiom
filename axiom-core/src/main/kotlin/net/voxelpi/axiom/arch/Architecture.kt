@@ -4,6 +4,7 @@ import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.instruction.ProgramConstant
 import net.voxelpi.axiom.register.RegisterFile
 
 /**
@@ -64,18 +65,26 @@ public abstract class Architecture(
         }
 
         // Calculate encoded program length.
-        val encodedProgram = UByteArray(program.instructions.size * instructionWordType.bytes)
+        val encodedProgram = UByteArray(program.data.size * instructionWordType.bytes)
 
         // Encode instructions.
-        for ((iInstruction, instruction) in program.instructions.withIndex()) {
-            if (instruction.operation !in supportedOperations) {
-                throw IllegalArgumentException("The operation \"${instruction.operation}\" is not supported by the architecture \"${id}\".")
+        for ((iInstruction, element) in program.data.withIndex()) {
+            val data = when (element) {
+                is Instruction -> {
+                    val instruction = element
+                    if (instruction.operation !in supportedOperations) {
+                        throw IllegalArgumentException("The operation \"${instruction.operation}\" is not supported by the architecture \"${id}\".")
+                    }
+                    encodeInstruction(instruction).getOrThrow()
+                }
+                is ProgramConstant -> {
+                    instructionWordType.pack(element.value)
+                }
             }
-            val encodedInstruction = encodeInstruction(instruction).getOrThrow()
             if (invertByteOrder) {
-                encodedInstruction.reverse()
+                data.reverse()
             }
-            encodedInstruction.copyInto(encodedProgram, iInstruction * instructionWordType.bytes)
+            data.copyInto(encodedProgram, iInstruction * instructionWordType.bytes)
         }
 
         // Return encoded program.

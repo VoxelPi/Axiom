@@ -6,7 +6,7 @@ import net.voxelpi.axiom.asm.type.ValueLike
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Operation
 
-public sealed interface InstructionStatement : ConditionalStatement {
+public sealed interface InstructionStatement : ConditionalStatement, ProgramElementStatement {
 
     public val operation: Operation
     public val inputA: ValueLike

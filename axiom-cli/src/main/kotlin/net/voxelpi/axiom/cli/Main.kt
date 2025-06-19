@@ -84,7 +84,7 @@ fun main(args: Array<String>) {
 
             if (true) {
                 rawFile.writeText(
-                    program.instructions.joinToString("\n") { instruction ->
+                    program.data.joinToString("\n") { instruction ->
                         var text = instruction.toString().padEnd(32)
                         val source = instruction.meta[Assembler.SOURCE_INSTRUCTION_META_KEY] as? SourceLink
                         if (source != null) {
@@ -106,9 +106,9 @@ fun main(args: Array<String>) {
             if (architecture.hasEncodedFormat) {
                 val encodedProgram = architecture.encodeProgram(program, invertByteOrder = inverseInstructionByteOrder).getOrThrow()
                 outputFilePath.writeBytes(encodedProgram.toByteArray())
-                println("Assembled ${program.instructions.size} instructions (${encodedProgram.size} bytes)")
+                println("Assembled ${program.data.size} instructions (${encodedProgram.size} bytes)")
             } else {
-                println("Assembled ${program.instructions.size} instructions")
+                println("Assembled ${program.data.size} instructions")
             }
         }
     }

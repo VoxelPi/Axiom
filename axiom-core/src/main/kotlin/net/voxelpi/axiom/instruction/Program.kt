@@ -1,10 +1,10 @@
 package net.voxelpi.axiom.instruction
 
 public data class Program(
-    val instructions: List<Instruction>,
+    val data: List<ProgramElement>,
 ) {
 
     override fun toString(): String {
-        return instructions.joinToString("\n")
+        return data.joinToString("\n")
     }
 }

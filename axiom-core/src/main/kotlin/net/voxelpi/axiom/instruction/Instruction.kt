@@ -9,8 +9,8 @@ public data class Instruction(
     val outputRegister: RegisterVariable,
     val inputA: InstructionValue,
     val inputB: InstructionValue,
-    val meta: Map<String, Any?>,
-) {
+    override val meta: Map<String, Any?>,
+) : ProgramElement {
     init {
         if (inputA is InstructionValue.RegisterReference) {
             require(inputA.register.readable) { "The register variable '${inputA.register.id}' cannot be read." }

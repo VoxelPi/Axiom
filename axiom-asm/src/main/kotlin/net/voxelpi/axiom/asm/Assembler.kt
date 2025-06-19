@@ -25,15 +25,17 @@ import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.asm.statement.program.MutableStatementProgram
 import net.voxelpi.axiom.asm.statement.program.StatementProgram
 import net.voxelpi.axiom.asm.statement.types.AnchorStatement
+import net.voxelpi.axiom.asm.statement.types.ConstantStatement
 import net.voxelpi.axiom.asm.statement.types.InstructionStatement
+import net.voxelpi.axiom.asm.statement.types.ProgramElementStatement
 import net.voxelpi.axiom.asm.type.IntegerValue
 import net.voxelpi.axiom.asm.type.RegisterLike
 import net.voxelpi.axiom.asm.type.ValueLike
-import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
-import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.instruction.ProgramConstant
+import net.voxelpi.axiom.instruction.ProgramElement
 import net.voxelpi.axiom.register.RegisterVariable
 import java.nio.file.Path
 import java.util.UUID
@@ -202,65 +204,71 @@ public class Assembler(
         program: StatementProgram,
         architecture: Architecture,
         statementPositions: List<Int>,
-    ): Result<List<Instruction>> {
+    ): Result<List<ProgramElement>> {
         // Create program memory full of nop instructions.
-        val instructions = MutableList(architecture.programSize.toInt()) {
-            Instruction(
-                Operation.LOAD,
-                Condition.NEVER,
-                findRegister(architecture, RegisterLike.AnyRegister(conditionable = true)).getOrElse { return Result.failure(it) },
-                findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) },
-                InstructionValue.ImmediateValue(0),
-                InstructionValue.ImmediateValue(0),
-                emptyMap(),
-            )
+        val programElements = MutableList<ProgramElement>(architecture.programSize.toInt()) {
+            ProgramConstant(0UL, emptyMap())
         }
 
         for ((index, statementInstance) in program.statements.withIndex()) {
             val statement = statementInstance.create()
-            if (statement !is InstructionStatement) {
+            if (statement !is ProgramElementStatement) {
                 throw SourceCompilationException(statementInstance.source, "Non instruction statement ${statementInstance.prototype.id} found")
             }
-
             val position = statementPositions[index]
 
-            val output = if (statement is InstructionStatement.WithOutput) {
-                parseOutputRegister(
-                    statement.output,
-                    statementInstance.sourceOfOrDefault(InstructionStatement.WithOutput::output),
-                    architecture,
-                ).getOrElse { return Result.failure(it) }
-            } else {
-                findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) }
+            when (statement) {
+                is ConstantStatement -> {
+                    val value = statement.value
+                    if (value !is IntegerValue) {
+                        throw SourceCompilationException(statementInstance.source, "Program constant $index is not an integer value")
+                    }
+
+                    programElements[position] = ProgramConstant(
+                        architecture.instructionWordType.unsignedValueOf(value.value.toULong()),
+                        mapOf(SOURCE_INSTRUCTION_META_KEY to statementInstance.source),
+                    )
+                }
+                is InstructionStatement -> {
+                    val output = if (statement is InstructionStatement.WithOutput) {
+                        parseOutputRegister(
+                            statement.output,
+                            statementInstance.sourceOfOrDefault(InstructionStatement.WithOutput::output),
+                            architecture,
+                        ).getOrElse { return Result.failure(it) }
+                    } else {
+                        findRegister(architecture, RegisterLike.AnyRegister(writable = true)).getOrElse { return Result.failure(it) }
+                    }
+
+                    val conditionRegister = parseConditionRegister(
+                        statement.conditionValue,
+                        statementInstance.sourceOfOrDefault(InstructionStatement::conditionValue),
+                        architecture,
+                    ).getOrElse { return Result.failure(it) }
+                    val inputA = parseInstructionValue(
+                        statement.inputA,
+                        statementInstance.sourceOfOrDefault(InstructionStatement::inputA),
+                        architecture,
+                    ).getOrElse { return Result.failure(it) }
+                    val inputB = parseInstructionValue(
+                        statement.inputB,
+                        statementInstance.sourceOfOrDefault(InstructionStatement::inputB),
+                        architecture,
+                    ).getOrElse { return Result.failure(it) }
+
+                    programElements[position] = Instruction(
+                        statement.operation,
+                        statement.condition,
+                        conditionRegister,
+                        output,
+                        inputA,
+                        inputB,
+                        mapOf(SOURCE_INSTRUCTION_META_KEY to statementInstance.source),
+                    )
+                }
             }
-
-            val conditionRegister = parseConditionRegister(
-                statement.conditionValue,
-                statementInstance.sourceOfOrDefault(InstructionStatement::conditionValue),
-                architecture,
-            ).getOrElse { return Result.failure(it) }
-            val inputA = parseInstructionValue(
-                statement.inputA,
-                statementInstance.sourceOfOrDefault(InstructionStatement::inputA),
-                architecture,
-            ).getOrElse { return Result.failure(it) }
-            val inputB = parseInstructionValue(
-                statement.inputB,
-                statementInstance.sourceOfOrDefault(InstructionStatement::inputB),
-                architecture,
-            ).getOrElse { return Result.failure(it) }
-
-            instructions[position] = Instruction(
-                statement.operation,
-                statement.condition,
-                conditionRegister,
-                output,
-                inputA,
-                inputB,
-                mapOf(SOURCE_INSTRUCTION_META_KEY to statementInstance.source),
-            )
         }
-        return Result.success(instructions)
+        return Result.success(programElements)
     }
 
     private fun parseConditionRegister(value: RegisterLike, source: SourceLink, architecture: Architecture): Result<RegisterVariable> {

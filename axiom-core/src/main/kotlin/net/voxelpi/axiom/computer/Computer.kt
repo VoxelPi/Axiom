@@ -70,8 +70,12 @@ public class Computer(
 
             // FETCH
             val instructionIndex = state.register(architecture.registers.programCounter)
-            val instruction = if (instructionIndex.toInt() in program.instructions.indices) {
-                program.instructions[instructionIndex.toInt()]
+            val instruction = if (instructionIndex.toInt() in program.data.indices) {
+                val element = program.data[instructionIndex.toInt()]
+                if (element !is Instruction) {
+                    throw Exception("Program at index $instructionIndex is not an instruction")
+                }
+                element
             } else {
                 hitBreak = true
                 val operation = if (architecture.dataWordType < architecture.registers.programCounterVariable.type) {
