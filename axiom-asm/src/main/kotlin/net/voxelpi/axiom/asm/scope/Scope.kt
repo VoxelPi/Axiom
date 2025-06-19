@@ -109,4 +109,17 @@ public sealed interface Scope {
     public fun findVariable(name: String): Pair<Variable, Scope>?
 
     public fun findVariable(uniqueId: UUID): Pair<Variable, Scope>?
+
+    public fun ancestry(): List<Scope>
+
+    public companion object {
+
+        public fun lastCommonScope(scopeA: Scope, scopeB: Scope): Scope? {
+            val scopeAAncestry = scopeA.ancestry()
+            val scopeBAncestry = scopeB.ancestry()
+
+            check(scopeAAncestry.isNotEmpty() && scopeBAncestry.isNotEmpty())
+            return (scopeAAncestry zip scopeBAncestry).lastOrNull { it.first.uniqueId == it.second.uniqueId }?.first
+        }
+    }
 }

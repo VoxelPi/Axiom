@@ -40,4 +40,8 @@ public class GlobalScope(
     override fun findVariable(uniqueId: UUID): Pair<Variable, Scope>? {
         return variables.values.find { it.uniqueId == uniqueId }?.let { it to this }
     }
+
+    override fun ancestry(): List<Scope> {
+        return listOf(this)
+    }
 }

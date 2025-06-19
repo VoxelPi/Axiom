@@ -80,6 +80,10 @@ public sealed class LocalScope(
         return null
     }
 
+    override fun ancestry(): List<Scope> {
+        return parent.ancestry() + listOf(this)
+    }
+
     public class Named(
         parent: Scope,
         override val scopes: MutableList<Scope>,
