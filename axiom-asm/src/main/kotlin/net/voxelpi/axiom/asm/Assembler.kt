@@ -210,9 +210,7 @@ public class Assembler(
         statementPositions: List<Int>,
     ): Result<List<ProgramElement>> {
         // Create program memory full of nop instructions.
-        val programElements = MutableList<ProgramElement>(architecture.programSize.toInt()) {
-            ProgramConstant(0UL, emptyMap())
-        }
+        val programElements = MutableList<ProgramElement>(architecture.programSize.toInt()) { ProgramElement.None }
 
         for ((index, statementInstance) in program.statements.withIndex()) {
             val statement = statementInstance.create()

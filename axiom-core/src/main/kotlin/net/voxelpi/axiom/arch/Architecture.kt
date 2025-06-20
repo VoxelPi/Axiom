@@ -5,6 +5,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.instruction.ProgramConstant
+import net.voxelpi.axiom.instruction.ProgramElement
 import net.voxelpi.axiom.register.RegisterFile
 
 /**
@@ -83,6 +84,9 @@ public abstract class Architecture(
                 }
                 is ProgramConstant -> {
                     instructionWordType.pack(element.value)
+                }
+                is ProgramElement.None -> {
+                    instructionWordType.pack(0UL)
                 }
             }
             if (invertByteOrder) {

@@ -11,6 +11,7 @@ import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.instruction.ProgramConstant
+import net.voxelpi.axiom.instruction.ProgramElement
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executor
 import java.util.concurrent.LinkedBlockingQueue
@@ -106,8 +107,10 @@ class EmulatedComputer(
         }
     }
 
-    suspend fun runInlineInstructions(program: Program, trace: Boolean = false, silent: Boolean = false) {
+    suspend fun runInlineInstructions(program: Program, trace: Boolean = false, silent: Boolean = false): Int {
         return withContext(coroutineContext) {
+            var executedInstructions: Int = 0
+
             val previousSilent = this@EmulatedComputer.silent
             this@EmulatedComputer.silent = silent
             for (programElement in program.data) {
@@ -118,14 +121,20 @@ class EmulatedComputer(
                         val bytes = architecture.instructionWordType.pack(programElement.value)
                         architecture.decodeInstruction(bytes).getOrThrow()
                     }
+                    is ProgramElement.None -> {
+                        break
+                    }
                 }
 
                 val patch = computer.runInlineInstruction(instruction)
+                executedInstructions += 1
                 if (trace) {
                     traceHandler.invoke(patch)
                 }
             }
             this@EmulatedComputer.silent = previousSilent
+
+            executedInstructions
         }
     }
 

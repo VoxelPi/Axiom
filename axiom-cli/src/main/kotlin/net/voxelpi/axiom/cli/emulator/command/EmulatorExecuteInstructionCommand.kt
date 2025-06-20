@@ -12,7 +12,7 @@ import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.parser.standard.StringParser
 
-class EmulatorExecuteInstruction(
+class EmulatorExecuteInstructionCommand(
     private val computer: EmulatedComputer,
 ) : AxiomCommandProvider {
 
@@ -36,10 +36,10 @@ class EmulatorExecuteInstruction(
                 }
 
                 // Run instructions.
-                runBlocking {
+                val executedInstructions = runBlocking {
                     computer.runInlineInstructions(program, trace = trace, silent = silent)
                 }
-                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Executed ${TextColors.brightYellow(program.data.size.toString())} instructions")
+                context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Executed ${TextColors.brightYellow(executedInstructions.toString())} instructions")
             }
         }
     }

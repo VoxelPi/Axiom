@@ -12,6 +12,7 @@ import net.voxelpi.axiom.instruction.InstructionValue
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.instruction.ProgramConstant
+import net.voxelpi.axiom.instruction.ProgramElement
 import net.voxelpi.axiom.register.RegisterVariable
 import kotlin.math.sqrt
 
@@ -382,6 +383,10 @@ public class Computer(
                         val value = when (programElement) {
                             is Instruction -> architecture.dataWordType.unpackFirst(architecture.encodeInstruction(programElement).getOrThrow())
                             is ProgramConstant -> architecture.dataWordType.unsignedValueOf(programElement.value)
+                            is ProgramElement.None -> {
+                                warningHandler.invoke("Reading unused program memory.")
+                                0UL
+                            }
                         }
                         result = outputRegister.type.unsignedValueOf(value)
                     }
