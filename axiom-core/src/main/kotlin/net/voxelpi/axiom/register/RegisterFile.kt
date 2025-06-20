@@ -63,8 +63,9 @@ public class RegisterFile(
             writeable: Boolean = false,
             conditionable: Boolean = false,
             needsMode2: Boolean = false,
+            mask: ULong? = null,
         ): RegisterVariable.Direct {
-            val variable = RegisterVariable.Direct(id, register, address, readable, writeable, conditionable, needsMode2)
+            val variable = RegisterVariable.Direct(id, register, address, readable, writeable, conditionable, needsMode2, mask)
             variables[id] = variable
             return variable
         }
@@ -79,8 +80,9 @@ public class RegisterFile(
             writeable: Boolean = false,
             conditionable: Boolean = false,
             needsMode2: Boolean = false,
+            mask: ULong? = null,
         ): RegisterVariable.Part {
-            val variable = RegisterVariable.Part(id, type, register, part, address, readable, writeable, conditionable, needsMode2)
+            val variable = RegisterVariable.Part(id, type, register, part, address, readable, writeable, conditionable, needsMode2, mask)
             variables[id] = variable
             return variable
         }

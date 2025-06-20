@@ -20,6 +20,8 @@ public sealed interface RegisterVariable {
 
     public val conditionable: Boolean
 
+    public val mask: ULong?
+
     public data class Direct(
         override val id: String,
         override val register: Register,
@@ -28,6 +30,7 @@ public sealed interface RegisterVariable {
         override val writable: Boolean,
         override val conditionable: Boolean,
         override val needsMode2: Boolean,
+        override val mask: ULong?,
     ) : RegisterVariable {
 
         override val type: WordType
@@ -48,6 +51,7 @@ public sealed interface RegisterVariable {
         override val writable: Boolean,
         override val conditionable: Boolean,
         override val needsMode2: Boolean,
+        override val mask: ULong?,
     ) : RegisterVariable {
 
         init {

@@ -27,10 +27,9 @@ public object AX08Architecture : Architecture(
 
         // Create the index register.
         indexRegister = createRegister("INDEX", WordType.INT16)
-        createVariable("INDEX", indexRegister!!, 10, writeable = true, needsMode2 = true)
-        createVariable("PAGE", indexRegister!!, WordType.INT8, 1, 11, readable = true, writeable = true, needsMode2 = true)
-        createVariable("INDEX_0", indexRegister!!, WordType.INT8, 0, 10, readable = true)
-        createVariable("INDEX_1", indexRegister!!, WordType.INT8, 1, 11, readable = true)
+        createVariable("I1", indexRegister!!, 10, writeable = true, needsMode2 = true, mask = 0xFF00UL)
+        createVariable("I1_0", indexRegister!!, WordType.INT8, 0, 10, readable = true)
+        createVariable("I1_1", indexRegister!!, WordType.INT8, 1, 11, readable = true)
 
         // Create general purpose registers.
         repeat(8) { registerIndex ->

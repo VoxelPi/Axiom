@@ -130,6 +130,9 @@ public class Computer(
                     hitBreak = true
                 }
             }
+            if (result != null && outputRegister.mask != null) {
+                result = result and outputRegister.mask!!
+            }
 
             // INCREMENT
             if (!conditionValid || result == null || outputRegister.register.id != architecture.registers.programCounter.id) {
@@ -197,6 +200,9 @@ public class Computer(
                 if (executionBreak) {
                     hitBreak = true
                 }
+            }
+            if (result != null && outputRegister.mask != null) {
+                result = result and outputRegister.mask!!
             }
 
             // STORE
