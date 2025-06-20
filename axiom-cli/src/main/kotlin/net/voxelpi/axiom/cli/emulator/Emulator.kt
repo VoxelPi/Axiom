@@ -59,7 +59,7 @@ class Emulator(
     initialProgram: String? = null,
 ) {
 
-    val computer = EmulatedComputer(architecture, ::handleTrace, ::handleInputRequest, ::handleOutput)
+    val computer = EmulatedComputer(architecture, ::handleTrace, ::handleInputRequest, ::handleOutput, ::handleWarning)
 
     val terminal = TerminalBuilder.builder().apply {
         system(true)
@@ -227,6 +227,10 @@ class Emulator(
 
     private fun handleTrace(patch: ComputerStatePatch<*>) {
         commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightCyan("[TRACE]")}  ${generateFormattedDescription(patch, computer.architecture)}")
+    }
+
+    private fun handleWarning(message: String) {
+        commandLineReader.printAbove("$PREFIX_COMPUTER ${TextColors.brightYellow("[WARNING]")}  $message")
     }
 
     private fun findHistoryFile(): Path {

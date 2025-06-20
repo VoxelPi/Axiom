@@ -20,6 +20,7 @@ public class Computer(
     public val inputAvailableProvider: () -> Boolean,
     public val inputProvider: () -> ULong,
     public val outputHandler: (ULong) -> Unit,
+    public val warningHandler: (String) -> Unit,
 ) {
 
     public var program: Program = Program(emptyList())
@@ -79,6 +80,7 @@ public class Computer(
                 }
                 element
             } else {
+                warningHandler("PC is outside of program")
                 hitBreak = true
                 val operation = if (architecture.registers.programCounterVariable.needsMode2 || architecture.dataWordType < architecture.registers.programCounterVariable.type) {
                     Operation.LOAD_2
@@ -158,7 +160,9 @@ public class Computer(
         return patch
     }
 
-    public fun runInlineInstruction(instruction: Instruction): ComputerStatePatch<ComputerStatePatch.Reason.InstructionExecution.Inline> {
+    public fun runInlineInstruction(
+        instruction: Instruction,
+    ): ComputerStatePatch<ComputerStatePatch.Reason.InstructionExecution.Inline> {
         var hitBreak = false
 
         val patch = state.modify {
@@ -230,7 +234,13 @@ public class Computer(
         }
     }
 
-    private fun ComputerStatePatch.Builder.executeOperation(operation: Operation, a: ULong, b: ULong, outputRegister: RegisterVariable, carryIn: Boolean): Pair<ULong?, Boolean> {
+    private fun ComputerStatePatch.Builder.executeOperation(
+        operation: Operation,
+        a: ULong,
+        b: ULong,
+        outputRegister: RegisterVariable,
+        carryIn: Boolean,
+    ): Pair<ULong?, Boolean> {
         var result: ULong? = null
         var hitBreak = false
 
@@ -370,7 +380,7 @@ public class Computer(
                         result = outputRegister.type.unsignedValueOf(value)
                     }
                     null -> {
-                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                        warningHandler("Reading unmapped memory address $address")
                         result = 0UL
                     }
                 }
@@ -386,10 +396,10 @@ public class Computer(
                         writeMemoryCell(mapping.map(address), b)
                     }
                     is MemoryMap.MemoryMapping.Program -> {
-                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                        warningHandler("Writing to read-only memory address $address")
                     }
                     null -> {
-                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                        warningHandler("Writing to unmapped memory address $address")
                     }
                 }
             }
@@ -418,9 +428,15 @@ public class Computer(
                 result = poppedValue and outputRegister.type.mask
             }
             Operation.STACK_PUSH -> {
+                if (stackPointer() == state.stackState.size - 1) {
+                    warningHandler("Stack overflow")
+                }
                 stackPush(b)
             }
             Operation.STACK_POP -> {
+                if (stackPointer() == 0) {
+                    warningHandler("Stack underflow")
+                }
                 val poppedValue = stackPop()
                 result = poppedValue and outputRegister.type.mask
             }

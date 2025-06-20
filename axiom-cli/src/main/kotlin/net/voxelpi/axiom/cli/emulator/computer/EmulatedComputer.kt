@@ -10,6 +10,7 @@ import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.instruction.ProgramConstant
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Executor
 import java.util.concurrent.LinkedBlockingQueue
@@ -21,12 +22,13 @@ class EmulatedComputer(
     val traceHandler: (patch: ComputerStatePatch<*>) -> Unit,
     val inputRequestHandler: () -> Unit,
     val outputHandler: (ULong) -> Unit,
+    val warningHandler: (String) -> Unit,
 ) : CoroutineScope {
 
     private val coroutineExecutor = ComputerExecutor()
     override val coroutineContext: CoroutineContext = SupervisorJob() + coroutineExecutor.asCoroutineDispatcher()
 
-    val computer = Computer(architecture, ::handleInputPoll, ::provideInput, ::handleOutput)
+    val computer = Computer(architecture, ::handleInputPoll, ::provideInput, ::handleOutput, warningHandler)
 
     val architecture: Architecture
         get() = computer.architecture
@@ -108,9 +110,14 @@ class EmulatedComputer(
         return withContext(coroutineContext) {
             val previousSilent = this@EmulatedComputer.silent
             this@EmulatedComputer.silent = silent
-            for (instruction in program.data) {
-                if (instruction !is Instruction) {
-                    throw Exception("Cannot execute program constants.")
+            for (programElement in program.data) {
+                val instruction = when (programElement) {
+                    is Instruction -> programElement
+                    is ProgramConstant -> {
+                        warningHandler("Executing program constant.")
+                        val bytes = architecture.instructionWordType.pack(programElement.value)
+                        architecture.decodeInstruction(bytes).getOrThrow()
+                    }
                 }
 
                 val patch = computer.runInlineInstruction(instruction)
