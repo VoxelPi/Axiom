@@ -2,6 +2,8 @@ package net.voxelpi.axiom.cli.util
 
 import com.github.ajalt.mordant.rendering.TextColors
 import net.voxelpi.axiom.WordType
+import kotlin.math.ceil
+import kotlin.math.log10
 
 fun visibleLength(s: String): Int {
     // Regex to match ANSI escape codes
@@ -21,28 +23,27 @@ fun formattedBooleanValue(value: Boolean): String {
 fun formattedValue(value: ULong, type: WordType, format: ValueFormat): String {
     return when (format) {
         ValueFormat.BINARY -> {
-            val state = value and type.mask
+            val state = type.unsignedValueOf(value)
             "${TextColors.brightCyan("0b")}${TextColors.brightGreen(state.toString(2).padStart(type.bits, '0').chunked(4).joinToString("_"))}"
         }
         ValueFormat.DECIMAL -> {
-            val state = value and type.mask
-            TextColors.brightGreen(state.toString())
+            val state = type.unsignedValueOf(value)
+            val maxLength = ceil(type.bits * log10(2.0)).toInt()
+
+            TextColors.brightGreen(state.toString().padStart(maxLength))
         }
         ValueFormat.HEXADECIMAL -> {
-            val state = value and type.mask
+            val state = type.unsignedValueOf(value)
             "${TextColors.brightCyan("0x")}${TextColors.brightGreen(state.toString(16).padStart(type.bytes * 2, '0').chunked(2).joinToString("_").uppercase())}"
         }
         ValueFormat.DECIMAL_SIGNED -> {
-            var state = value and type.mask
-            val negative = state and (1UL shl (type.bits - 1)) != 0UL
-            if (negative) {
-                state = state or type.mask.inv()
-            }
+            val state = type.signedValueOf(value)
+            val maxLength = ceil((type.bits - 1) * log10(2.0)).toInt() + 1 // Plus one for optional negative sign.
 
-            TextColors.brightGreen((state.toLong()).toString())
+            TextColors.brightGreen(state.toString().padStart(maxLength))
         }
         ValueFormat.CHARACTER -> {
-            val state = value and type.mask
+            val state = type.unsignedValueOf(value)
             val symbol = stringFromCodePoint(state)
             "${TextColors.brightCyan("'")}${TextColors.brightGreen(symbol)}${TextColors.brightCyan("'")}"
         }
