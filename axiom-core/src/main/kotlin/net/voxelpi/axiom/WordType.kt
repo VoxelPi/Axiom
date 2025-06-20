@@ -27,6 +27,8 @@ public sealed class WordType(
 
     public abstract fun unpack(value: UByteArray): ULong
 
+    public abstract fun unpackFirst(value: UByteArray): ULong
+
     public fun unsignedValueOf(value: ULong): ULong {
         return value and mask
     }
@@ -51,6 +53,11 @@ public sealed class WordType(
             require(value.size == 1) { "Expected exactly 1 byte, got ${value.size}." }
             return value[0].toULong()
         }
+
+        override fun unpackFirst(value: UByteArray): ULong {
+            require(value.size >= 1) { "Expected at least 1 byte, got ${value.size}." }
+            return value[0].toULong()
+        }
     }
 
     public data object INT16 : WordType(2) {
@@ -67,6 +74,11 @@ public sealed class WordType(
 
         override fun unpack(value: UByteArray): ULong {
             require(value.size == 2) { "Expected exactly 2 bytes, got ${value.size}." }
+            return (value[0].toULong() shl 0) or (value[1].toULong() shl 8)
+        }
+
+        override fun unpackFirst(value: UByteArray): ULong {
+            require(value.size >= 2) { "Expected exactly 2 bytes, got ${value.size}." }
             return (value[0].toULong() shl 0) or (value[1].toULong() shl 8)
         }
     }
@@ -87,6 +99,11 @@ public sealed class WordType(
 
         override fun unpack(value: UByteArray): ULong {
             require(value.size == 4) { "Expected exactly 4 bytes, got ${value.size}." }
+            return unpackFirst(value)
+        }
+
+        override fun unpackFirst(value: UByteArray): ULong {
+            require(value.size >= 4) { "Expected exactly 4 bytes, got ${value.size}." }
             var result = 0UL
             result = result or (value[0].toULong() shl 0)
             result = result or (value[1].toULong() shl 8)
@@ -116,6 +133,11 @@ public sealed class WordType(
 
         override fun unpack(value: UByteArray): ULong {
             require(value.size == 8) { "Expected exactly 8 bytes, got ${value.size}." }
+            return unpackFirst(value)
+        }
+
+        override fun unpackFirst(value: UByteArray): ULong {
+            require(value.size >= 8) { "Expected exactly 8 bytes, got ${value.size}." }
             var result: ULong = 0u
             result = result or (value[0].toULong() shl 0)
             result = result or (value[1].toULong() shl 8)

@@ -2,6 +2,7 @@ package net.voxelpi.axiom.arch.ax08
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.arch.MemoryMap
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
@@ -13,8 +14,6 @@ import net.voxelpi.axiom.util.biMapOf
 public object AX08Architecture : Architecture(
     "ax08",
     WordType.INT32,
-    WordType.INT8,
-    256,
     WordType.INT8,
     16,
     WordType.INT16,
@@ -38,6 +37,11 @@ public object AX08Architecture : Architecture(
             val register = createRegister("R${registerIndex + 1}", WordType.INT8)
             createVariable("R${registerIndex + 1}", register, registerIndex, readable = true, writeable = true, conditionable = true)
         }
+    }
+
+    override val memoryMap: MemoryMap = MemoryMap.create(WordType.INT8) {
+        memory(0x0000..0x7FFF)
+        program(0x8000..0xFFFF, 0x8000..0xFFFF)
     }
 
     override val supportedOperations: Set<Operation>

@@ -2,6 +2,7 @@ package net.voxelpi.axiom.arch.mcpc16
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.arch.MemoryMap
 import net.voxelpi.axiom.instruction.Condition
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
@@ -12,8 +13,6 @@ import net.voxelpi.axiom.util.biMapOf
 public object MCPC16Architecture : Architecture(
     "mcpc16",
     WordType.INT64,
-    WordType.INT16,
-    256,
     WordType.INT16,
     16,
     WordType.INT16,
@@ -32,6 +31,11 @@ public object MCPC16Architecture : Architecture(
                 createVariable("C$conditionSourceIndex", register, registerIndex, readable = true, writeable = true, conditionable = true)
             }
         }
+    }
+
+    override val memoryMap: MemoryMap = MemoryMap.create(WordType.INT16) {
+        memory(0x0000..0x7FFF)
+        program(0x8000..0xFFFF, 0x8000..0xFFFF)
     }
 
     override val supportedOperations: Set<Operation>

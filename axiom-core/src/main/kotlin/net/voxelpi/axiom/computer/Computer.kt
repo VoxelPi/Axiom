@@ -2,6 +2,7 @@ package net.voxelpi.axiom.computer
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.arch.MemoryMap
 import net.voxelpi.axiom.computer.state.ComputerState
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.computer.state.ComputerStateStorage
@@ -10,6 +11,7 @@ import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.InstructionValue
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.instruction.Program
+import net.voxelpi.axiom.instruction.ProgramConstant
 import net.voxelpi.axiom.register.RegisterVariable
 import kotlin.math.sqrt
 
@@ -351,17 +353,45 @@ public class Computer(
             Operation.MEMORY_LOAD -> {
                 val base = architecture.registers.indexRegister?.let { state.register(it) } ?: 0UL
                 val offset = a
-                val address = (base + offset).toInt().coerceIn(0, architecture.memorySize - 1)
+                val address = (base + offset).toInt()
 
-                val value = state.memoryCell(address)
-                result = value and outputRegister.type.mask
+                val mapping = architecture.memoryMap.selectMapping(address)
+                when (mapping) {
+                    is MemoryMap.MemoryMapping.Memory -> {
+                        val value = state.memoryCell(mapping.map(address))
+                        result = outputRegister.type.unsignedValueOf(value)
+                    }
+                    is MemoryMap.MemoryMapping.Program -> {
+                        val programElement = program.data[mapping.map(address)]
+                        val value = when (programElement) {
+                            is Instruction -> architecture.dataWordType.unpackFirst(architecture.encodeInstruction(programElement).getOrThrow())
+                            is ProgramConstant -> architecture.dataWordType.unsignedValueOf(programElement.value)
+                        }
+                        result = outputRegister.type.unsignedValueOf(value)
+                    }
+                    null -> {
+                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                        result = 0UL
+                    }
+                }
             }
             Operation.MEMORY_STORE -> {
                 val base = architecture.registers.indexRegister?.let { state.register(it) } ?: 0UL
                 val offset = a
-                val address = (base + offset).toInt().coerceIn(0, architecture.memorySize - 1)
+                val address = (base + offset).toInt()
 
-                writeMemoryCell(address, b)
+                val mapping = architecture.memoryMap.selectMapping(address)
+                when (mapping) {
+                    is MemoryMap.MemoryMapping.Memory -> {
+                        writeMemoryCell(mapping.map(address), b)
+                    }
+                    is MemoryMap.MemoryMapping.Program -> {
+                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                    }
+                    null -> {
+                        // TODO: THIS SHOULD AT LEAST BE A WARNING
+                    }
+                }
             }
             Operation.IO_POLL -> {
                 result = 1UL

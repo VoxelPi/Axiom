@@ -22,7 +22,7 @@ class EmulatorMemoryCommand(
 
     override fun registerCommands(commandManager: AxiomCommandManager) {
         commandManager.buildAndRegister("memory") {
-            required("address", integerParser(0, computer.architecture.memorySize - 1))
+            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
@@ -30,14 +30,14 @@ class EmulatorMemoryCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryWordType, format)
+                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryMap.wordType, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} is set to $value")
             }
         }
 
         commandManager.buildAndRegister("memory") {
             literal("get")
-            required("address", integerParser(0, computer.architecture.memorySize - 1))
+            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
@@ -45,19 +45,19 @@ class EmulatorMemoryCommand(
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
-                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryWordType, format)
+                val value = formattedValue(computerState.memoryCell(address), computer.architecture.memoryMap.wordType, format)
                 context.sender().terminal.writer().println("${Emulator.PREFIX_EMULATOR} Memory cell ${TextColors.brightYellow("#$address")} is set to $value")
             }
         }
 
         commandManager.buildAndRegister("memory") {
             literal("set")
-            required("address", integerParser(0, computer.architecture.memorySize - 1))
+            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
             required("value", longParser())
 
             handler { context ->
                 val address: Int = context["address"]
-                val value: ULong = context.get<Long>("value").toULong() and computer.architecture.memoryWordType.mask
+                val value: ULong = computer.architecture.memoryMap.wordType.unsignedValueOf(context.get<Long>("value").toULong())
 
                 val computerState = runBlocking {
                     computer.modifyState {
@@ -70,8 +70,8 @@ class EmulatorMemoryCommand(
 
         commandManager.buildAndRegister("memory") {
             literal("dump")
-            required("from", integerParser(0, computer.architecture.memorySize - 1))
-            required("to", integerParser(0, computer.architecture.memorySize - 1))
+            required("from", integerParser(0, computer.architecture.memoryMap.size - 1))
+            required("to", integerParser(0, computer.architecture.memoryMap.size - 1))
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
@@ -94,11 +94,11 @@ class EmulatorMemoryCommand(
                                     val state = computerState.memoryCell(address)
                                     row {
                                         cell(address)
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.DECIMAL))
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.DECIMAL_SIGNED))
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.HEXADECIMAL))
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.BINARY))
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, ValueFormat.CHARACTER))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, ValueFormat.DECIMAL))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, ValueFormat.DECIMAL_SIGNED))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, ValueFormat.HEXADECIMAL))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, ValueFormat.BINARY))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, ValueFormat.CHARACTER))
                                     }
                                 }
                             }
@@ -115,7 +115,7 @@ class EmulatorMemoryCommand(
                                     row {
                                         val state = computerState.memoryCell(address)
                                         cell(address)
-                                        cell(formattedValue(state, computer.architecture.memoryWordType, format))
+                                        cell(formattedValue(state, computer.architecture.memoryMap.wordType, format))
                                     }
                                 }
                             }

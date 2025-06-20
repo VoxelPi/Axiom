@@ -51,7 +51,7 @@ public data class ComputerStatePatch<R : ComputerStatePatch.Reason>(
 
         override fun writeMemoryCell(address: Int, value: ULong) {
             val previousValue = memoryCell(address)
-            val newValue = base.architecture.memoryWordType.unsignedValueOf(value)
+            val newValue = base.architecture.memoryMap.wordType.unsignedValueOf(value)
             changes += ComputerStateChange.MemoryChange(address, previousValue, newValue)
         }
 

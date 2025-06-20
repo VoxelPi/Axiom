@@ -14,7 +14,7 @@ public class ComputerStateStorage(
         it.id to 0UL
     }.toMutableMap()
 
-    internal val memoryState: ULongArray = ULongArray(architecture.memorySize) { 0UL }
+    internal val memoryState: ULongArray = ULongArray(architecture.memoryMap.memorySize) { 0UL }
     internal val stackState: ComputerStack = ComputerStack(architecture.stackSize)
 
     public fun clear() {

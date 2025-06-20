@@ -2,6 +2,7 @@ package net.voxelpi.axiom.arch.dev08
 
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
+import net.voxelpi.axiom.arch.MemoryMap
 import net.voxelpi.axiom.instruction.Instruction
 import net.voxelpi.axiom.instruction.Operation
 import net.voxelpi.axiom.register.RegisterFile
@@ -9,8 +10,6 @@ import net.voxelpi.axiom.register.RegisterFile
 public object DEV08Architecture : Architecture(
     "dev08",
     WordType.INT8,
-    WordType.INT8,
-    256,
     WordType.INT8,
     256,
     WordType.INT8,
@@ -22,6 +21,10 @@ public object DEV08Architecture : Architecture(
             val register = createRegister("R$iRegister", WordType.INT8)
             createVariable("R$iRegister", register, iRegister, readable = true, writeable = true, conditionable = true)
         }
+    }
+
+    override val memoryMap: MemoryMap = MemoryMap.create(WordType.INT8) {
+        memory(0x00..0xFF)
     }
 
     override val hasEncodedFormat: Boolean

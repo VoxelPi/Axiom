@@ -10,15 +10,14 @@ import net.voxelpi.axiom.register.RegisterFile
 /**
  * @property id The id of the architecture.
  * @property instructionWordType The type of instruction word.
- * @property memorySize The size of the memory.
+ * @property dataWordType The type of data word.
  * @property stackSize The size of the stack.
+ * @property stackWordType The type of stack data word.
  */
 public abstract class Architecture(
     public val id: String,
     public val instructionWordType: WordType,
     public val dataWordType: WordType,
-    public val memorySize: Int,
-    public val memoryWordType: WordType,
     public val stackSize: Int,
     public val stackWordType: WordType,
 ) {
@@ -27,6 +26,11 @@ public abstract class Architecture(
      * The register file of the architecture.
      */
     public abstract val registers: RegisterFile
+
+    /**
+     * The memory map of the architecture.
+     */
+    public abstract val memoryMap: MemoryMap
 
     /**
      * The maximum size of a program on this architecture.
