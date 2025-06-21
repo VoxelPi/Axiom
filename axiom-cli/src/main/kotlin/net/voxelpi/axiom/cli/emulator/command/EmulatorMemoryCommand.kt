@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.arch.MemoryMap
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandProvider
+import net.voxelpi.axiom.cli.command.parser.computerULongParser
 import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import net.voxelpi.axiom.cli.util.ValueFormat
@@ -18,7 +19,6 @@ import net.voxelpi.axiom.instruction.ProgramElement
 import org.incendo.cloud.kotlin.extension.buildAndRegister
 import org.incendo.cloud.kotlin.extension.getOrNull
 import org.incendo.cloud.parser.standard.EnumParser.enumParser
-import org.incendo.cloud.parser.standard.IntegerParser.integerParser
 import org.incendo.cloud.parser.standard.LongParser.longParser
 
 class EmulatorMemoryCommand(
@@ -27,11 +27,11 @@ class EmulatorMemoryCommand(
 
     override fun registerCommands(commandManager: AxiomCommandManager) {
         commandManager.buildAndRegister("memory") {
-            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
+            required("address", computerULongParser())
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
-                val address: Int = context["address"]
+                val address = context.get<ULong>("address").toInt()
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
@@ -43,11 +43,11 @@ class EmulatorMemoryCommand(
 
         commandManager.buildAndRegister("memory") {
             literal("get")
-            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
+            required("address", computerULongParser())
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
-                val address: Int = context["address"]
+                val address = context.get<ULong>("address").toInt()
                 val format: ValueFormat = context.getOrDefault("format", ValueFormat.DECIMAL)
 
                 val computerState = runBlocking { computer.state() }
@@ -59,11 +59,11 @@ class EmulatorMemoryCommand(
 
         commandManager.buildAndRegister("memory") {
             literal("set")
-            required("address", integerParser(0, computer.architecture.memoryMap.size - 1))
+            required("address", computerULongParser())
             required("value", longParser())
 
             handler { context ->
-                val address: Int = context["address"]
+                val address = context.get<ULong>("address").toInt()
                 val value: ULong = computer.architecture.memoryMap.wordType.unsignedValueOf(context.get<Long>("value").toULong())
 
                 when (val mapping = computer.architecture.memoryMap.selectMapping(address)) {
@@ -89,13 +89,13 @@ class EmulatorMemoryCommand(
 
         commandManager.buildAndRegister("memory") {
             literal("dump")
-            required("from", integerParser(0, computer.architecture.memoryMap.size - 1))
-            required("to", integerParser(0, computer.architecture.memoryMap.size - 1))
+            required("from", computerULongParser())
+            required("to", computerULongParser())
             optional("format", enumParser(ValueFormat::class.java))
 
             handler { context ->
-                val from: Int = context["from"]
-                val to: Int = context["to"]
+                val from: Int = context.get<ULong>("from").toInt()
+                val to: Int = context.get<ULong>("to").toInt()
                 val format: ValueFormat? = context.getOrNull("format")
 
                 val computerState = runBlocking { computer.state() }
