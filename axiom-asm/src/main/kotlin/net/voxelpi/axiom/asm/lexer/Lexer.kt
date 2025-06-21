@@ -43,31 +43,33 @@ public class Lexer() {
         val statementTexts = mutableListOf<String>()
         var accumulatedText = ""
         for (splitText in splitStatementTexts) {
-            val text = accumulatedText + splitText
-            var i = accumulatedText.length
             var bracketOpen = accumulatedText.isNotEmpty()
 
             var isEscaped = false
-            while (i < text.length) {
+            for (c in splitText) {
                 if (isEscaped) {
                     isEscaped = false
                     continue
                 }
-                if (text[i] == '\\') {
+                if (c == '\\') {
                     isEscaped = true
                     continue
                 }
-                if (text[i] == '"') {
+                if (c == '"') {
                     bracketOpen = !bracketOpen
                 }
-                ++i
             }
 
+            val text = accumulatedText + splitText
             if (bracketOpen) {
                 accumulatedText = "$text;"
             } else {
                 statementTexts += text
+                accumulatedText = ""
             }
+        }
+        if (accumulatedText.isNotEmpty()) {
+            statementTexts += accumulatedText
         }
 
         var iStartColumn = 0
@@ -110,12 +112,19 @@ public class Lexer() {
                 val iStringStart = iSymbol // Index of opening string quote.
                 iSymbol += 1
                 var isEscaped = false
-                var characters = mutableListOf<Char>()
+                val characters = mutableListOf<Char>()
                 while (iSymbol < text.length) {
                     if (isEscaped) {
-                        characters += text[iSymbol]
-                        iSymbol += 1
+                        val escapedSymbol = when (val symbol = text[iSymbol]) {
+                            'b' -> '\b'
+                            'n' -> '\n'
+                            'r' -> '\r'
+                            't' -> '\t'
+                            else -> symbol
+                        }
+                        characters += escapedSymbol
                         isEscaped = false
+                        iSymbol += 1
                         continue
                     }
                     if (text[iSymbol] == '"') {
@@ -123,6 +132,7 @@ public class Lexer() {
                     }
                     if (text[iSymbol] == '\\') {
                         isEscaped = true
+                        iSymbol += 1
                         continue
                     }
                     characters += text[iSymbol]
@@ -155,7 +165,6 @@ public class Lexer() {
             }
 
             // Handle symbols.
-            var isSymbol = false
             for (symbol in SYMBOLS) {
                 if (text.startsWith(symbol, iSymbol)) {
                     // Ignore unary operators if the next character is a digit.

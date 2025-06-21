@@ -162,4 +162,23 @@ class LexerTest {
         val textToken = tokenStatements[0].tokens[0] as Token.StringText
         assertEquals(testText, textToken.value)
     }
+
+    @Test
+    fun `test escaped tokens`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit(
+            "test",
+            """
+            "\b\n\r\t"
+            """.trimIndent()
+        )
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(1, tokenStatements.size, "Invalid number of statements")
+        val statement = tokenStatements[0]
+        assertEquals(1, statement.tokens.size, "Invalid number of tokens in statement 1")
+
+        val textToken = tokenStatements[0].tokens[0] as Token.StringText
+        assertEquals("\b\n\r\t", textToken.value)
+    }
 }
