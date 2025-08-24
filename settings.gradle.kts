@@ -16,6 +16,7 @@ include("axiom-arch:axiom-arch-dev64")
 include("axiom-arch:axiom-arch-mcpc08")
 include("axiom-arch:axiom-arch-mcpc16")
 include("axiom-asm")
+include("axiom-bridge")
 include("axiom-cli")
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
