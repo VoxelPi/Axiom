@@ -11,14 +11,28 @@ public class AxiomBridgeConnection(private val port: SerialPort) : AutoCloseable
 
     private val inputChannel = port.inputChannel()
 
-    private val inputStream = port.inputStream
+    private val outputStream = port.outputStream
 
     override fun close() {
         port.closePort()
     }
 
     public fun sendPacket(payload: ByteArray) {
+        // Calculate the size.
+        val size = payload.size
+        val sizeBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(size).put(payload).array()
 
+        // Compute the packet hash.
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(sizeBytes)
+        digest.update(payload)
+        val hashBytes = digest.digest()
+
+        // Send the packet.
+        outputStream.write(hashBytes)
+        outputStream.write(sizeBytes)
+        outputStream.write(payload)
+        outputStream.flush()
     }
 
     public suspend fun readPacket(): Result<ByteArray> = runCatching {
