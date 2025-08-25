@@ -118,6 +118,22 @@ class AssemblerCommand(
     }
 }
 
+class BridgeCommand(
+    val architectures: Map<String, Architecture>,
+) : CliktCommand(name = "bridge") {
+
+    val architecture by option("-a", "--arch", help = "Target architecture to be emulated")
+        .choice(architectures)
+        .default(AX08Architecture(AX08Architecture.Variant.LITE))
+    val port by option("-p", "--port", help = "The serial port on which the computer is connected")
+    val baudRate by option("-b", "--baud", help = "The serial baud rate that should be used")
+        .int()
+
+    override fun run() {
+        echo("Not yet implemented", err = true)
+    }
+}
+
 class EmulatorCommand(
     val architectures: Map<String, Architecture>,
 ) : CliktCommand(name = "emulator") {
@@ -149,6 +165,10 @@ fun main(args: Array<String>) {
     ).associateBy(Architecture::id)
 
     AxiomCommand()
-        .subcommands(AssemblerCommand(architectures), EmulatorCommand(architectures))
+        .subcommands(
+            AssemblerCommand(architectures),
+            BridgeCommand(architectures),
+            EmulatorCommand(architectures),
+        )
         .main(args)
 }
