@@ -1,17 +1,15 @@
 package net.voxelpi.axiom.bridge
 
 import com.fazecast.jSerialComm.SerialPort
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import net.voxelpi.axiom.bridge.util.inputChannel
+import net.voxelpi.axiom.bridge.util.receiveArray
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.MessageDigest
 
 public class AxiomBridgeConnection(private val port: SerialPort) : AutoCloseable {
 
-    init {
-        port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0)
-    }
+    private val inputChannel = port.inputChannel()
 
     private val inputStream = port.inputStream
 
@@ -23,53 +21,28 @@ public class AxiomBridgeConnection(private val port: SerialPort) : AutoCloseable
 
     }
 
-    public suspend fun readPacket(): Result<ByteArray> {
+    public suspend fun readPacket(): Result<ByteArray> = runCatching {
         // Read packet hash.
-        val hashBytes = readBytes(32).getOrElse {
-            return Result.failure(it)
-        }
+        val hashBytes = inputChannel.receiveArray(32)
 
         // Read packet size.
-        val sizeBytes = readBytes(4).getOrElse {
-            return Result.failure(it)
-        }
+        val sizeBytes = inputChannel.receiveArray(4)
         val size = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt()
-        if (size < 0) {
-            throw IllegalStateException("Invalid payload size")
-        }
+        check(size >= 0) { "Invalid payload size $size" }
 
         // Read packet payload.
-        val payload = readBytes(size).getOrElse {
-            return Result.failure(it)
-        }
+        val payload = inputChannel.receiveArray(size)
 
         // Compute the packet hash.
         val digest = MessageDigest.getInstance("SHA-256")
         digest.update(sizeBytes)
         digest.update(payload)
-        val computedHash = digest.digest()
+        val computedHashBytes = digest.digest()
 
         // Verify the packet hash.
-        if (!hashBytes.contentEquals(computedHash)) {
-            return Result.failure(IllegalStateException("Hash mismatch"))
-        }
+        check(hashBytes.contentEquals(computedHashBytes)) { "Hash mismatch" }
 
         // Return the payload
-        return Result.success(payload)
-    }
-
-    private suspend fun readBytes(nBytes: Int): Result<ByteArray> = withContext(Dispatchers.IO) {
-        val buffer = ByteArray(nBytes)
-        var offset = 0
-
-        while (offset < nBytes) {
-            val read = inputStream.read(buffer, offset, nBytes - offset)
-            if (read == -1) {
-                return@withContext Result.failure(IllegalStateException("Stream closed while reading"))
-            }
-            offset += read
-        }
-
-        return@withContext Result.success(buffer)
+        return@runCatching payload
     }
 }
