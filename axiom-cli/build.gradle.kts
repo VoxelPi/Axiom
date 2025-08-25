@@ -10,7 +10,6 @@ dependencies {
     // Kotlin
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.reflect)
-    implementation(libs.kotlinx.cli)
     implementation(libs.bundles.kotlinx.coroutines)
 
     // Project
@@ -30,6 +29,7 @@ dependencies {
     runtimeOnly(libs.log4j.slf4j.impl)
 
     // Other
+    implementation(libs.clikt)
     implementation(libs.cloud.core)
     implementation(libs.cloud.kotlin)
     implementation(libs.jline)

@@ -8,6 +8,7 @@ import org.incendo.cloud.kotlin.extension.suggestionProvider
 import org.incendo.cloud.parser.standard.StringParser.quotedStringParser
 import org.incendo.cloud.suggestion.SuggestionProvider
 import java.io.File
+import kotlin.io.path.Path
 
 class EmulatorLoadCommand(val emulator: Emulator) : AxiomCommandProvider {
 
@@ -24,7 +25,7 @@ class EmulatorLoadCommand(val emulator: Emulator) : AxiomCommandProvider {
 
             handler { context ->
                 val inputFile: String = context.get("program")
-                emulator.loadProgram(inputFile)
+                emulator.loadProgram(Path(inputFile))
             }
         }
 

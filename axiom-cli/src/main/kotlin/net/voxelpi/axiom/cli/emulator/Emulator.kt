@@ -56,7 +56,7 @@ import kotlin.io.path.pathString
 
 class Emulator(
     val architecture: Architecture,
-    initialProgram: String? = null,
+    initialProgram: Path? = null,
 ) {
 
     val computer = EmulatedComputer(architecture, ::handleTrace, ::handleInputRequest, ::handleOutput, ::handleWarning)
@@ -106,8 +106,8 @@ class Emulator(
 
     private var lastInputFilePath: Path? = null
 
-    fun loadProgram(filename: String) {
-        val inputFilePath = Path(filename).absolute().normalize()
+    fun loadProgram(file: Path) {
+        val inputFilePath = file.absolute().normalize()
         lastInputFilePath = inputFilePath
 
         if (!inputFilePath.exists() || !inputFilePath.isRegularFile()) {
@@ -144,7 +144,7 @@ class Emulator(
             terminal.writer().println("$PREFIX_EMULATOR No program was loaded yet.")
             return
         }
-        loadProgram(path.absolutePathString())
+        loadProgram(path)
     }
 
     init {
