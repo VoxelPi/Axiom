@@ -58,10 +58,8 @@ public object AX08Architecture : Architecture(
         // Encode condition register.
         encodedInstruction = encodedInstruction or ((instruction.conditionRegister.address.toUInt() and 0b111u) shl 21)
 
-        // Encode output register address (except if the instruction has an explicit output to the program counter).
-        if (instruction.operation !in pcOutputOperations) {
-            encodedInstruction = encodedInstruction or ((instruction.outputRegister.address.toUInt() and 0b111u) shl 18)
-        }
+        // Encode output register address.
+        encodedInstruction = encodedInstruction or ((instruction.outputRegister.address.toUInt() and 0b111u) shl 18)
 
         // Encode input A.
         encodedInstruction = when (val value = instruction.inputA) {
