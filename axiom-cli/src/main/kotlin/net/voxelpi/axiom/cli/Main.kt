@@ -6,8 +6,8 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.boolean
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.path
@@ -49,17 +49,16 @@ class AssemblerCommand(
 
     val input by argument(help = "The input file")
         .path(mustExist = true, canBeFile = true, canBeDir = false, mustBeReadable = true)
-    val output by option(help = "The output file")
+    val output by argument(help = "The output file")
         .path()
-    val position by option(help = "The position of the program in memory")
+        .optional()
+    val position by option("--position", help = "The position of the program in memory")
         .int()
         .default(0)
     val generateRaw by option("-r", "--raw", help = "If a raw axm file should be generated")
-        .boolean()
-        .default(false)
-    val inverseInstructionByteOrder by option("-i", "--inverse", help = "If the instruction byte order should be inverted")
-        .boolean()
-        .default(false)
+        .flag()
+    val inverseInstructionByteOrder by option("--inverse", help = "If the instruction byte order should be inverted")
+        .flag()
     val architecture by option("-a", "--arch", help = "Target architecture to assembled for")
         .choice(architectures)
         .default(AX08Architecture)
