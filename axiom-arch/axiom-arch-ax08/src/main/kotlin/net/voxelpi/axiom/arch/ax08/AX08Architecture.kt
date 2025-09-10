@@ -11,13 +11,20 @@ import net.voxelpi.axiom.register.RegisterFile
 import net.voxelpi.axiom.register.RegisterVariable
 import net.voxelpi.axiom.util.biMapOf
 
-public object AX08Architecture : Architecture(
-    "ax08",
-    WordType.INT32,
-    WordType.INT8,
-    16,
-    WordType.INT16,
-) {
+public class AX08Architecture(
+    public val variant: Variant,
+) : Architecture(
+        variant.id,
+        WordType.INT32,
+        WordType.INT8,
+        16,
+        WordType.INT16,
+    ) {
+
+    public enum class Variant(public val id: String) {
+        NORMAL("ax08"),
+        LITE("ax08l"),
+    }
 
     override val registers: RegisterFile = RegisterFile.create("PC", WordType.INT16) {
         // Create the PC variables.
@@ -27,7 +34,7 @@ public object AX08Architecture : Architecture(
 
         // Create the index register.
         indexRegister = createRegister("INDEX", WordType.INT16)
-        createVariable("I1", indexRegister!!, 10, writeable = true, needsMode2 = true, mask = 0xFF00UL)
+        createVariable("I1", indexRegister!!, if (variant == Variant.LITE) 11 else 10, writeable = true, needsMode2 = true, mask = 0xFF00UL)
         createVariable("I1_0", indexRegister!!, WordType.INT8, 0, 10, readable = true)
         createVariable("I1_1", indexRegister!!, WordType.INT8, 1, 11, readable = true)
 
@@ -50,7 +57,14 @@ public object AX08Architecture : Architecture(
         var encodedInstruction = 0.toUInt()
 
         // Encode operation.
-        encodedInstruction = encodedInstruction or ((operationMapping.inverse[instruction.operation]!! and 0b11111u) shl 27)
+        val opcodeMapping = when (variant) {
+            Variant.NORMAL -> operationMapping
+            Variant.LITE -> operationMappingLite
+        }
+        if (instruction.operation !in opcodeMapping.inverse) {
+            return Result.failure(IllegalArgumentException("Unsupported operation ${instruction.operation}"))
+        }
+        encodedInstruction = encodedInstruction or ((opcodeMapping.inverse[instruction.operation]!! and 0b11111u) shl 27)
 
         // Encode condition.
         encodedInstruction = encodedInstruction or ((conditionMapping.inverse[instruction.condition]!! and 0b111u) shl 24)
@@ -177,6 +191,41 @@ public object AX08Architecture : Architecture(
         // 0x1B is not implemented
         0x1Cu to Operation.CALL_2,
         0x1Du to Operation.RETURN,
+        // 0x1E is not implemented
+        0x1Fu to Operation.BREAK,
+    )
+
+    private val operationMappingLite = biMapOf(
+        0x00u to Operation.LOAD_2,
+        0x01u to Operation.LOAD,
+        0x02u to Operation.AND,
+        // 0x03 is not implemented
+        // 0x04 is not implemented
+        // 0x05 is not implemented
+        0x06u to Operation.XOR,
+        // 0x07 is not implemented
+        0x08u to Operation.ADD,
+        // 0x09 is not implemented
+        // 0x0A is not implemented
+        // 0x0B is not implemented
+        0x0Cu to Operation.SHIFT_LEFT,
+        0x0Du to Operation.SHIFT_RIGHT,
+        // 0x0E is not implemented
+        // 0x0F is not implemented
+        0x10u to Operation.BIT_GET,
+        // 0x11 is not implemented
+        // 0x12 is not implemented
+        // 0x13 is not implemented
+        0x14u to Operation.MEMORY_LOAD,
+        0x15u to Operation.MEMORY_STORE,
+        // 0x16 is not implemented
+        // 0x17 is not implemented
+        0x18u to Operation.IO_POLL,
+        0x19u to Operation.IO_READ,
+        0x1Au to Operation.IO_WRITE,
+        // 0x1B is not implemented
+        // 0x1Cu is not implemented
+        // 0x1Du is not implemented
         // 0x1E is not implemented
         0x1Fu to Operation.BREAK,
     )

@@ -61,7 +61,7 @@ class AssemblerCommand(
         .flag()
     val architecture by option("-a", "--arch", help = "Target architecture to assembled for")
         .choice(architectures)
-        .default(AX08Architecture)
+        .default(AX08Architecture(AX08Architecture.Variant.LITE))
 
     override fun run() {
         val inputFilePath = input.absolute().normalize()
@@ -105,7 +105,11 @@ class AssemblerCommand(
         }
 
         if (architecture.hasEncodedFormat) {
-            val encodedProgram = architecture.encodeProgram(program, invertByteOrder = inverseInstructionByteOrder).getOrThrow()
+            val encodedProgram = architecture.encodeProgram(program, invertByteOrder = inverseInstructionByteOrder).getOrElse { exception ->
+                // TODO: Maybe generate a sourced exception?
+                echo(Text(generateCompilationStackTraceMessage(exception)), err = true)
+                exitProcess(1)
+            }
             outputFilePath.writeBytes(encodedProgram.toByteArray())
             println("Assembled ${program.data.size} instructions (${encodedProgram.size} bytes)")
         } else {
@@ -123,7 +127,7 @@ class EmulatorCommand(
         .optional()
     val architecture by option("-a", "--arch", help = "Target architecture to be emulated")
         .choice(architectures)
-        .default(AX08Architecture)
+        .default(AX08Architecture(AX08Architecture.Variant.LITE))
 
     override fun run() {
         Emulator(architecture, program)
@@ -134,7 +138,8 @@ fun main(args: Array<String>) {
     val terminal = Terminal()
 
     val architectures: Map<String, Architecture> = listOf(
-        AX08Architecture,
+        AX08Architecture(AX08Architecture.Variant.NORMAL),
+        AX08Architecture(AX08Architecture.Variant.LITE),
         DEV08Architecture,
         DEV16Architecture,
         DEV32Architecture,
