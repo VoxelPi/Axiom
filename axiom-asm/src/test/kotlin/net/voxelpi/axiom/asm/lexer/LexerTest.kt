@@ -181,4 +181,23 @@ class LexerTest {
         val textToken = tokenStatements[0].tokens[0] as Token.StringText
         assertEquals("\b\n\r\t", textToken.value)
     }
+
+    @Test
+    fun `test characters`() {
+        val lexer = Lexer()
+        val unit = CompilationUnit(
+            "test",
+            """
+            'l'
+            """.trimIndent()
+        )
+
+        val tokenStatements = lexer.tokenize(unit)
+        assertEquals(1, tokenStatements.size, "Invalid number of statements")
+        val statement = tokenStatements[0]
+        assertEquals(1, statement.tokens.size, "Invalid number of tokens in statement 1")
+
+        val textToken = tokenStatements[0].tokens[0] as Token.Integer
+        assertEquals('l'.code.toLong(), textToken.value)
+    }
 }

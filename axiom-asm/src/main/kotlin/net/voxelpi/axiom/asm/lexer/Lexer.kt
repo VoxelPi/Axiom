@@ -204,6 +204,24 @@ public class Lexer() {
             val tokenText = text.substring(iTokenStart, iTokenEnd)
             val wordSource = SourceLink.CompilationUnitSlice(unit, statementIndex + iTokenStart, lineNumber, columnNumber + iTokenStart, iTokenEnd - iTokenStart)
 
+            // Characters.
+            if (tokenText.startsWith('\'') && tokenText.endsWith('\'')) {
+                val symbol = when (val characterText = tokenText.substring(1, tokenText.length - 1)) {
+                    "\\b" -> '\b'.code.toLong()
+                    "\\n" -> '\n'.code.toLong()
+                    "\\r" -> '\r'.code.toLong()
+                    "\\t" -> '\t'.code.toLong()
+                    else -> {
+                        if (characterText.length != 1) {
+                            throw SourceCompilationException(wordSource, "Invalid character '$characterText'")
+                        }
+                        characterText.codePointAt(0).toLong()
+                    }
+                }
+                statement.add(Token.Integer(symbol, wordSource))
+                continue
+            }
+
             // Integers.
             val parsedInteger = parseInteger(tokenText)
             if (parsedInteger != null) {
