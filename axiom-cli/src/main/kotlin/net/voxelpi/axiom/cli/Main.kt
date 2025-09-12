@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.cli
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -25,6 +26,7 @@ import net.voxelpi.axiom.arch.mcpc08.MCPC08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.asm.source.SourceLink
+import net.voxelpi.axiom.bridge.AxiomBridge
 import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import kotlin.io.path.Path
@@ -34,6 +36,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
@@ -118,11 +121,20 @@ class AssemblerCommand(
     }
 }
 
-class BridgeCommand(
-    val architectures: Map<String, Architecture>,
-) : CliktCommand(name = "bridge") {
+object BridgeCommand : NoOpCliktCommand(name = "bridge") {
 
-    val architecture by option("-a", "--arch", help = "Target architecture to be emulated")
+    override fun aliases(): Map<String, List<String>> = mapOf(
+        "flash" to listOf("upload")
+    )
+}
+
+class BridgeUploadCommand(
+    val architectures: Map<String, Architecture>,
+) : CliktCommand(name = "upload") {
+
+    val programFile by argument(help = "The file to upload").path(mustExist = true, mustBeReadable = true)
+
+    val architecture by option("-a", "--arch", help = "Target architecture")
         .choice(architectures)
         .default(AX08Architecture(AX08Architecture.Variant.LITE))
     val port by option("-p", "--port", help = "The serial port on which the computer is connected")
@@ -130,7 +142,11 @@ class BridgeCommand(
         .int()
 
     override fun run() {
-        echo("Not yet implemented", err = true)
+        echo("Uploading ${programFile.normalize().absolutePathString()}")
+
+        AxiomBridge.connect(port!!, 115200, architecture).getOrThrow().use { bridge ->
+            bridge.uploadProgram(programFile.readBytes())
+        }
     }
 }
 
@@ -167,7 +183,9 @@ fun main(args: Array<String>) {
     AxiomCommand()
         .subcommands(
             AssemblerCommand(architectures),
-            BridgeCommand(architectures),
+            BridgeCommand.apply {
+                subcommands(BridgeUploadCommand(architectures))
+            },
             EmulatorCommand(architectures),
         )
         .main(args)
