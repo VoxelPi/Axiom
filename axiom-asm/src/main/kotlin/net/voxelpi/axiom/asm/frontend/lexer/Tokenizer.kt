@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.frontend.lexer
 
 import net.voxelpi.axiom.asm.source.SourceReference
 import net.voxelpi.axiom.asm.source.SourceUnit
+import kotlin.streams.toList
 
 internal object Tokenizer {
 
@@ -65,27 +66,32 @@ internal object Tokenizer {
         unit: SourceUnit,
     ): List<Token> {
         val tokens: MutableList<Token> = mutableListOf()
+        val codePoints = text.codePoints().toList()
 
         var iStartWhitespace: Int? = null
 
-        var iSymbol = 0
-        symbol_loop@ while (iSymbol < text.length) {
+        var iCodePoint = 0
+        symbol_loop@ while (iCodePoint < codePoints.size) {
             // Get the current character.
-            val c = text[iSymbol]
+            // val c = text[iSymbol]
+            val codePoint = codePoints[iCodePoint]
+            val iChar = text.offsetByCodePoints(0, iCodePoint)
+            // val codePoint = text.codePointAt(iSymbol)
+            // val codePointWidth = text.offsetByCodePoints(iSymbol, 1)
 
             // Ignore whitespace.
-            if (c.isWhitespace()) {
+            if (Character.isWhitespace(codePoint)) {
                 if (iStartWhitespace == null) {
-                    iStartWhitespace = iSymbol
+                    iStartWhitespace = iChar
                 }
-                ++iSymbol
+                ++iCodePoint
                 continue
             } else {
                 if (iStartWhitespace != null) {
                     val whitespaceSource = SourceReference.UnitSlice(
                         unit,
                         lineStartIndex + iStartWhitespace,
-                        iSymbol - iStartWhitespace,
+                        iChar - iStartWhitespace,
                     )
                     tokens.add(Token.Separator.Weak(whitespaceSource))
                     iStartWhitespace = null
@@ -93,26 +99,26 @@ internal object Tokenizer {
             }
 
             // Text token
-            val wordMatch = WORD_PATTERN.find(text.substring(iSymbol))
+            val wordMatch = WORD_PATTERN.find(text.substring(iChar))
             if (wordMatch != null) {
                 val tokenSource = SourceReference.UnitSlice(
                     unit,
-                    lineStartIndex + iSymbol,
+                    lineStartIndex + iChar,
                     wordMatch.value.length,
                 )
                 tokens.add(Token.Symbol(wordMatch.value, tokenSource))
-                iSymbol += wordMatch.value.length
+                iCodePoint += wordMatch.value.codePointCount(0, wordMatch.value.length)
                 continue
             }
 
             // Symbol token
             val symbolSource = SourceReference.UnitSlice(
                 unit,
-                lineStartIndex + iSymbol,
+                lineStartIndex + iChar,
                 1,
             )
-            tokens.add(Token.Symbol(c.toString(), symbolSource))
-            iSymbol += 1
+            tokens.add(Token.Symbol(String(Character.toChars(codePoint)), symbolSource))
+            iCodePoint += 1
         }
 
         return tokens
