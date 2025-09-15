@@ -65,7 +65,7 @@ class CharacterTokenTransformationTest {
             """.trimIndent()
         )
         var tokens = Tokenizer.tokenize(sourceUnit)
-        assertEquals(4, tokens.size) // TODO: Should be 3, but the utf8 parts get split by the tokenizer.
+        assertEquals(3, tokens.size)
 
         tokens = CharacterTokenTransformation.transform(tokens)
         assertEquals(1, tokens.size)
