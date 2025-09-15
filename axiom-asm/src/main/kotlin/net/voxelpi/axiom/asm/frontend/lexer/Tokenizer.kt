@@ -33,7 +33,7 @@ internal object Tokenizer {
             // Handle whitespace.
             val iFirstNoneWhitespace = nonCommentText.indexOfFirst { !it.isWhitespace() }
             val iLastNoneWhitespaceWhitespace = nonCommentText.indexOfLast { !it.isWhitespace() }
-            check (iFirstNoneWhitespace != -1) { "Blank line detected, should be already handled" }
+            check(iFirstNoneWhitespace != -1) { "Blank line detected, should be already handled" }
             check(iLastNoneWhitespaceWhitespace != -1) { "Blank line detected, should be already handled" }
             if (iWhitespaceStart != null) {
                 val iWhitespaceEnd = iStartIndex + iFirstNoneWhitespace

@@ -10,7 +10,7 @@ public object Assembler {
         programPath: Path,
         architecture: Architecture,
         includeDirectories: List<Path>,
-    ) : Program {
+    ): Program {
         TODO()
     }
 }
