@@ -14,12 +14,14 @@ public object CharacterTokenTransformation : TokenTransformation {
         while (iToken < tokens.size) {
             val token = tokens[iToken]
             if (token !is Token.Symbol) {
+                transformedTokens.add(token)
                 iToken += 1
                 continue
             }
 
             // Check if token is the opening of a char literal.
             if (token.symbol != "'") {
+                transformedTokens.add(token)
                 iToken += 1
                 continue
             }
