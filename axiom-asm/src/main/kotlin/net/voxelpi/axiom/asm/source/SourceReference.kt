@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.source
 
+import net.voxelpi.axiom.asm.exception.CompilationException
 import kotlin.ranges.coerceAtMost
 import kotlin.text.count
 import kotlin.text.indexOfLast
@@ -67,4 +68,18 @@ public sealed interface SourceReference {
         override val text: String,
         val generator: String,
     ) : SourceReference
+}
+
+/**
+ * Joins a list of unit slice references to a single unit slice reference.
+ */
+public fun List<SourceReference.UnitSlice>.join(): SourceReference.UnitSlice {
+    if (isEmpty()) {
+        throw CompilationException("Unable to join empty token list")
+    }
+
+    val iStart = minOf { it.index }
+    val iEnd = maxOf { it.index + it.length }
+    val length = iEnd - iStart
+    return SourceReference.UnitSlice(first().unit, iStart, length)
 }
