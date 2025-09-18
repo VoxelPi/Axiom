@@ -33,6 +33,11 @@ public sealed interface Token : Sourced {
         override val source: SourceReference.UnitSlice,
     ) : Token
 
+    public data class Text(
+        public val value: String,
+        override val source: SourceReference.UnitSlice,
+    ) : Token
+
     public data class Bracket(
         val type: BracketType,
         val tokens: List<Token>,
