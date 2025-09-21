@@ -1,7 +1,7 @@
 package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.frontend.lexer.Tokenizer
 import net.voxelpi.axiom.asm.language.BracketType
 import net.voxelpi.axiom.asm.source.SourceUnit
@@ -47,24 +47,24 @@ class BracketTokenTransformationTest {
         )
 
         assertEquals(3, tokens.size)
-        assertInstanceOf<Token.Symbol>(tokens[0])
-        assertEquals("a", (tokens[0] as Token.Symbol).symbol)
-        assertInstanceOf<Token.Separator.Weak>(tokens[1])
-        assertInstanceOf<Token.Bracket>(tokens[2])
-        assertEquals(BracketType.CURLY, (tokens[2] as Token.Bracket).type)
+        assertInstanceOf<LexerToken.Text>(tokens[0])
+        assertEquals("a", (tokens[0] as LexerToken.Text).value)
+        assertInstanceOf<LexerToken.Separator.Weak>(tokens[1])
+        assertInstanceOf<LexerToken.Bracket>(tokens[2])
+        assertEquals(BracketType.CURLY, (tokens[2] as LexerToken.Bracket).type)
 
-        val firstBracketToken = (tokens[2] as Token.Bracket).tokens
+        val firstBracketToken = (tokens[2] as LexerToken.Bracket).tokens
         assertEquals(3, firstBracketToken.size)
-        assertInstanceOf<Token.Symbol>(firstBracketToken[0])
-        assertEquals("b", (firstBracketToken[0] as Token.Symbol).symbol)
-        assertInstanceOf<Token.Separator.Weak>(firstBracketToken[1])
-        assertInstanceOf<Token.Bracket>(firstBracketToken[2])
-        assertEquals(BracketType.CURLY, (firstBracketToken[2] as Token.Bracket).type)
+        assertInstanceOf<LexerToken.Text>(firstBracketToken[0])
+        assertEquals("b", (firstBracketToken[0] as LexerToken.Text).value)
+        assertInstanceOf<LexerToken.Separator.Weak>(firstBracketToken[1])
+        assertInstanceOf<LexerToken.Bracket>(firstBracketToken[2])
+        assertEquals(BracketType.CURLY, (firstBracketToken[2] as LexerToken.Bracket).type)
 
-        val secondBracketToken = (firstBracketToken[2] as Token.Bracket).tokens
+        val secondBracketToken = (firstBracketToken[2] as LexerToken.Bracket).tokens
         assertEquals(1, secondBracketToken.size)
-        assertInstanceOf<Token.Symbol>(secondBracketToken[0])
-        assertEquals("c", (secondBracketToken[0] as Token.Symbol).symbol)
+        assertInstanceOf<LexerToken.Text>(secondBracketToken[0])
+        assertEquals("c", (secondBracketToken[0] as LexerToken.Text).value)
     }
 
     @Test

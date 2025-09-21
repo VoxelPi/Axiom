@@ -1,19 +1,19 @@
 package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.source.SourceReference
 
 internal object TextTokenTransformation : TokenTransformation {
 
-    override fun transform(tokens: List<Token>): List<Token> {
-        val transformedTokens = mutableListOf<Token>()
+    override fun transform(tokens: List<LexerToken>): List<LexerToken> {
+        val transformedTokens = mutableListOf<LexerToken>()
 
         var iToken = 0
         while (iToken < tokens.size) {
             // Wait for an opening quote.
             val token = tokens[iToken]
-            if (token !is Token.Symbol || token.symbol != "\"") {
+            if (token !is LexerToken.Symbol || token.symbol != "\"") {
                 transformedTokens.add(token)
                 iToken += 1
                 continue
@@ -26,7 +26,7 @@ internal object TextTokenTransformation : TokenTransformation {
             var escaped = false
             while (iToken < tokens.size) {
                 when (val token = tokens[iToken]) {
-                    is Token.Symbol -> {
+                    is LexerToken.Symbol -> {
                         if (escaped) {
                             escaped = false
                         } else {
@@ -36,8 +36,8 @@ internal object TextTokenTransformation : TokenTransformation {
                             }
                         }
                     }
-                    is Token.Separator.Normal -> throw SourcedCompilationException(token.source, "Invalid newline in string literal: $token")
-                    is Token.Text -> throw SourcedCompilationException(token.source, "Invalid token in string literal: $token")
+                    is LexerToken.Separator.Normal -> throw SourcedCompilationException(token.source, "Invalid newline in string literal: $token")
+                    is LexerToken.StringLiteral -> throw SourcedCompilationException(token.source, "Invalid token in string literal: $token")
                     else -> {
                         escaped = false
                     }
@@ -60,7 +60,7 @@ internal object TextTokenTransformation : TokenTransformation {
                 content = content.replace(escapedSymbol, replacement)
             }
 
-            transformedTokens.add(Token.Text(content, source))
+            transformedTokens.add(LexerToken.StringLiteral(content, source))
         }
 
         return transformedTokens

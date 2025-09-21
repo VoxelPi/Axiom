@@ -1,16 +1,16 @@
 package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.language.BracketType
 import net.voxelpi.axiom.asm.source.SourceReference
 
 internal object BracketTokenTransformation : TokenTransformation {
 
-    override fun transform(tokens: List<Token>): List<Token> {
-        val outputTokens = mutableListOf<Token>()
+    override fun transform(tokens: List<LexerToken>): List<LexerToken> {
+        val outputTokens = mutableListOf<LexerToken>()
         val scopeStarts: ArrayDeque<Pair<BracketType, SourceReference.UnitSlice>> = ArrayDeque()
-        val scopes: ArrayDeque<MutableList<Token>> = ArrayDeque(listOf(outputTokens))
+        val scopes: ArrayDeque<MutableList<LexerToken>> = ArrayDeque(listOf(outputTokens))
 
         var iToken = 0
         while (iToken < tokens.size) {
@@ -20,7 +20,7 @@ internal object BracketTokenTransformation : TokenTransformation {
             iToken += 1
 
             // If the token is not a symbol, it can simply put into the current scope.
-            if (token !is Token.Symbol) {
+            if (token !is LexerToken.Symbol) {
                 currentScope.add(token)
                 continue
             }
@@ -45,7 +45,7 @@ internal object BracketTokenTransformation : TokenTransformation {
 
                 // Create the bracket token.
                 val bracketScopeTokens = scopes.removeLast()
-                val bracketToken = Token.Bracket(
+                val bracketToken = LexerToken.Bracket(
                     bracketType,
                     bracketScopeTokens,
                     openingBracketSource,

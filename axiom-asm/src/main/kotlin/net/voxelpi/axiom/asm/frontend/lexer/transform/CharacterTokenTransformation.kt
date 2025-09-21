@@ -1,19 +1,19 @@
 package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.source.SourceReference
 import kotlin.streams.toList
 
 public object CharacterTokenTransformation : TokenTransformation {
 
-    override fun transform(tokens: List<Token>): List<Token> {
-        val transformedTokens = mutableListOf<Token>()
+    override fun transform(tokens: List<LexerToken>): List<LexerToken> {
+        val transformedTokens = mutableListOf<LexerToken>()
 
         var iToken = 0
         while (iToken < tokens.size) {
             val token = tokens[iToken]
-            if (token !is Token.Symbol) {
+            if (token !is LexerToken.Symbol) {
                 transformedTokens.add(token)
                 iToken += 1
                 continue
@@ -32,7 +32,7 @@ public object CharacterTokenTransformation : TokenTransformation {
             var escaped = false
             while (iClosingQuote < tokens.size) {
                 val token = tokens[iClosingQuote]
-                if (token !is Token.Symbol) {
+                if (token !is LexerToken.Symbol) {
                     iClosingQuote += 1
                     escaped = false
                     continue
@@ -77,7 +77,7 @@ public object CharacterTokenTransformation : TokenTransformation {
 
             // Handle normal characters.
             if (contentCodePoints.size == 1) {
-                transformedTokens.add(Token.Integer(contentCodePoints[0].toLong(), source))
+                transformedTokens.add(LexerToken.Integer(contentCodePoints[0].toLong(), source))
                 continue
             }
 
@@ -87,7 +87,7 @@ public object CharacterTokenTransformation : TokenTransformation {
                 if (escapedChar !in ESCAPED_CHARACTER_MAPPING) {
                     throw SourcedCompilationException(source, "Invalid escaped character '$escapedChar'")
                 }
-                transformedTokens.add(Token.Integer(ESCAPED_CHARACTER_MAPPING[escapedChar]!!.code.toLong(), source))
+                transformedTokens.add(LexerToken.Integer(ESCAPED_CHARACTER_MAPPING[escapedChar]!!.code.toLong(), source))
                 continue
             }
 

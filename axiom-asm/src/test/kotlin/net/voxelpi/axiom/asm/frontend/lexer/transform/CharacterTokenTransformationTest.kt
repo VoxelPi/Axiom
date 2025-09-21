@@ -1,7 +1,7 @@
 package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.frontend.lexer.Tokenizer
 import net.voxelpi.axiom.asm.source.SourceUnit
 import org.junit.jupiter.api.assertThrows
@@ -53,7 +53,7 @@ class CharacterTokenTransformationTest {
 
         tokens = CharacterTokenTransformation.transform(tokens)
         assertEquals(1, tokens.size)
-        assertEquals("ä".codePointAt(0).toLong(), (tokens[0] as? Token.Integer)?.value)
+        assertEquals("ä".codePointAt(0).toLong(), (tokens[0] as? LexerToken.Integer)?.value)
     }
 
     @Test
@@ -69,7 +69,7 @@ class CharacterTokenTransformationTest {
 
         tokens = CharacterTokenTransformation.transform(tokens)
         assertEquals(1, tokens.size)
-        assertEquals("💀".codePointAt(0).toLong(), (tokens[0] as? Token.Integer)?.value)
+        assertEquals("💀".codePointAt(0).toLong(), (tokens[0] as? LexerToken.Integer)?.value)
     }
 
     @Test
