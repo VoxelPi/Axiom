@@ -1,12 +1,12 @@
 package net.voxelpi.axiom.asm.frontend.parser
 
-import net.voxelpi.axiom.asm.frontend.lexer.Token
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.frontend.parser.value.ValueParser
 import net.voxelpi.axiom.asm.source.SourcedValue
 import net.voxelpi.axiom.asm.source.join
 
 internal class TokenReader(
-    private val tokens: List<Token>,
+    private val tokens: List<LexerToken>,
     iStart: Int = 0,
 ) {
 
@@ -18,13 +18,13 @@ internal class TokenReader(
         snapshots.addLast(index)
     }
 
-    fun revert(): List<Token> {
+    fun revert(): List<LexerToken> {
         val iEnd = index
         index = snapshots.removeLast()
         return tokens.subList(index, iEnd)
     }
 
-    fun accept(): List<Token> {
+    fun accept(): List<LexerToken> {
         val startIndex = snapshots.removeLast()
         return tokens.subList(startIndex, index)
     }
@@ -36,14 +36,22 @@ internal class TokenReader(
         return tokens.size - index
     }
 
-    fun readToken(): Token? {
+    val head: LexerToken?
+        get() {
+            if (index >= tokens.size) {
+                return null
+            }
+            return tokens[index]
+        }
+
+    fun readToken(): LexerToken? {
         if (index >= tokens.size) {
             return null
         }
         return tokens[index++]
     }
 
-    fun readTokenIf(predicate: (token: Token) -> Boolean): Token? {
+    fun readTokenIf(predicate: (token: LexerToken) -> Boolean): LexerToken? {
         if (index >= tokens.size) {
             return null
         }
@@ -57,20 +65,24 @@ internal class TokenReader(
         return token
     }
 
-    inline fun <reified T : Token> readTypedToken(): T? {
+    inline fun <reified T : LexerToken> readTypedToken(): T? {
         return readTokenIf { it is T } as T?
     }
 
-    inline fun <reified T : Token> readTypedTokenIf(noinline predicate: (token: T) -> Boolean): T? {
+    inline fun <reified T : LexerToken> readTypedTokenIf(noinline predicate: (token: T) -> Boolean): T? {
         return readTokenIf { it is T && predicate(it) } as T?
     }
 
     fun readSymbol(symbol: String): Boolean {
-        return readTypedTokenIf<Token.Symbol> { it.symbol == symbol } != null
+        return readTypedTokenIf<LexerToken.Symbol> { it.symbol == symbol } != null
     }
 
     fun readAnySeparator(): Int {
         return readSeparator(0..3)!!
+    }
+
+    fun readSeparator(level: Int): Int? {
+        return readSeparator(level..level)
     }
 
     fun readSeparator(levels: IntRange): Int? {
@@ -81,15 +93,15 @@ internal class TokenReader(
         val token = tokens[index]
 
         // If the following token is not a separator, treat it as a level 0 separator.
-        if (token !is Token.Separator) {
+        if (token !is LexerToken.Separator) {
             return if (0 in levels) 0 else null
         }
 
         // Read separator token.
         val level = when (token) {
-            is Token.Separator.Strong -> 3
-            is Token.Separator.Normal -> 2
-            is Token.Separator.Weak -> 1
+            is LexerToken.Separator.Strong -> 3
+            is LexerToken.Separator.Normal -> 2
+            is LexerToken.Separator.Weak -> 1
         }
         if (level in levels) {
             index++

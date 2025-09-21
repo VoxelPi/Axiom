@@ -13,4 +13,12 @@ public object Assembler {
     ): Program {
         TODO()
     }
+
+    public fun assemble(
+        mainUnit: String,
+        architecture: Architecture,
+        includedUnits: Map<String, String> = emptyMap(),
+    ) {
+        TODO()
+    }
 }

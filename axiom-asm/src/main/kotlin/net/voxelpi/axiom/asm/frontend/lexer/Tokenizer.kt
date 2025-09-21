@@ -1,18 +1,19 @@
 package net.voxelpi.axiom.asm.frontend.lexer
 
+import net.voxelpi.axiom.asm.language.BracketType
 import net.voxelpi.axiom.asm.source.SourceReference
 import net.voxelpi.axiom.asm.source.SourceUnit
 import kotlin.streams.toList
 
 internal object Tokenizer {
 
-    fun tokenize(unit: SourceUnit): List<Token> {
+    fun tokenize(unit: SourceUnit): List<LexerToken> {
         // Early exit for completely empty program.
         if (unit.text.isBlank()) {
             return emptyList()
         }
 
-        val tokens = mutableListOf<Token>()
+        val tokens = mutableListOf<LexerToken>()
 
         val text = unit.text
         val lines = text.split("\n")
@@ -43,7 +44,7 @@ internal object Tokenizer {
                     iWhitespaceStart,
                     iWhitespaceEnd - iWhitespaceStart
                 )
-                tokens += Token.Separator.Normal(whitespaceSource)
+                tokens += LexerToken.Separator.Normal(whitespaceSource)
             }
             iWhitespaceStart = iStartIndex + iLastNoneWhitespaceWhitespace + 1
 
@@ -64,14 +65,14 @@ internal object Tokenizer {
         text: String,
         lineStartIndex: Int,
         unit: SourceUnit,
-    ): List<Token> {
-        val tokens: MutableList<Token> = mutableListOf()
+    ): List<LexerToken> {
+        val tokens: MutableList<LexerToken> = mutableListOf()
         val codePoints = text.codePoints().toList()
 
         var iStartWhitespace: Int? = null
 
         var iCodePoint = 0
-        symbol_loop@ while (iCodePoint < codePoints.size) {
+        while (iCodePoint < codePoints.size) {
             // Get the current character.
             // val c = text[iSymbol]
             val codePoint = codePoints[iCodePoint]
@@ -93,36 +94,83 @@ internal object Tokenizer {
                         lineStartIndex + iStartWhitespace,
                         iChar - iStartWhitespace,
                     )
-                    tokens.add(Token.Separator.Weak(whitespaceSource))
+                    tokens.add(LexerToken.Separator.Weak(whitespaceSource))
                     iStartWhitespace = null
                 }
             }
 
-            // Text token
-            val wordMatch = WORD_PATTERN.find(text.substring(iChar))
-            if (wordMatch != null) {
-                val tokenSource = SourceReference.UnitSlice(
+            // Symbol token
+            val symbolMatch = SYMBOLS.find(text.substring(iChar)::startsWith)
+            if (symbolMatch != null) {
+                val symbolSource = SourceReference.UnitSlice(
                     unit,
                     lineStartIndex + iChar,
-                    wordMatch.value.length,
+                    1,
                 )
-                tokens.add(Token.Symbol(wordMatch.value, tokenSource))
-                iCodePoint += wordMatch.value.codePointCount(0, wordMatch.value.length)
+                tokens.add(LexerToken.Symbol(symbolMatch, symbolSource))
+                iCodePoint += symbolMatch.codePointCount(0, symbolMatch.length)
                 continue
             }
 
-            // Symbol token
-            val symbolSource = SourceReference.UnitSlice(
+            // Find text end.
+            var iCodePointWordEnd = codePoints.size
+
+            // Find next whitespace.
+            for (i in (iCodePoint + 1)..<iCodePointWordEnd) {
+                if (Character.isWhitespace(codePoints[i])) {
+                    iCodePointWordEnd = i
+                    break
+                }
+            }
+
+            // Find next symbol.
+            var iCharWordEnd = text.offsetByCodePoints(0, iCodePointWordEnd)
+            for (symbol in SYMBOLS) {
+                val iCharOccurrence = text.substring(iChar, iCharWordEnd).indexOf(symbol)
+                if (iCharOccurrence != -1 && iCharOccurrence < iCharWordEnd) {
+                    iCharWordEnd = iChar + iCharOccurrence
+                }
+            }
+            // iCodePointWordEnd = iCodePoint + text.substring(iChar, iCharWordEnd).codePointCount(0, iCharWordEnd - iChar)
+
+            // Generate text token.
+            val wordText = text.substring(iChar..<iCharWordEnd)
+            val tokenSource = SourceReference.UnitSlice(
                 unit,
                 lineStartIndex + iChar,
-                1,
+                wordText.length,
             )
-            tokens.add(Token.Symbol(String(Character.toChars(codePoint)), symbolSource))
-            iCodePoint += 1
+            tokens.add(LexerToken.Text(wordText, tokenSource))
+            iCodePoint += text.substring(iChar, iCharWordEnd).codePointCount(0, wordText.length)
         }
 
         return tokens
     }
 
-    private val WORD_PATTERN = "^[\\w\\p{L}]+".toRegex()
+    private val SYMBOLS = setOf(
+        ";",
+        ",",
+        ".",
+        "!",
+        "?",
+        "\"",
+        "'",
+        "\\",
+        "=",
+        "*",
+        "+",
+        "-",
+        "/",
+        "%",
+        "$",
+        "@",
+        ":",
+        "^",
+        "|",
+        "&",
+        "<",
+        ">",
+        *BracketType.entries.map { it.openingSymbol }.toTypedArray(),
+        *BracketType.entries.map { it.closingSymbol }.toTypedArray(),
+    )
 }

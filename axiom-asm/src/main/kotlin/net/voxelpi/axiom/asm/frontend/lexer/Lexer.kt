@@ -3,6 +3,7 @@ package net.voxelpi.axiom.asm.frontend.lexer
 import net.voxelpi.axiom.asm.frontend.lexer.transform.BracketTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.CharacterTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.IntegerTokenMapping
+import net.voxelpi.axiom.asm.frontend.lexer.transform.NamespacedIdTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.StrongSeparatorTokenMapping
 import net.voxelpi.axiom.asm.frontend.lexer.transform.TextTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.TrimScopeTokenTransformation
@@ -10,7 +11,7 @@ import net.voxelpi.axiom.asm.source.SourceUnit
 
 public object Lexer {
 
-    public fun tokenize(source: SourceUnit): List<Token> {
+    public fun tokenize(source: SourceUnit): List<LexerToken> {
         var tokens = Tokenizer.tokenize(source)
 
         // Apply all transformations.
@@ -25,6 +26,7 @@ public object Lexer {
         CharacterTokenTransformation,
         TextTokenTransformation,
         IntegerTokenMapping,
+        NamespacedIdTransformation,
         StrongSeparatorTokenMapping,
         BracketTokenTransformation,
         TrimScopeTokenTransformation,
