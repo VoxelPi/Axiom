@@ -24,7 +24,10 @@ import net.voxelpi.axiom.arch.dev32.DEV32Architecture
 import net.voxelpi.axiom.arch.dev64.DEV64Architecture
 import net.voxelpi.axiom.arch.mcpc08.MCPC08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
+import net.voxelpi.axiom.bridge.AxiomBridge
 import net.voxelpi.axiom.cli.emulator.Emulator
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.readBytes
 
 class AxiomCommand : CliktCommand(name = "axiom") {
 
