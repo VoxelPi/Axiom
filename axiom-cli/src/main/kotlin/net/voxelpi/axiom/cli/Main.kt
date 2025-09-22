@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.cli
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -25,6 +26,7 @@ import net.voxelpi.axiom.arch.mcpc08.MCPC08Architecture
 import net.voxelpi.axiom.arch.mcpc16.MCPC16Architecture
 import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.asm.source.SourceLink
+import net.voxelpi.axiom.bridge.AxiomBridge
 import net.voxelpi.axiom.cli.emulator.Emulator
 import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import kotlin.io.path.Path
@@ -34,6 +36,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
@@ -118,6 +121,37 @@ class AssemblerCommand(
     }
 }
 
+object BridgeCommand : NoOpCliktCommand(name = "bridge") {
+
+    override fun aliases(): Map<String, List<String>> = mapOf(
+        "flash" to listOf("upload")
+    )
+}
+
+class BridgeUploadCommand(
+    val architectures: Map<String, Architecture>,
+) : CliktCommand(name = "upload") {
+
+    val programFile by argument(help = "The file to upload").path(mustExist = true, mustBeReadable = true)
+
+    val architecture by option("-a", "--arch", help = "Target architecture")
+        .choice(architectures)
+        .default(AX08Architecture(AX08Architecture.Variant.LITE))
+    val port by option("-p", "--port", help = "The serial port on which the computer is connected")
+    val baudRate by option("-b", "--baud", help = "The serial baud rate that should be used")
+        .int()
+
+    override fun run() {
+        echo("Uploading ${programFile.normalize().absolutePathString()}")
+
+        AxiomBridge.connect(port!!, 115200, architecture).getOrThrow().use { bridge ->
+            bridge.uploadProgram(programFile.readBytes())
+        }
+
+        echo("Verify complete")
+    }
+}
+
 class EmulatorCommand(
     val architectures: Map<String, Architecture>,
 ) : CliktCommand(name = "emulator") {
@@ -149,6 +183,12 @@ fun main(args: Array<String>) {
     ).associateBy(Architecture::id)
 
     AxiomCommand()
-        .subcommands(AssemblerCommand(architectures), EmulatorCommand(architectures))
+        .subcommands(
+            AssemblerCommand(architectures),
+            BridgeCommand.apply {
+                subcommands(BridgeUploadCommand(architectures))
+            },
+            EmulatorCommand(architectures),
+        )
         .main(args)
 }

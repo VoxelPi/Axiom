@@ -2,6 +2,7 @@
 clikt = "5.0.3"
 cloud-command = "2.0.0"
 jline = "3.30.5"
+jserialcomm = "2.11.2"
 junit = "5.13.4"
 kotlin = "2.2.20"
 kotlin-logging = "7.0.13"
@@ -18,14 +19,16 @@ ktlint = "13.1.0"
 shadow = "9.1.0"
 
 [libraries]
-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
-
+# Kotlin
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
 
+# Libraries
+jserialcomm = { module = "com.fazecast:jSerialComm", version.ref = "jserialcomm" }
+
+# Logging
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j-impl", version.ref = "log4j" }
@@ -37,6 +40,10 @@ cloud-core = { module = "org.incendo:cloud-core", version.ref = "cloud-command" 
 cloud-kotlin = { module = "org.incendo:cloud-kotlin-extensions", version.ref = "cloud-command" }
 jline = { module = "org.jline:jline", version.ref = "jline" }
 mordant = { module = "com.github.ajalt.mordant:mordant", version.ref = "mordant" }
+
+# Tests
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 
 # Plugins used in build src
 blossom = { module = "net.kyori:blossom", version.ref = "blossom" }
