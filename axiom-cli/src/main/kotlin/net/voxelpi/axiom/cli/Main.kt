@@ -147,6 +147,8 @@ class BridgeUploadCommand(
         AxiomBridge.connect(port!!, 115200, architecture).getOrThrow().use { bridge ->
             bridge.uploadProgram(programFile.readBytes())
         }
+
+        echo("Verify complete")
     }
 }
 

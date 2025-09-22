@@ -16,7 +16,7 @@ public object AxiomBridge {
             SerialPort.ONE_STOP_BIT,
             SerialPort.NO_PARITY,
         )
-        // port.setFlowControl(SerialPort.FLOW_CONTROL_CTS_ENABLED or SerialPort.FLOW_CONTROL_RTS_ENABLED)
+        port.setFlowControl(SerialPort.FLOW_CONTROL_CTS_ENABLED or SerialPort.FLOW_CONTROL_RTS_ENABLED)
         port.openPort().also { success ->
             if (!success) {
                 return Result.failure(RuntimeException("Could not connect to axiom bridge at port $portDescriptor!"))

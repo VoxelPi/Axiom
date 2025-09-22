@@ -1,6 +1,9 @@
 package net.voxelpi.axiom.bridge
 
 import com.fazecast.jSerialComm.SerialPort
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.bridge.util.inputChannel
 import net.voxelpi.axiom.bridge.util.receiveArray
@@ -83,7 +86,7 @@ public class AxiomBridgeConnection(
             val packetBuffer = ByteBuffer.allocate(1 + (chunks.size / 8) + (if (chunks.size % 8 == 0) 0 else 1))
             packetBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-            packetBuffer.put(PACKET_ID_SEND_PROGRAM_HEADER.toByte())
+            packetBuffer.put(PACKET_ID_UPLOAD_PROGRAM_START.toByte())
 
             val presentBitMaps = chunkUsed.chunked(64).map { chunkUsedChunk ->
                 var chunkPresentData: ULong = 0UL
@@ -102,7 +105,7 @@ public class AxiomBridgeConnection(
             sendPacket(packetBuffer.array())
         }
 
-        // Send chunk
+        // Send chunk.
         for ((chunkIndex, chunk) in chunks.withIndex()) {
             if (!chunkUsed[chunkIndex]) {
                 continue
@@ -111,7 +114,7 @@ public class AxiomBridgeConnection(
             val packetBuffer = ByteBuffer.allocate(1 + 2 + 1024)
             packetBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-            packetBuffer.put(PACKET_ID_SEND_PROGRAM_CHUNK.toByte())
+            packetBuffer.put(PACKET_ID_UPLOAD_PROGRAM_CHUNK.toByte())
             packetBuffer.putShort(chunkIndex.toShort())
             packetBuffer.put(chunk)
 
@@ -119,12 +122,40 @@ public class AxiomBridgeConnection(
             sendPacket(packetBuffer.array())
         }
 
+        // Send program end.
+        val packetBuffer = ByteBuffer.allocate(1)
+        packetBuffer.put(PACKET_ID_UPLOAD_PROGRAM_END.toByte())
+        sendPacket(packetBuffer.array())
+
+        // Wait for the response.
+        runBlocking {
+            delay(100)
+
+            withTimeout(1000) {
+                val responseArray = readPacket().getOrThrow()
+                val responseBuffer = ByteBuffer.wrap(responseArray)
+                responseBuffer.order(ByteOrder.LITTLE_ENDIAN)
+                val id = responseBuffer.get()
+                check(id == PACKET_ID_UPLOAD_PROGRAM_RESPONSE.toByte())
+
+                val valid = responseBuffer.get() != 0.toByte()
+                check(valid) { "Invalid chunk uploaded" }
+
+                for (i in 0..<(chunks.size / 8)) {
+                    val data = responseBuffer.get()
+                    check(data == 0.toByte()) { "Chunk missing" }
+                }
+            }
+        }
+
         return Result.success(Unit)
     }
 
     public companion object {
         private const val PACKET_ID_INFO = 0x01
-        private const val PACKET_ID_SEND_PROGRAM_HEADER = 0x10
-        private const val PACKET_ID_SEND_PROGRAM_CHUNK = 0x11
+        private const val PACKET_ID_UPLOAD_PROGRAM_START = 0x10
+        private const val PACKET_ID_UPLOAD_PROGRAM_CHUNK = 0x11
+        private const val PACKET_ID_UPLOAD_PROGRAM_END = 0x12
+        private const val PACKET_ID_UPLOAD_PROGRAM_RESPONSE = 0x13
     }
 }
