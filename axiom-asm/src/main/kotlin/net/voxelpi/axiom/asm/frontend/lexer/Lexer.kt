@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.frontend.lexer
 
 import net.voxelpi.axiom.asm.frontend.lexer.transform.BracketTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.CharacterTokenTransformation
+import net.voxelpi.axiom.asm.frontend.lexer.transform.DirectiveTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.IntegerTokenMapping
 import net.voxelpi.axiom.asm.frontend.lexer.transform.LabelTokenTransformation
 import net.voxelpi.axiom.asm.frontend.lexer.transform.NamespacedIdTransformation
@@ -32,6 +33,7 @@ public object Lexer {
         NamespacedIdTransformation,
         PlaceholderTokenTransformation,
         LabelTokenTransformation,
+        DirectiveTokenTransformation,
         BracketTokenTransformation,
         TrimScopeTokenTransformation,
     )

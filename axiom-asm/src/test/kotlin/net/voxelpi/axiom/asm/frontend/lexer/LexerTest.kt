@@ -19,6 +19,6 @@ class LexerTest {
 
         val tokens = Lexer.tokenize(source)
 
-        assertEquals(8, tokens.size)
+        assertEquals(7, tokens.size)
     }
 }

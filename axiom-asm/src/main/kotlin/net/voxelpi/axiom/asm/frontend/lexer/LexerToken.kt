@@ -54,6 +54,11 @@ public sealed interface LexerToken : Token {
         override val source: SourceReference.UnitSlice,
     ) : LexerToken
 
+    public data class Directive(
+        public val value: String,
+        override val source: SourceReference.UnitSlice,
+    ) : LexerToken
+
     public data class Bracket(
         val type: BracketType,
         val tokens: List<LexerToken>,
