@@ -4,6 +4,7 @@ import net.voxelpi.axiom.asm.exception.SourcedCompilationException
 import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.frontend.lexer.Tokenizer
 import net.voxelpi.axiom.asm.language.BracketType
+import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourceUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
@@ -49,7 +50,8 @@ class BracketTokenTransformationTest {
         assertEquals(3, tokens.size)
         assertInstanceOf<LexerToken.Text>(tokens[0])
         assertEquals("a", (tokens[0] as LexerToken.Text).value)
-        assertInstanceOf<LexerToken.Separator.Weak>(tokens[1])
+        assertInstanceOf<LexerToken.Separator>(tokens[1])
+        assertEquals(SeparatorType.WEAK, (tokens[1] as? LexerToken.Separator)?.type)
         assertInstanceOf<LexerToken.Bracket>(tokens[2])
         assertEquals(BracketType.CURLY, (tokens[2] as LexerToken.Bracket).type)
 
@@ -57,7 +59,8 @@ class BracketTokenTransformationTest {
         assertEquals(3, firstBracketToken.size)
         assertInstanceOf<LexerToken.Text>(firstBracketToken[0])
         assertEquals("b", (firstBracketToken[0] as LexerToken.Text).value)
-        assertInstanceOf<LexerToken.Separator.Weak>(firstBracketToken[1])
+        assertInstanceOf<LexerToken.Separator>(firstBracketToken[1])
+        assertEquals(SeparatorType.WEAK, (tokens[1] as? LexerToken.Separator)?.type)
         assertInstanceOf<LexerToken.Bracket>(firstBracketToken[2])
         assertEquals(BracketType.CURLY, (firstBracketToken[2] as LexerToken.Bracket).type)
 

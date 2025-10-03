@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.frontend.parser
 
 import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.frontend.parser.value.ValueParser
+import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourcedValue
 import net.voxelpi.axiom.asm.source.join
 
@@ -96,18 +97,35 @@ internal class TokenReader(
         if (token !is LexerToken.Separator) {
             return if (0 in levels) 0 else null
         }
+        val tokenLevel = token.type
 
         // Read separator token.
-        val level = when (token) {
-            is LexerToken.Separator.Strong -> 3
-            is LexerToken.Separator.Normal -> 2
-            is LexerToken.Separator.Weak -> 1
+        val level = when (tokenLevel) {
+            SeparatorType.STRONG -> 3
+            SeparatorType.NORMAL -> 2
+            SeparatorType.WEAK -> 1
         }
         if (level in levels) {
             index++
             return level
         }
         return null
+    }
+
+    /**
+     * Returns a list of all tokens up to the first separator of the given [level].
+     * The separator is also consumed but not put in the returned list
+     */
+    fun readUntilSeparator(level: SeparatorType): List<LexerToken> {
+        val selected = mutableListOf<LexerToken>()
+        while (remaining() > 0) {
+            val token = readToken() ?: break
+            if (token is LexerToken.Separator && token.type >= level) {
+                break
+            }
+            selected += token
+        }
+        return selected
     }
 
     fun <T : Any> readValue(parser: ValueParser<T>): Result<T> {

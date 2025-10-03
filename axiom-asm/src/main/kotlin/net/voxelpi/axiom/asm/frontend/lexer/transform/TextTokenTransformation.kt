@@ -2,6 +2,7 @@ package net.voxelpi.axiom.asm.frontend.lexer.transform
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
 import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
+import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourceReference
 
 internal object TextTokenTransformation : TokenTransformation {
@@ -36,7 +37,7 @@ internal object TextTokenTransformation : TokenTransformation {
                             }
                         }
                     }
-                    is LexerToken.Separator.Normal -> throw SourcedCompilationException(token.source, "Invalid newline in string literal: $token")
+                    is LexerToken.Separator if token.type == SeparatorType.NORMAL -> throw SourcedCompilationException(token.source, "Invalid newline in string literal: $token")
                     is LexerToken.StringLiteral -> throw SourcedCompilationException(token.source, "Invalid token in string literal: $token")
                     else -> {
                         escaped = false

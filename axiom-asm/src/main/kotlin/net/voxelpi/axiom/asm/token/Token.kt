@@ -1,4 +1,4 @@
-package net.voxelpi.axiom.asm.frontend.token
+package net.voxelpi.axiom.asm.token
 
 import net.voxelpi.axiom.asm.source.Sourced
 

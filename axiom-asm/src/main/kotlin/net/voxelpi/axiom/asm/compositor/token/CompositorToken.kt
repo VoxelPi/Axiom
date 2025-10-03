@@ -1,61 +1,49 @@
-package net.voxelpi.axiom.asm.frontend.lexer
+package net.voxelpi.axiom.asm.compositor.token
 
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.language.BracketType
 import net.voxelpi.axiom.asm.language.NamespacedId
-import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourceReference
 import net.voxelpi.axiom.asm.token.Token
 
-public sealed interface LexerToken : Token {
+internal sealed interface CompositorToken : Token {
 
-    override val source: SourceReference.UnitSlice
-
-    public data class Separator(
-        val type: SeparatorType,
+    data class Separator(
+        val type: BracketType,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class Symbol(
-        public val symbol: String,
+    data class Symbol(
+        val symbol: String,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class Text(
-        public val value: String,
+    data class Text(
+        val value: String,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class Integer(
-        public val value: Long,
+    data class Integer(
+        val value: Long,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class StringLiteral(
-        public val value: String,
+    data class StringLiteral(
+        val value: String,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class Label(
-        public val id: NamespacedId,
+    data class Placeholder(
+        val id: NamespacedId,
         override val source: SourceReference.UnitSlice,
-    ) : LexerToken
+    ) : CompositorToken
 
-    public data class Placeholder(
-        public val id: NamespacedId,
-        override val source: SourceReference.UnitSlice,
-    ) : LexerToken
-
-    public data class Directive(
-        public val value: String,
-        override val source: SourceReference.UnitSlice,
-    ) : LexerToken
-
-    public data class Bracket(
+    data class Bracket(
         val type: BracketType,
         val tokens: List<LexerToken>,
         val openingBracketSource: SourceReference.UnitSlice,
         val closingBracketSource: SourceReference.UnitSlice,
-    ) : LexerToken {
+    ) : CompositorToken {
 
         override val source: SourceReference.UnitSlice
             get() {

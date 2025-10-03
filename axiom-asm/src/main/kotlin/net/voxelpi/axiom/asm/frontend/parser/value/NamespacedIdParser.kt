@@ -9,31 +9,11 @@ import kotlin.reflect.typeOf
 internal object NamespacedIdParser : ValueParser<NamespacedId>(typeOf<NamespacedId>()) {
 
     override fun parse(tokens: TokenReader): Result<NamespacedId> {
-        val firstToken = tokens.readTypedToken<LexerToken.Symbol>()
-            ?: return Result.failure(CompilationException("NamespacedId part has to be a valid text"))
+        val token = tokens.readTypedToken<LexerToken.Text>()
+            ?: return Result.failure(CompilationException("Expected namespace token"))
 
-        val parts = mutableListOf(firstToken.symbol)
+        val namespacedId = NamespacedId(token.value.split("::"))
 
-        while (tokens.remaining() >= 3) {
-            tokens.snapshot()
-            if (!tokens.readSymbol(":")) {
-                tokens.revert()
-                break
-            }
-            if (!tokens.readSymbol(":")) {
-                tokens.revert()
-                break
-            }
-            val name = tokens.readTypedToken<LexerToken.Symbol>()
-            if (name == null) {
-                tokens.revert()
-                break
-            }
-            parts.add(name.symbol)
-            tokens.accept()
-        }
-
-        val namespace = NamespacedId(parts)
-        return Result.success(namespace)
+        return Result.success(namespacedId)
     }
 }
