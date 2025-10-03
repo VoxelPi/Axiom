@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.frontend.lexer
 
+import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourceUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
@@ -25,7 +26,8 @@ class TokenizerTest {
         assertInstanceOf<LexerToken.Symbol>(tokens[1])
         assertEquals(",", (tokens[1] as? LexerToken.Symbol)?.symbol)
 
-        assertInstanceOf<LexerToken.Separator.Weak>(tokens[2])
+        assertInstanceOf<LexerToken.Separator>(tokens[2])
+        assertEquals(SeparatorType.WEAK, (tokens[2] as? LexerToken.Separator)?.type)
 
         assertInstanceOf<LexerToken.Text>(tokens[3])
         assertEquals("World", (tokens[3] as? LexerToken.Text)?.value)

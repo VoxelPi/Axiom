@@ -1,4 +1,4 @@
-package net.voxelpi.axiom.asm.frontend.preprocessor
+package net.voxelpi.axiom.asm.compositor.parser
 
 import net.voxelpi.axiom.asm.exception.SourcedCompilationException
 import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
@@ -6,15 +6,12 @@ import net.voxelpi.axiom.asm.frontend.parser.TokenReader
 
 internal object PreProcessorParser {
 
-    public fun parse(tokens: List<LexerToken>): List<PreProcessorToken> {
-        val preprocessedTokens = mutableListOf<PreProcessorToken>()
+    public fun parse(tokens: List<LexerToken>): List<CompositorToken> {
+        val preprocessedTokens = mutableListOf<CompositorToken>()
         val reader = TokenReader(tokens)
 
-        if (reader.readSymbol("!")) {
-            val directive = reader.readTypedToken<LexerToken.Symbol>()
-                ?: throw SourcedCompilationException(reader.head!!.source, "Expected a directive")
-
-            when (directive.symbol) {
+        val directive = reader.readTypedToken<LexerToken.Directive>()?.let { directive ->
+            when (directive.value) {
                 "include" -> {
                     reader.readSeparator(level = 1)
                         ?: throw SourcedCompilationException(reader.head!!.source, "Missing included file path")
@@ -44,7 +41,7 @@ internal object PreProcessorParser {
                     TODO()
                 }
                 else -> {
-                    throw SourcedCompilationException(directive.source, "Unknown directive ${directive.symbol}")
+                    throw SourcedCompilationException(directive.source, "Unknown directive ${directive.value}")
                 }
             }
         }

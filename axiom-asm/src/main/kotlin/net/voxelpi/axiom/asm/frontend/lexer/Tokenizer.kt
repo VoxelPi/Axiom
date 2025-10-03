@@ -1,6 +1,7 @@
 package net.voxelpi.axiom.asm.frontend.lexer
 
 import net.voxelpi.axiom.asm.language.BracketType
+import net.voxelpi.axiom.asm.language.SeparatorType
 import net.voxelpi.axiom.asm.source.SourceReference
 import net.voxelpi.axiom.asm.source.SourceUnit
 import kotlin.streams.toList
@@ -44,7 +45,7 @@ internal object Tokenizer {
                     iWhitespaceStart,
                     iWhitespaceEnd - iWhitespaceStart
                 )
-                tokens += LexerToken.Separator.Normal(whitespaceSource)
+                tokens += LexerToken.Separator(SeparatorType.NORMAL, whitespaceSource)
             }
             iWhitespaceStart = iStartIndex + iLastNoneWhitespaceWhitespace + 1
 
@@ -94,7 +95,7 @@ internal object Tokenizer {
                         lineStartIndex + iStartWhitespace,
                         iChar - iStartWhitespace,
                     )
-                    tokens.add(LexerToken.Separator.Weak(whitespaceSource))
+                    tokens.add(LexerToken.Separator(SeparatorType.WEAK, whitespaceSource))
                     iStartWhitespace = null
                 }
             }
