@@ -6,7 +6,6 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import net.voxelpi.axiom.AxiomBuildParameters
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.asm.Assembler
 import net.voxelpi.axiom.cli.command.AxiomCommandManager
 import net.voxelpi.axiom.cli.command.AxiomCommandSender
 import net.voxelpi.axiom.cli.emulator.command.EmulatorBreakCommand
@@ -28,11 +27,9 @@ import net.voxelpi.axiom.cli.emulator.computer.EmulatedComputer
 import net.voxelpi.axiom.cli.util.ValueFormat
 import net.voxelpi.axiom.cli.util.codePointFromString
 import net.voxelpi.axiom.cli.util.formattedValue
-import net.voxelpi.axiom.cli.util.generateCompilationStackTraceMessage
 import net.voxelpi.axiom.cli.util.generateFormattedDescription
 import net.voxelpi.axiom.cli.util.stringFromCodePoint
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
-import net.voxelpi.axiom.instruction.Program
 import net.voxelpi.axiom.util.parseInteger
 import org.incendo.cloud.exception.ArgumentParseException
 import org.incendo.cloud.exception.InvalidSyntaxException
@@ -47,7 +44,6 @@ import org.jline.utils.InfoCmp
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.div
 import kotlin.io.path.exists
@@ -115,27 +111,28 @@ class Emulator(
             return
         }
 
-        val assembler = Assembler(
-            listOf(
-                Path(".").absolute().normalize(),
-            )
-        )
+        // TODO: Assembler v2
+        // val assembler = Assembler(
+        //     listOf(
+        //         Path(".").absolute().normalize(),
+        //     )
+        // )
 
-        val program: Program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
-            terminal.writer().println(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED")))
-            terminal.writer().println(generateCompilationStackTraceMessage(exception))
-            return
-        }
-        if (computer.isExecuting()) {
-            terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, because the computer is currently running")))
-            return
-        }
-        computer.load(program).getOrElse {
-            terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, ${it.message}")))
-            return
-        }
-
-        terminal.writer().println("$PREFIX_EMULATOR Loaded program \"${inputFilePath.absolutePathString()}\"")
+        // val program: Program = assembler.assemble(inputFilePath, architecture).getOrElse { exception ->
+        //     terminal.writer().println(TextColors.brightRed(TextStyles.bold("COMPILATION FAILED")))
+        //     terminal.writer().println(generateCompilationStackTraceMessage(exception))
+        //     return
+        // }
+        // if (computer.isExecuting()) {
+        //     terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, because the computer is currently running")))
+        //     return
+        // }
+        // computer.load(program).getOrElse {
+        //     terminal.writer().println(TextColors.brightRed(TextStyles.bold("Failed to load program, ${it.message}")))
+        //     return
+        // }
+        //
+        // terminal.writer().println("$PREFIX_EMULATOR Loaded program \"${inputFilePath.absolutePathString()}\"")
     }
 
     fun reloadProgram() {
