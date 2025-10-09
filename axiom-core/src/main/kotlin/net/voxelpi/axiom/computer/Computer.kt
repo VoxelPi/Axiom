@@ -420,13 +420,13 @@ public class Computer(
                     }
                 }
             }
-            Operation.IO_POLL -> {
+            Operation.IO_POLL, Operation.IO_POLL_1 -> {
                 result = 1UL
             }
-            Operation.IO_READ -> {
+            Operation.IO_READ, Operation.IO_READ_1 -> {
                 result = inputProvider() and outputRegister.type.mask
             }
-            Operation.IO_WRITE -> {
+            Operation.IO_WRITE, Operation.IO_WRITE_1 -> {
                 outputHandler.invoke(a)
             }
             Operation.CALL -> {

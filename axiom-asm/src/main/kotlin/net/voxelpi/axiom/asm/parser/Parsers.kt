@@ -329,6 +329,8 @@ public object Parsers {
             val noInputWithOutputFunctions = mapOf(
                 "read" to Operation.IO_READ,
                 "poll" to Operation.IO_POLL,
+                "read1" to Operation.IO_READ_1,
+                "poll1" to Operation.IO_POLL_1,
             )
 
             for ((operator, operation) in noInputWithOutputFunctions) {
@@ -347,6 +349,7 @@ public object Parsers {
 
             val aInputNoOutputFunctions = mapOf(
                 "write" to Operation.IO_WRITE,
+                "write_1" to Operation.IO_WRITE_1,
             )
 
             for ((operator, operation) in aInputNoOutputFunctions) {
