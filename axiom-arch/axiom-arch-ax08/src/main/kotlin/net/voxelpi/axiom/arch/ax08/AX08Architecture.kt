@@ -177,10 +177,10 @@ public class AX08Architecture(
         0x0Du to Operation.SHIFT_RIGHT,
         0x0Eu to Operation.ROTATE_LEFT,
         0x0Fu to Operation.ROTATE_RIGHT,
-        0x10u to Operation.BIT_GET,
-        0x11u to Operation.BIT_SET,
-        0x12u to Operation.BIT_CLEAR,
-        0x13u to Operation.BIT_TOGGLE,
+        0x10u to Operation.BIT_DECODE,
+        0x11u to Operation.BIT_DECODE_INVERTED,
+        // 0x12 is not implemented
+        // 0x13 is not implemented
         0x14u to Operation.MEMORY_LOAD,
         0x15u to Operation.MEMORY_STORE,
         // 0x16 is not implemented
@@ -189,9 +189,9 @@ public class AX08Architecture(
         0x19u to Operation.IO_READ,
         0x1Au to Operation.IO_WRITE,
         // 0x1B is not implemented
-        0x1Cu to Operation.CALL_2,
-        0x1Du to Operation.RETURN,
-        // 0x1E is not implemented
+        0x1Cu to Operation.IO_POLL_1,
+        0x1Du to Operation.IO_READ_1,
+        0x1Eu to Operation.IO_WRITE_1,
         0x1Fu to Operation.BREAK,
     )
 
@@ -212,7 +212,7 @@ public class AX08Architecture(
         0x0Du to Operation.SHIFT_RIGHT,
         // 0x0E is not implemented
         // 0x0F is not implemented
-        0x10u to Operation.BIT_GET,
+        0x10u to Operation.BIT_DECODE,
         // 0x11 is not implemented
         // 0x12 is not implemented
         // 0x13 is not implemented
@@ -224,9 +224,9 @@ public class AX08Architecture(
         0x19u to Operation.IO_READ,
         0x1Au to Operation.IO_WRITE,
         // 0x1B is not implemented
-        // 0x1Cu is not implemented
-        // 0x1Du is not implemented
-        // 0x1E is not implemented
+        0x1Cu to Operation.IO_POLL_1,
+        0x1Du to Operation.IO_READ_1,
+        0x1Eu to Operation.IO_WRITE_1,
         0x1Fu to Operation.BREAK,
     )
 
