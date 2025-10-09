@@ -1,5 +1,6 @@
 package net.voxelpi.axiom.asm.compositor.parser
 
+import net.voxelpi.axiom.asm.frontend.lexer.LexerToken
 import net.voxelpi.axiom.asm.language.BracketType
 import net.voxelpi.axiom.asm.language.NamespacedId
 import net.voxelpi.axiom.asm.language.SeparatorType
@@ -70,12 +71,13 @@ internal sealed interface CompositorToken : Token {
 
         data class Insert(
             override val source: SourceReference.UnitSlice,
-            val parameters: List<List<CompositorToken>>,
+            val template: DirectiveParameterValue<CompositorTemplateHeader>,
+            val parameters: CompositorTemplatePrototype,
         ) : Directive
 
         data class If(
             override val source: SourceReference.UnitSlice,
-            val condition: List<CompositorToken>,
+            val condition: List<LexerToken>,
         ) : Directive
 
         data class Else(

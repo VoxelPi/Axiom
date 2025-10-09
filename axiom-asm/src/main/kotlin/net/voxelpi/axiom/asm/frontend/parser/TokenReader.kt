@@ -37,6 +37,13 @@ internal class TokenReader(
         return tokens.size - index
     }
 
+    fun skip(count: Int): Boolean? {
+        if (index + count >= tokens.size) {
+            return null
+        }
+        return true
+    }
+
     val head: LexerToken?
         get() {
             if (index >= tokens.size) {
@@ -44,6 +51,14 @@ internal class TokenReader(
             }
             return tokens[index]
         }
+
+    fun readRemainingTokens(): List<LexerToken> {
+        if (index >= tokens.size) {
+            return emptyList()
+        }
+
+        return tokens.subList(index, tokens.size)
+    }
 
     fun readToken(): LexerToken? {
         if (index >= tokens.size) {
@@ -74,8 +89,8 @@ internal class TokenReader(
         return readTokenIf { it is T && predicate(it) } as T?
     }
 
-    fun readSymbol(symbol: String): Boolean {
-        return readTypedTokenIf<LexerToken.Symbol> { it.symbol == symbol } != null
+    fun readSymbol(symbol: String): LexerToken.Symbol? {
+        return readTypedTokenIf<LexerToken.Symbol> { it.symbol == symbol }
     }
 
     fun readAnySeparator(): Int {
