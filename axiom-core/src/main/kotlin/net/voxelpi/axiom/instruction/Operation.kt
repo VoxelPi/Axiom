@@ -26,6 +26,8 @@ public enum class Operation(public val type: OperationType, public val format: S
     SHIFT_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = shift right {a}"),
     ROTATE_LEFT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = rotate left {a}"),
     ROTATE_RIGHT(OperationType.A_INPUT_WITH_OUTPUT, "{out} = rotate right {a}"),
+    BIT_DECODE(OperationType.A_INPUT_WITH_OUTPUT, "{out} = decode {a}"),
+    BIT_DECODE_INVERTED(OperationType.A_INPUT_WITH_OUTPUT, "{out} = ndecode {a}"),
     BIT_GET(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit get {b}"),
     BIT_SET(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit set {b}"),
     BIT_CLEAR(OperationType.AB_INPUT_WITH_OUTPUT, "{out} = {a} bit clear {b}"),

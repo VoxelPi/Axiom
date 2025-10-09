@@ -351,6 +351,12 @@ public class Computer(
                 result = ((a shr 1) or (carryState shl (architecture.dataWordType.bits - 1))) and outputRegister.type.mask
                 writeCarry(((a shr 0) and 1UL) != 0UL)
             }
+            Operation.BIT_DECODE -> {
+                result = (1UL shl (b.toInt() and 0xFF)) and outputRegister.type.mask
+            }
+            Operation.BIT_DECODE_INVERTED -> {
+                result = (1UL shl (b.toInt() and 0xFF)).inv() and outputRegister.type.mask
+            }
             Operation.BIT_GET -> {
                 val bitValue = (1UL shl (b.toInt() and 0xFF)) and outputRegister.type.mask
                 result = if ((a and bitValue) != 0UL) 1UL else 0UL

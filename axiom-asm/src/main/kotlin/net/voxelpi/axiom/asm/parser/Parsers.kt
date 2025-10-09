@@ -307,6 +307,8 @@ public object Parsers {
                 "rotate right" to Pair(Operation.ROTATE_RIGHT, 0L),
                 "inc" to Pair(Operation.ADD, 1L),
                 "dec" to Pair(Operation.SUBTRACT, 1L),
+                "bit decode" to Pair(Operation.BIT_DECODE, 0L),
+                "bit ndecode" to Pair(Operation.BIT_DECODE_INVERTED, 0L),
             )
 
             for ((operator, operatorData) in aInputWithOutputFunctions) {
