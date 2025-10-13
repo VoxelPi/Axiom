@@ -299,7 +299,7 @@ public class Computer(
             Operation.SUBTRACT_WITH_CARRY -> {
                 // A - B - (1 - C_in) = A - (B + 1 - C_in) = A + (inv(B) + 1) + inv(C_in))
                 val bInput = (b.inv() + 1UL) and architecture.dataWordType.mask
-                val carryState = if (carryIn) 0UL else 1UL // INVERTED!!!
+                val carryState = if (carryIn) 0UL else (-1).toULong() // INVERTED!!!
 
                 val partialSum = (a + bInput) and outputRegister.type.mask
                 result = (a + bInput + carryState) and outputRegister.type.mask
@@ -352,10 +352,10 @@ public class Computer(
                 writeCarry(((a shr 0) and 1UL) != 0UL)
             }
             Operation.BIT_DECODE -> {
-                result = (1UL shl (b.toInt() and 0xFF)) and outputRegister.type.mask
+                result = (1UL shl (a.toInt() and 0xFF)) and outputRegister.type.mask
             }
             Operation.BIT_DECODE_INVERTED -> {
-                result = (1UL shl (b.toInt() and 0xFF)).inv() and outputRegister.type.mask
+                result = (1UL shl (a.toInt() and 0xFF)).inv() and outputRegister.type.mask
             }
             Operation.BIT_GET -> {
                 val bitValue = (1UL shl (b.toInt() and 0xFF)) and outputRegister.type.mask
