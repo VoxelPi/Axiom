@@ -177,8 +177,8 @@ public class AX08Architecture(
         0x0Du to Operation.SHIFT_RIGHT,
         0x0Eu to Operation.ROTATE_LEFT,
         0x0Fu to Operation.ROTATE_RIGHT,
-        0x10u to Operation.BIT_DECODE,
-        0x11u to Operation.BIT_DECODE_INVERTED,
+        0x10u to Operation.BIT_DECODE_INVERTED,
+        0x11u to Operation.BIT_DECODE,
         // 0x12 is not implemented
         // 0x13 is not implemented
         0x14u to Operation.MEMORY_LOAD,
@@ -212,7 +212,7 @@ public class AX08Architecture(
         0x0Du to Operation.SHIFT_RIGHT,
         // 0x0E is not implemented
         // 0x0F is not implemented
-        0x10u to Operation.BIT_DECODE,
+        0x10u to Operation.BIT_DECODE_INVERTED,
         // 0x11 is not implemented
         // 0x12 is not implemented
         // 0x13 is not implemented
