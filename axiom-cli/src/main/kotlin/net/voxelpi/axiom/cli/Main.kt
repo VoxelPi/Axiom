@@ -16,6 +16,8 @@ import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.widgets.Text
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.arch.ax08.AX08Architecture
 import net.voxelpi.axiom.arch.dev08.DEV08Architecture
@@ -40,6 +42,7 @@ import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
+import kotlin.time.measureTime
 
 class AxiomCommand : CliktCommand(name = "axiom") {
 
@@ -142,13 +145,33 @@ class BridgeUploadCommand(
         .int()
 
     override fun run() {
-        echo("Uploading ${programFile.normalize().absolutePathString()}")
-
-        AxiomBridge.connect(port!!, 115200, architecture).getOrThrow().use { bridge ->
-            bridge.uploadProgram(programFile.readBytes())
+        val bridge = AxiomBridge.connect(port!!, 115200, architecture).getOrElse { exception ->
+            echo("${TextColors.brightRed(TextStyles.bold("ERROR"))} ${TextColors.brightRed("Unable to open port $port. Please make sure the bridge is connected at the specified port.")}", err = true)
+            return
         }
 
-        echo("Verify complete")
+        val bridgeInfo = runBlocking {
+            withTimeout(1000) {
+                bridge.fetchInfo().getOrElse { exception ->
+                    echo("${TextColors.brightRed(TextStyles.bold("ERROR"))} ${TextColors.brightRed("Unable to connect to bridge at port $port. Please make sure the bridge is connected at the specified port. ${exception.message}")}", err = true)
+                    exitProcess(1)
+                }
+            }
+        }
+        echo("Connected to ${architecture.id} bridge v${bridgeInfo.version} (commit: ${bridgeInfo.gitVersion}, protocol: ${bridgeInfo.protocolVersion})")
+
+        echo("Uploading \"${programFile.normalize().absolutePathString()}\"")
+        val uploadTime = measureTime {
+            runBlocking {
+                withTimeout(1000) {
+                    bridge.uploadProgram(programFile.readBytes()).getOrElse { exception ->
+                        echo("${TextColors.brightRed(TextStyles.bold("ERROR"))} Failed to upload the program. ${exception.message}")
+                        exitProcess(1)
+                    }
+                }
+            }
+        }
+        echo("${TextColors.brightGreen("Verify complete")} (${String.format("%.3f", uploadTime.inWholeMilliseconds / 1000.0)}s)")
     }
 }
 

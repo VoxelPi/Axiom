@@ -1,9 +1,6 @@
 package net.voxelpi.axiom.bridge
 
 import com.fazecast.jSerialComm.SerialPort
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import net.voxelpi.axiom.arch.Architecture
 import net.voxelpi.axiom.bridge.util.inputChannel
 import net.voxelpi.axiom.bridge.util.receiveArray
@@ -67,7 +64,37 @@ public class AxiomBridgeConnection(
         return@runCatching payload
     }
 
-    public fun uploadProgram(data: ByteArray): Result<Unit> {
+    public suspend fun fetchInfo(): Result<AxiomBridgeInfo> = runCatching {
+        val requestPacketBuffer = ByteBuffer.allocate(1).order(ByteOrder.LITTLE_ENDIAN).apply {
+            put(PACKET_ID_INFO.toByte())
+        }
+        // Send the request packet.
+        sendPacket(requestPacketBuffer.array())
+
+        // Read the response.
+        // delay(100)
+        val responseArray = readPacket().getOrThrow()
+        val responseBuffer = ByteBuffer.wrap(responseArray).order(ByteOrder.LITTLE_ENDIAN)
+
+        val id = responseBuffer.get()
+        check(id == PACKET_ID_INFO_RESPONSE.toByte()) { "Invalid response to info request" }
+
+        val protocolVersion = responseBuffer.getInt()
+
+        val versionLength = responseBuffer.getShort().toInt()
+        val versionBytes = ByteArray(versionLength)
+        responseBuffer.get(versionBytes)
+        val version = String(versionBytes, Charsets.UTF_8)
+
+        val gitVersionLength = responseBuffer.getShort().toInt()
+        val gitVersionBytes = ByteArray(gitVersionLength)
+        responseBuffer.get(gitVersionBytes)
+        val gitVersion = String(gitVersionBytes, Charsets.UTF_8)
+
+        return Result.success(AxiomBridgeInfo(protocolVersion, version, gitVersion))
+    }
+
+    public suspend fun uploadProgram(data: ByteArray): Result<Unit> {
         val architectureProgramByteCount = architecture.programSize * architecture.instructionWordType.bytes.toULong()
 
         // Check program length.
@@ -128,24 +155,19 @@ public class AxiomBridgeConnection(
         sendPacket(packetBuffer.array())
 
         // Wait for the response.
-        runBlocking {
-            delay(100)
+        // delay(100)
+        val responseArray = readPacket().getOrThrow()
+        val responseBuffer = ByteBuffer.wrap(responseArray)
+        responseBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        val id = responseBuffer.get()
+        check(id == PACKET_ID_UPLOAD_PROGRAM_RESPONSE.toByte())
 
-            withTimeout(1000) {
-                val responseArray = readPacket().getOrThrow()
-                val responseBuffer = ByteBuffer.wrap(responseArray)
-                responseBuffer.order(ByteOrder.LITTLE_ENDIAN)
-                val id = responseBuffer.get()
-                check(id == PACKET_ID_UPLOAD_PROGRAM_RESPONSE.toByte())
+        val valid = responseBuffer.get() != 0.toByte()
+        check(valid) { "Invalid chunk uploaded" }
 
-                val valid = responseBuffer.get() != 0.toByte()
-                check(valid) { "Invalid chunk uploaded" }
-
-                for (i in 0..<(chunks.size / 8)) {
-                    val data = responseBuffer.get()
-                    check(data == 0.toByte()) { "Chunk missing" }
-                }
-            }
+        for (i in 0..<(chunks.size / 8)) {
+            val data = responseBuffer.get()
+            check(data == 0.toByte()) { "Chunk missing" }
         }
 
         return Result.success(Unit)
@@ -153,6 +175,7 @@ public class AxiomBridgeConnection(
 
     public companion object {
         private const val PACKET_ID_INFO = 0x01
+        private const val PACKET_ID_INFO_RESPONSE = 0x01
         private const val PACKET_ID_UPLOAD_PROGRAM_START = 0x10
         private const val PACKET_ID_UPLOAD_PROGRAM_CHUNK = 0x11
         private const val PACKET_ID_UPLOAD_PROGRAM_END = 0x12
