@@ -4,8 +4,6 @@ import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import net.voxelpi.axiom.WordType
 import net.voxelpi.axiom.arch.Architecture
-import net.voxelpi.axiom.asm.Assembler
-import net.voxelpi.axiom.asm.source.SourceLink
 import net.voxelpi.axiom.computer.state.ComputerStateChange
 import net.voxelpi.axiom.computer.state.ComputerStatePatch
 import net.voxelpi.axiom.instruction.Condition
@@ -53,17 +51,18 @@ fun generateFormattedDescription(patch: ComputerStatePatch<*>, architecture: Arc
             }
             description += "${TextColors.brightBlue(instructionIndexPart)}${TextColors.gray("  ")}"
 
-            val sourceLinkPart = if (reason is ComputerStatePatch.Reason.InstructionExecution.Program) {
-                val source = reason.instruction.meta[Assembler.SOURCE_INSTRUCTION_META_KEY] as? SourceLink
-                if (source != null && source is SourceLink.CompilationUnitSlice) {
-                    "${source.unit.id.padStart(16)}  ${"${source.line + 1}".padStart(5)}:${"${source.column + 1}".padStart(2)}"
-                } else {
-                    " ".repeat(16 + 2 + 5 + 1 + 2)
-                }
-            } else {
-                " ".repeat(16 + 2 + 5 + 1 + 2)
-            }
-            description += "${TextColors.brightYellow(sourceLinkPart)}${TextColors.gray("  ")}"
+            // TODO: Assembler v2
+            // val sourceLinkPart = if (reason is ComputerStatePatch.Reason.InstructionExecution.Program) {
+            //     val source = reason.instruction.meta[Assembler.SOURCE_INSTRUCTION_META_KEY] as? SourceLink
+            //     if (source != null && source is SourceLink.CompilationUnitSlice) {
+            //         "${source.unit.id.padStart(16)}  ${"${source.line + 1}".padStart(5)}:${"${source.column + 1}".padStart(2)}"
+            //     } else {
+            //         " ".repeat(16 + 2 + 5 + 1 + 2)
+            //     }
+            // } else {
+            " ".repeat(16 + 2 + 5 + 1 + 2)
+            // }
+            // description += "${TextColors.brightYellow(sourceLinkPart)}${TextColors.gray("  ")}"
 
             val instruction = reason.instruction
             val condition = instruction.condition
